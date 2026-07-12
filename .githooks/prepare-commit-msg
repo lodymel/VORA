@@ -1,0 +1,22 @@
+#!/bin/sh
+# Strip Cursor co-author trailers before the commit message is finalized.
+# GitHub treats Co-authored-by as a contributor — never allow Cursor here.
+
+MSG_FILE="$1"
+SOURCE="${2:-}"
+
+if [ ! -f "$MSG_FILE" ]; then
+  exit 0
+fi
+
+# Cursor / Cursor Agent may inject these via the commit UI or templates.
+tmp="$(mktemp)"
+# shellcheck disable=SC2016
+sed -E \
+  -e '/^[Cc][Oo]-[Aa]uthor[Ee]d-[Bb]y:[[:space:]]*.*[Cc]ursor/d' \
+  -e '/^[Cc][Oo]-[Aa]uthor[Ee]d-[Bb]y:[[:space:]]*.*cursoragent@/d' \
+  -e '/^[Cc][Oo]-[Aa]uthor[Ee]d-[Bb]y:[[:space:]]*.*@cursor\./d' \
+  "$MSG_FILE" > "$tmp"
+mv "$tmp" "$MSG_FILE"
+
+exit 0

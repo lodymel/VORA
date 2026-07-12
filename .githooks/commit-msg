@@ -1,0 +1,19 @@
+#!/bin/sh
+# Reject commits whose message still attributes work to Cursor.
+
+MSG_FILE="$1"
+
+if [ ! -f "$MSG_FILE" ]; then
+  exit 0
+fi
+
+if grep -Ei \
+  '^[[:space:]]*Co-authored-by:.*cursor|cursoragent@|@cursor\.(com|sh)' \
+  "$MSG_FILE" >/dev/null 2>&1
+then
+  echo "error: commit message must not list Cursor as a co-author." >&2
+  echo "       Remove any Co-authored-by: Cursor trailer and try again." >&2
+  exit 1
+fi
+
+exit 0

@@ -34,6 +34,8 @@ pnpm build   # production build
 pnpm start   # serve production build
 ```
 
+`pnpm install` also enables repo git hooks so commits/pushes never attribute work to Cursor on GitHub.
+
 ## Product notes
 
 Deeper product requirements live in [`docs/VORA_PRD.md`](docs/VORA_PRD.md).

@@ -48,19 +48,7 @@ Never feel:
 
 ------------------------------------------------------------------------
 
-# 3. Visual References
-
-Quality references only (feeling, not layout):
-
--   Platform human interface guidelines
--   Editorial composition and quiet typography craft
--   Soft, high-trust interaction pacing
-
-Do not copy layouts. Reinterpret the feeling.
-
-------------------------------------------------------------------------
-
-# 4. Information Architecture
+# 3. Information Architecture
 
 Sky → Write & Memory
 
@@ -68,7 +56,7 @@ Me → Journey
 
 ------------------------------------------------------------------------
 
-# 5. Core User Flow
+# 4. Core User Flow
 
 Landing
 
@@ -94,7 +82,7 @@ Return Tomorrow
 
 ------------------------------------------------------------------------
 
-# 6. Write Experience
+# 5. Write Experience
 
 Purpose: Transform one written sentence into one meaningful Light.
 
@@ -121,7 +109,7 @@ Rules:
 
 ------------------------------------------------------------------------
 
-# 7. AI Principles
+# 6. AI Principles
 
 Never judge.
 
@@ -149,7 +137,7 @@ Only emotional meaning remains.
 
 ------------------------------------------------------------------------
 
-# 8. Sky
+# 7. Sky
 
 One Light = One Star.
 
@@ -171,7 +159,7 @@ Weekly Reflection explains WHY the constellation appeared.
 
 ------------------------------------------------------------------------
 
-# 9. Me
+# 8. Me
 
 Contains:
 
@@ -189,7 +177,7 @@ Account
 
 ------------------------------------------------------------------------
 
-# 10. Motion System
+# 9. Motion System
 
 Motion Philosophy:
 
@@ -223,7 +211,7 @@ Heavy particles
 
 ------------------------------------------------------------------------
 
-# 11. Responsive
+# 10. Responsive
 
 One adaptive system.
 
@@ -243,7 +231,7 @@ Never create different visual identities.
 
 ------------------------------------------------------------------------
 
-# 12. Accessibility
+# 11. Accessibility
 
 Support:
 
@@ -259,7 +247,7 @@ High contrast
 
 ------------------------------------------------------------------------
 
-# 13. Edge Cases
+# 12. Edge Cases
 
 Long speech
 
@@ -283,7 +271,7 @@ Network interruption
 
 ------------------------------------------------------------------------
 
-# 14. Privacy
+# 13. Privacy
 
 Reflections belong to users.
 
@@ -299,7 +287,7 @@ Delete account
 
 ------------------------------------------------------------------------
 
-# 15. Widget & Wallpaper (Future)
+# 14. Widget & Wallpaper (Future)
 
 Widget:
 
@@ -317,7 +305,7 @@ Weekly Constellation
 
 ------------------------------------------------------------------------
 
-# 16. Engineering Rules
+# 15. Engineering Rules
 
 Preserve current architecture.
 
@@ -331,7 +319,7 @@ Refine rather than rebuild.
 
 ------------------------------------------------------------------------
 
-# 17. Success Criteria
+# 16. Success Criteria
 
 After 30 seconds a first-time user should understand:
 
@@ -347,7 +335,7 @@ After 30 seconds a first-time user should understand:
 
 ------------------------------------------------------------------------
 
-# 18. Design Principles Checklist
+# 17. Design Principles Checklist
 
 Every design decision must answer:
 

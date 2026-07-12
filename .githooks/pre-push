@@ -1,0 +1,71 @@
+#!/bin/sh
+# Block pushes that would add Cursor to GitHub contributors
+# (author, committer, or Co-authored-by trailer).
+
+remote="$1"
+url="$2"
+
+z40=0000000000000000000000000000000000000000
+
+is_cursor_identity() {
+  printf '%s' "$1" | grep -Ei 'cursor|cursoragent' >/dev/null 2>&1
+}
+
+scan_commit() {
+  sha="$1"
+  author_name="$(git log -1 --format='%an' "$sha")"
+  author_email="$(git log -1 --format='%ae' "$sha")"
+  committer_name="$(git log -1 --format='%cn' "$sha")"
+  committer_email="$(git log -1 --format='%ce' "$sha")"
+  body="$(git log -1 --format='%B' "$sha")"
+
+  if is_cursor_identity "$author_name" || is_cursor_identity "$author_email"; then
+    echo "error: commit $sha has Cursor as author ($author_name <$author_email>)." >&2
+    return 1
+  fi
+  if is_cursor_identity "$committer_name" || is_cursor_identity "$committer_email"; then
+    echo "error: commit $sha has Cursor as committer ($committer_name <$committer_email>)." >&2
+    return 1
+  fi
+  if printf '%s' "$body" | grep -Ei \
+    '^[[:space:]]*Co-authored-by:.*cursor|cursoragent@|@cursor\.(com|sh)' \
+    >/dev/null 2>&1
+  then
+    echo "error: commit $sha includes a Cursor Co-authored-by trailer." >&2
+    return 1
+  fi
+  return 0
+}
+
+fail=0
+
+while read -r local_ref local_sha remote_ref remote_sha
+do
+  if [ "$local_sha" = "$z40" ]; then
+    # delete remote branch — nothing to scan
+    continue
+  fi
+
+  if [ "$remote_sha" = "$z40" ]; then
+    range="$local_sha"
+    # all commits reachable from new branch tip not already on any remote
+    commits="$(git rev-list "$local_sha" --not --remotes="$remote" 2>/dev/null || git rev-list "$local_sha")"
+  else
+    commits="$(git rev-list "$remote_sha..$local_sha")"
+  fi
+
+  for sha in $commits
+  do
+    if ! scan_commit "$sha"; then
+      fail=1
+    fi
+  done
+done
+
+if [ "$fail" -ne 0 ]; then
+  echo "error: push blocked — Cursor must not appear as a GitHub contributor." >&2
+  echo "       Rewrite those commits with your own author identity, then push again." >&2
+  exit 1
+fi
+
+exit 0

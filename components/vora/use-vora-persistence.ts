@@ -105,6 +105,7 @@ export function useVoraPersistence() {
     if (saved) {
       setStage(saved.stage === 'app' ? 'app' : 'splash')
       setTab(saved.tab === 'profile' ? 'profile' : 'sky')
+      // Always resolve — restores the default seven when the sky went sparse.
       setLights(resolveSkyLights(saved.lights))
       setLightReminder(resolveReminder(saved))
       const theme = normalizeSkyThemeId(saved.skyTheme)

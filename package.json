@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test:typo": "node scripts/check-album-typo.mjs"
+    "test:typo": "node scripts/check-album-typo.mjs",
+    "prepare": "sh scripts/enable-git-hooks.sh"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

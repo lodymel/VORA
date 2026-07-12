@@ -75,22 +75,22 @@ export const SPARK_PROMPTS: SparkPrompt[] = [
   { title: 'What do you choose for yourself?', subtitle: 'Write with love. Only for you.' },
 ]
 
-/** Bump when default Sky seed shape changes — refreshes seed-only skies. */
-export const SKY_SEED_REVISION = 5
+/** Bump when default Sky seed shape changes — refreshes seed filler on sparse skies. */
+export const SKY_SEED_REVISION = 6
 
 /**
  * Seven category quotes for the default constellation.
  * Success is clearly present, plus Love / Dream / Fun / Health.
- * Dates span today and the two days before (e.g. Jul 10 → Jul 12).
+ * Dates are all before today (7 days ago → yesterday) so the sky already feels lived-in.
  */
 const SEED_FROM_CATEGORIES: readonly { sentence: string; daysAgo: number }[] = [
-  { sentence: SUCCESS_LIGHTS[3], daysAgo: 2 },
-  { sentence: LOVE_LIGHTS[2], daysAgo: 2 },
-  { sentence: SUCCESS_LIGHTS[16], daysAgo: 1 },
-  { sentence: DREAM_LIGHTS[9], daysAgo: 1 },
-  { sentence: FUN_LIGHTS[1], daysAgo: 1 },
-  { sentence: HEALTH_LIGHTS[0], daysAgo: 0 },
-  { sentence: SUCCESS_LIGHTS[7], daysAgo: 0 },
+  { sentence: SUCCESS_LIGHTS[3], daysAgo: 7 },
+  { sentence: LOVE_LIGHTS[2], daysAgo: 6 },
+  { sentence: DREAM_LIGHTS[9], daysAgo: 5 },
+  { sentence: FUN_LIGHTS[1], daysAgo: 4 },
+  { sentence: HEALTH_LIGHTS[0], daysAgo: 3 },
+  { sentence: SUCCESS_LIGHTS[16], daysAgo: 2 },
+  { sentence: SUCCESS_LIGHTS[7], daysAgo: 1 },
 ]
 
 function formatLightDateLabel(daysAgo: number, now: Date): string {
@@ -116,14 +116,22 @@ export function isSeedLight(light: Light): boolean {
 }
 
 /**
- * Hangul out. Seed-only skies always regenerate so date labels cannot stick on “today”.
- * Real user Lights (non-seed ids) are kept.
+ * Hangul out. Keep personal Lights.
+ * Sparse skies (< 7 own Lights) always keep the starter constellation —
+ * one Hold must never erase the default seven.
  */
 export function resolveSkyLights(lights: Light[] | null | undefined): Light[] {
   const cleaned = dedupeLights(lights).filter((light) => !hasHangul(light.sentence))
   const userLights = cleaned.filter((light) => !isSeedLight(light))
-  if (userLights.length > 0) return userLights
-  return createSeedLights()
+
+  if (userLights.length >= 7) return userLights
+
+  const seeds = createSeedLights()
+  if (userLights.length === 0) return seeds
+
+  const taken = new Set(userLights.map((light) => light.sentence.trim().toLowerCase()))
+  const filler = seeds.filter((seed) => !taken.has(seed.sentence.trim().toLowerCase()))
+  return dedupeLights([...userLights, ...filler])
 }
 
 /** True when the sky has no Lights yet (needs the default constellation). */

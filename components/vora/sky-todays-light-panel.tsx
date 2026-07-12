@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { hasMeaningfulContent } from './distill-reflection'
 import { getAlbumTypoLines, MirrorTodaysLight } from './mirror-todays-light'
@@ -18,6 +18,12 @@ const MAX_DRAFT = 280
 const WRITE_EASE = [0.22, 1, 0.36, 1] as const
 /** One shared breath for write enter / leave */
 const WRITE_FADE = { duration: 0.55, ease: WRITE_EASE }
+
+function resizeDiaryField(el: HTMLTextAreaElement | null) {
+  if (!el) return
+  el.style.height = '0px'
+  el.style.height = `${el.scrollHeight}px`
+}
 
 /** Today&apos;s Light hero — diary write, browse stars, hold ritual. */
 export function SkyTodaysLightPanel({
@@ -93,6 +99,18 @@ export function SkyTodaysLightPanel({
     return () => window.clearTimeout(timer)
   }, [isWriting])
 
+  useLayoutEffect(() => {
+    if (!isWriting) return
+    resizeDiaryField(inputRef.current)
+  }, [draft, isWriting, writingHangul])
+
+  useEffect(() => {
+    if (!isWriting) return
+    const onResize = () => resizeDiaryField(inputRef.current)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [isWriting])
+
   useEffect(() => {
     setReleaseArmed(false)
   }, [viewingLight?.id, heldTodayLight?.id, isWriting])
@@ -112,7 +130,10 @@ export function SkyTodaysLightPanel({
     if (ascending) return
     setPlanetId(planet.id)
     setDraft((prev) => pickCategoryLight(planet.id, prev).slice(0, MAX_DRAFT))
-    window.requestAnimationFrame(() => inputRef.current?.focus())
+    window.requestAnimationFrame(() => {
+      resizeDiaryField(inputRef.current)
+      inputRef.current?.focus()
+    })
   }
 
   function handleReleaseClick() {
@@ -169,7 +190,7 @@ export function SkyTodaysLightPanel({
                     setPlanetId(null)
                   }}
                   maxLength={MAX_DRAFT}
-                  rows={2}
+                  rows={1}
                   disabled={ascending}
                   lang={writingHangul ? 'ko' : undefined}
                   className={`vora-sky-diary-input vora-mirror-album-primary text-balance${

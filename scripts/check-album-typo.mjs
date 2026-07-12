@@ -108,17 +108,17 @@ expectLines('I attract success through who I am becoming.', ['I attract', 'succe
   'becoming.',
 ])
 
-// Success couplet — keep “It arrives” and “quiet mornings” intact
+// Success couplet — card-safe poster breaks
 expectLines(
   "Success doesn't arrive with applause. It arrives after countless quiet mornings.",
-  ["Success doesn't arrive", 'with applause.'],
+  ["Success doesn't", 'arrive with', 'applause.'],
   ['It arrives', 'after countless', 'quiet mornings.'],
 )
 
 expectLines(
   'Success belongs to those who keep showing up after the excitement fades.',
   ['Success belongs to', 'those who keep'],
-  ['showing up after', 'the excitement fades.'],
+  ['showing up after', 'the excitement', 'fades.'],
 )
 
 // Long soft bridge still binary-splits (over primary budget)
@@ -131,7 +131,7 @@ expectLines('I attract success through who I am becoming', ['I attract', 'succes
 {
   const a = getAlbumTypoLines('I choose thoughts that lift me higher.')
   assert.deepEqual(a.primaryLines, ['I choose thoughts'])
-  assert.deepEqual(a.accentLines, ['that lift me higher.'])
+  assert.deepEqual(a.accentLines, ['that lift', 'me higher.'])
 }
 
 {
@@ -145,7 +145,7 @@ expectLines('I attract success through who I am becoming', ['I attract', 'succes
   assert.ok(ko.primaryLines.length >= 1)
   assert.ok(ko.primaryLines.every((line) => line.length > 0))
   for (const line of [...ko.primaryLines, ...ko.accentLines]) {
-    assert.ok(line.length <= 16, `Korean line too long: ${line}`)
+    assert.ok(line.length <= 14, `Korean line too long: ${line}`)
   }
 }
 

@@ -204,11 +204,13 @@
   --vora-typo-pair-gap: 0.3em;
   --vora-typo-display-hero: clamp(2.15rem, 7.4vw, 3rem);
   --vora-typo-display-accent: clamp(2.05rem, 7vw, 2.85rem);
-  /* Sky measure is ~full phone width; keep clamps inside that so nowrap lines rarely overflow. */
-  --vora-typo-sky-hero: clamp(2.35rem, 8.2vw + 0.4rem, 3.1rem);
-  --vora-typo-sky-accent: clamp(2.2rem, 7.6vw + 0.35rem, 2.95rem);
-  --vora-typo-card-hero: clamp(1.5rem, 5.9vw, 1.92rem);
-  --vora-typo-card-accent: clamp(1.42rem, 5.6vw, 1.82rem);
+  /* Sky measure is ~full phone width; tame clamps so nowrap lines keep quiet air. */
+  --vora-typo-sky-hero: clamp(2.12rem, 7.2vw + 0.32rem, 2.78rem);
+  --vora-typo-sky-accent: clamp(1.98rem, 6.7vw + 0.28rem, 2.62rem);
+  --vora-typo-card-hero: clamp(1.38rem, 5.35vw, 1.78rem);
+  --vora-typo-card-accent: clamp(1.3rem, 5.05vw, 1.68rem);
+  /* AlbumTypoBlock fit — 1 until a line needs to breathe inside the measure */
+  --vora-typo-fit-scale: 1;
   --vora-typo-enter-hero: clamp(1.95rem, 6.9vw, 2.5rem);
   --vora-typo-enter-whisper: clamp(1.85rem, 6.6vw, 2.4rem);
 
@@ -1230,10 +1232,10 @@ body[data-vora-card-open='true'] .vora-pointer-o-star:not(.vora-pointer-o-star--
   --vora-typo-accent-leading: 1.38;
   --vora-typo-pair-gap: 0.48em;
   /* Slightly smaller than Latin — Hangul squares read heavier */
-  --vora-typo-sky-hero: clamp(2.05rem, 7.1vw + 0.3rem, 2.72rem);
-  --vora-typo-sky-accent: clamp(1.88rem, 6.5vw + 0.28rem, 2.52rem);
-  --vora-typo-card-hero: clamp(1.32rem, 5.15vw, 1.68rem);
-  --vora-typo-card-accent: clamp(1.22rem, 4.75vw, 1.55rem);
+  --vora-typo-sky-hero: clamp(1.92rem, 6.4vw + 0.28rem, 2.48rem);
+  --vora-typo-sky-accent: clamp(1.78rem, 5.9vw + 0.24rem, 2.28rem);
+  --vora-typo-card-hero: clamp(1.22rem, 4.7vw, 1.55rem);
+  --vora-typo-card-accent: clamp(1.12rem, 4.35vw, 1.42rem);
   --vora-typo-display-hero: clamp(1.95rem, 6.6vw, 2.7rem);
   --vora-typo-display-accent: clamp(1.82rem, 6.1vw, 2.5rem);
   word-break: keep-all;
@@ -2113,6 +2115,8 @@ body[data-vora-card-open='true'] .vora-pointer-o-star:not(.vora-pointer-o-star--
   gap: var(--vora-typo-pair-gap);
   margin: 0;
   padding: 0;
+  transform: scale(var(--vora-typo-fit-scale, 1));
+  transform-origin: center center;
 }
 
 .vora-mirror-oval {
@@ -5179,13 +5183,16 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
 .vora-sky-todays-light .vora-mirror-headline--writing .vora-sky-diary-input {
   display: block;
   width: 100%;
-  min-height: 0;
+  min-height: calc(2 * 1em * var(--vora-typo-hero-leading));
+  max-height: min(42dvh, 14.5rem);
   margin: 0;
   padding: 0;
   border: 0;
   background: transparent;
   resize: none;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  field-sizing: content;
   font-family: var(--font-sky-hero);
   font-size: var(--vora-typo-sky-hero);
   line-height: var(--vora-typo-hero-leading);
@@ -7388,6 +7395,8 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   overflow-wrap: normal;
   word-break: normal;
   text-align: center;
+  transform: scale(var(--vora-typo-fit-scale, 1));
+  transform-origin: center center;
 }
 
 .vora-light-card-primary {
@@ -7553,8 +7562,8 @@ body[data-vora-card-open='true'] .vora-app-header {
 
 .vora-light-card-reveal .vora-light-card {
   /* Cap type so long accent lines keep breathing room inside the inset */
-  --vora-typo-card-hero: clamp(1.45rem, 9.4cqi, 2.1rem);
-  --vora-typo-card-accent: clamp(1.35rem, 8.8cqi, 2rem);
+  --vora-typo-card-hero: clamp(1.32rem, 8.2cqi, 1.88rem);
+  --vora-typo-card-accent: clamp(1.24rem, 7.7cqi, 1.78rem);
 }
 
 @media (min-width: 768px) {
@@ -7834,20 +7843,3 @@ body[data-vora-card-open='true'] .vora-app-header {
   pointer-events: none;
   opacity: 1;
 }
-
-/* apple-me-rebuild 1783782543 */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

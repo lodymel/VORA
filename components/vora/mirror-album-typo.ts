@@ -35,13 +35,16 @@ const RELATIVE_HEAD = /^(who|what|which|whose)$/i
 /**
  * Soft budget — Sky + Card share identical breaks.
  * Card accent is larger type in a narrow inset; keep lines short enough for mobile.
+ * Tuned to real phone measure (~14–16 glyphs) so nowrap lines keep air inside the card.
  */
-const LINE_BUDGET = 22
+const LINE_BUDGET = 16
 /** Accent (Rosemartin) reads wider — tighter char budget than primary. */
-const ACCENT_LINE_BUDGET = 18
+const ACCENT_LINE_BUDGET = 14
 /** Hangul squares — optical width budget (see measureTypoWidth). */
-const KR_LINE_BUDGET = 14
-const KR_ACCENT_LINE_BUDGET = 12
+const KR_LINE_BUDGET = 12
+const KR_ACCENT_LINE_BUDGET = 10
+/** Soft overshoot for poster binary splits — keep tiny; large slack overflows the card. */
+const LINE_SLACK = 2
 
 function cleanWord(word: string) {
   return word.replace(/[^\w']/g, '')
@@ -135,24 +138,27 @@ export function balancePhraseLines(text: string, maxChars = LINE_BUDGET): string
   if (words.length === 0) return []
 
   const joined = words.join(' ')
-  if (words.length <= 2) return [joined]
 
   // Fits the measure → one line.
   // Never force a couplet just because there are 4 words — “I can do it” is one breath.
   // Long tails (“I attract success through”, 25+) still binary-split below.
   if (measureTypoWidth(joined) <= maxChars) return [joined]
 
+  // Two words over budget → stack (never one long nowrap that clips the card).
+  if (words.length === 2) return [words[0], words[1]]
+  if (words.length === 1) return [joined]
+
   // 3–6 words over budget: balanced binary poster split
   if (words.length <= 6) {
     const binary = balancedBinary(words)
-    if (binary && binary.every((line) => measureTypoWidth(line) <= maxChars + 8)) {
+    if (binary && binary.every((line) => measureTypoWidth(line) <= maxChars + LINE_SLACK)) {
       const weakCouplet = binary.some((line, index) => {
         if (index === 0) return false
         const first = cleanWord(line.split(/\s+/)[0] ?? '')
         return DANGLING.test(first) || (TINY.test(first) && first.length <= 3)
       })
       // Prefer one slightly long line over “that lift” / “me higher.”
-      if (weakCouplet && measureTypoWidth(joined) <= maxChars + 6) return [joined]
+      if (weakCouplet && measureTypoWidth(joined) <= maxChars + LINE_SLACK) return [joined]
       return binary
     }
   }
@@ -219,7 +225,37 @@ export function balancePhraseLines(text: string, maxChars = LINE_BUDGET): string
     lines[i + 1] = `${moved} ${lines[i + 1]}`
   }
 
-  return lines.filter(Boolean)
+  // Final card-safe pass — orphan/dangling pulls can re-inflate a line past measure.
+  // Hard-pack only (no second orphan dance) so nowrap ink stays inside Sky + Card.
+  return hardPackOverBudget(lines.filter(Boolean), maxChars)
+}
+
+/** Re-pack any line that still exceeds the soft budget after editorial pulls. */
+function hardPackOverBudget(lines: string[], maxChars: number): string[] {
+  const out: string[] = []
+  for (const line of lines) {
+    const words = line.split(/\s+/).filter(Boolean)
+    if (words.length <= 1 || measureTypoWidth(line) <= maxChars + LINE_SLACK) {
+      out.push(line)
+      continue
+    }
+    let current: string[] = []
+    let len = 0
+    for (const word of words) {
+      const add =
+        current.length === 0 ? measureTypoWidth(word) : measureTypoWidth(` ${word}`)
+      if (current.length > 0 && len + add > maxChars) {
+        out.push(current.join(' '))
+        current = [word]
+        len = measureTypoWidth(word)
+      } else {
+        current.push(word)
+        len += add
+      }
+    }
+    if (current.length) out.push(current.join(' '))
+  }
+  return out
 }
 
 function splitVoice(sentence: string): { primary: string; accent: string } {
@@ -311,22 +347,22 @@ const LOCKED_ALBUM_TYPO: Record<
     primaryLines: ['I attract', 'success through'],
     accentLines: ['who I am', 'becoming.'],
   },
-  // Keep phrase chunks intact — Success couplet poster break.
+  // Keep phrase chunks intact — Success couplet poster break (card-safe lengths).
   "success doesn't arrive with applause. it arrives after countless quiet mornings.": {
-    primaryLines: ["Success doesn't arrive", 'with applause.'],
+    primaryLines: ["Success doesn't", 'arrive with', 'applause.'],
     accentLines: ['It arrives', 'after countless', 'quiet mornings.'],
   },
   "success doesn't arrive with applause. it arrives after countless quiet mornings": {
-    primaryLines: ["Success doesn't arrive", 'with applause.'],
+    primaryLines: ["Success doesn't", 'arrive with', 'applause.'],
     accentLines: ['It arrives', 'after countless', 'quiet mornings.'],
   },
   'success belongs to those who keep showing up after the excitement fades.': {
     primaryLines: ['Success belongs to', 'those who keep'],
-    accentLines: ['showing up after', 'the excitement fades.'],
+    accentLines: ['showing up after', 'the excitement', 'fades.'],
   },
   'success belongs to those who keep showing up after the excitement fades': {
     primaryLines: ['Success belongs to', 'those who keep'],
-    accentLines: ['showing up after', 'the excitement fades.'],
+    accentLines: ['showing up after', 'the excitement', 'fades.'],
   },
 }
 
@@ -418,13 +454,13 @@ export const ALBUM_TYPO_REGRESSION = [
   },
   {
     sentence: "Success doesn't arrive with applause. It arrives after countless quiet mornings.",
-    primaryLines: ["Success doesn't arrive", 'with applause.'],
+    primaryLines: ["Success doesn't", 'arrive with', 'applause.'],
     accentLines: ['It arrives', 'after countless', 'quiet mornings.'],
   },
   {
     sentence: 'Success belongs to those who keep showing up after the excitement fades.',
     primaryLines: ['Success belongs to', 'those who keep'],
-    accentLines: ['showing up after', 'the excitement fades.'],
+    accentLines: ['showing up after', 'the excitement', 'fades.'],
   },
 ] as const
 

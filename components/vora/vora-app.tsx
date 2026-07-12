@@ -9,7 +9,7 @@ import { VoraHeader } from './vora-header'
 import { EnterRitualScreen } from './screens/enter-ritual-screen'
 import { SkyScreen } from './screens/sky-screen'
 import { ProfileScreen } from './screens/profile-screen'
-import { addLightIfNew, getTodaysLight, hasLightToday, removeLight } from './constants'
+import { addLightIfNew, getTodaysLight, hasLightToday, isSeedLight, removeLight, resolveSkyLights, createSeedLights } from './constants'
 import { useVoraPersistence } from './use-vora-persistence'
 import { voraAudio } from './vora-audio'
 import { skyThemeUsesLightChrome } from './light-card-theme'
@@ -92,7 +92,8 @@ export function VoraApp() {
       const next = addLightIfNew(prev, sentence)
       if (!next) return prev
       added = true
-      return next
+      // Keep the starter seven while the personal sky is still sparse.
+      return resolveSkyLights(next)
     })
     return added
   }
@@ -102,7 +103,13 @@ export function VoraApp() {
   }
 
   function handleDeleteLight(id: string) {
-    setLights((prev) => removeLight(prev, id))
+    setLights((prev) => {
+      const next = removeLight(prev, id)
+      const userLeft = next.filter((light) => !isSeedLight(light))
+      // Empty personal sky → restore the default constellation.
+      if (userLeft.length === 0) return createSeedLights()
+      return next
+    })
   }
 
   function handleFinishWrite(sentence: string) {
