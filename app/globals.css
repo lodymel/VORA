@@ -4494,8 +4494,9 @@ body[data-vora-card-open='true'] .vora-cursor-o-star:not(.vora-cursor-o-star--me
   text-transform: uppercase;
   white-space: nowrap;
   color: var(--vora-sky-fg);
-  opacity: 0;
-  visibility: hidden;
+  /* Soft always-on date so newcomers can read the sky without hovering */
+  opacity: 0.42;
+  visibility: visible;
   transition:
     opacity 0.28s var(--vora-ease),
     visibility 0.28s var(--vora-ease);
@@ -4503,21 +4504,21 @@ body[data-vora-card-open='true'] .vora-cursor-o-star:not(.vora-cursor-o-star--me
 @media (hover: hover) and (pointer: fine) {
   .vora-constellation-node:hover .vora-constellation-node-date,
   .vora-constellation-node:focus-visible .vora-constellation-node-date {
-    opacity: 0.65;
+    opacity: 0.72;
     visibility: visible;
   }
 }
 .vora-constellation-node:active .vora-constellation-node-date,
 .vora-constellation-node--active .vora-constellation-node-date {
-  opacity: 0.65;
+  opacity: 0.72;
   visibility: visible;
 }
 .vora-constellation-node--dimmed .vora-constellation-node-date {
-  opacity: 0;
-  visibility: hidden;
+  opacity: 0.18;
+  visibility: visible;
 }
 .vora-constellation-node--dimmed.vora-constellation-node--active .vora-constellation-node-date {
-  opacity: 0.35;
+  opacity: 0.4;
   visibility: visible;
 }
 .vora-constellation-node-shimmer {

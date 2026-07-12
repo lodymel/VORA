@@ -9,7 +9,6 @@ import { VoraHeader } from './vora-header'
 import { EnterRitualScreen } from './screens/enter-ritual-screen'
 import { SkyScreen } from './screens/sky-screen'
 import { ProfileScreen } from './screens/profile-screen'
-import { SignupScreen } from './screens/signup-screen'
 import { addLightIfNew, getTodaysLight, hasLightToday, removeLight } from './constants'
 import { useVoraPersistence } from './use-vora-persistence'
 import { voraAudio } from './vora-audio'
@@ -43,7 +42,6 @@ export function VoraApp() {
   } = useVoraPersistence()
   const todaysLight = useMemo(() => getTodaysLight(), [])
   const [writing, setWriting] = useState(false)
-  const [signup, setSignup] = useState(false)
   const [skyHomeNonce, setSkyHomeNonce] = useState(0)
   const [soundOn, setSoundOn] = useState(false)
   const [writeInvite, setWriteInvite] = useState(false)
@@ -123,7 +121,6 @@ export function VoraApp() {
 
   function returnToGate() {
     setWriting(false)
-    setSignup(false)
     setTab('sky')
     setStage('splash')
   }
@@ -172,40 +169,38 @@ export function VoraApp() {
             transition={{ duration: 0.95, ease: [0.22, 1, 0.36, 1] as const }}
           >
             <div className="relative h-full w-full">
-              {!signup && (
-                <VoraHeader
-                  tone={tab === 'sky' ? (skyLightChrome ? 'light' : 'night') : 'light'}
-                  onHome={goHome}
-                  trailing={
-                    <div className="vora-header-actions">
-                      <button
-                        type="button"
-                        onClick={() => void toggleSound()}
-                        className={`vora-header-sound-btn ${soundOn ? 'vora-header-sound-btn--on' : ''}`}
-                        aria-label={soundOn ? 'Mute sound' : 'Enable sound'}
-                        aria-pressed={soundOn}
-                      >
-                        {soundOn ? (
-                          <Volume2 size={16} strokeWidth={1.35} aria-hidden="true" />
-                        ) : (
-                          <VolumeX size={16} strokeWidth={1.35} aria-hidden="true" />
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={toggleWriting}
-                        className={`vora-header-write-btn${writing ? ' vora-header-write-btn--active' : ''}${
-                          writeInvite && !writing ? ' vora-header-write-btn--invite' : ''
-                        }`}
-                        aria-label={writing ? 'Close writing' : 'Write your own Light'}
-                        aria-pressed={writing}
-                      >
-                        <PenLine size={17} strokeWidth={1.35} aria-hidden="true" />
-                      </button>
-                    </div>
-                  }
-                />
-              )}
+              <VoraHeader
+                tone={tab === 'sky' ? (skyLightChrome ? 'light' : 'night') : 'light'}
+                onHome={goHome}
+                trailing={
+                  <div className="vora-header-actions">
+                    <button
+                      type="button"
+                      onClick={() => void toggleSound()}
+                      className={`vora-header-sound-btn ${soundOn ? 'vora-header-sound-btn--on' : ''}`}
+                      aria-label={soundOn ? 'Mute sound' : 'Enable sound'}
+                      aria-pressed={soundOn}
+                    >
+                      {soundOn ? (
+                        <Volume2 size={16} strokeWidth={1.35} aria-hidden="true" />
+                      ) : (
+                        <VolumeX size={16} strokeWidth={1.35} aria-hidden="true" />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={toggleWriting}
+                      className={`vora-header-write-btn${writing ? ' vora-header-write-btn--active' : ''}${
+                        writeInvite && !writing ? ' vora-header-write-btn--invite' : ''
+                      }`}
+                      aria-label={writing ? 'Close writing' : 'Write your own Light'}
+                      aria-pressed={writing}
+                    >
+                      <PenLine size={17} strokeWidth={1.35} aria-hidden="true" />
+                    </button>
+                  </div>
+                }
+              />
 
               <AnimatePresence mode="wait">
                 {tab === 'sky' && (
@@ -243,27 +238,13 @@ export function VoraApp() {
                 )}
               </AnimatePresence>
 
-              {!signup && (
-                <NavBar
-                  active={tab}
-                  onChange={setTab}
-                  tone={tab === 'sky' ? (skyLightChrome ? 'light' : 'dark') : 'light'}
-                  skyTheme={skyTheme}
-                  onBeginAgain={returnToGate}
-                />
-              )}
-
-              <AnimatePresence>
-                {signup && (
-                  <SignupScreen
-                    onComplete={() => {
-                      setSignup(false)
-                      setTab('sky')
-                    }}
-                    onBack={() => setSignup(false)}
-                  />
-                )}
-              </AnimatePresence>
+              <NavBar
+                active={tab}
+                onChange={setTab}
+                tone={tab === 'sky' ? (skyLightChrome ? 'light' : 'dark') : 'light'}
+                skyTheme={skyTheme}
+                onBeginAgain={returnToGate}
+              />
             </div>
           </motion.div>
         )}

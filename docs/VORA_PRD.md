@@ -10,7 +10,7 @@
 
 ## Mission
 
-VORA helps people pause for one honest moment every day. One spoken
+VORA helps people pause for one honest moment every day. One written
 sentence becomes one Light. Over time, Lights reveal emotional patterns
 instead of overwhelming journals.
 
@@ -62,9 +62,7 @@ Do not copy layouts. Reinterpret the feeling.
 
 # 4. Information Architecture
 
-Mirror → Today
-
-Sky → Memory
+Sky → Write & Memory
 
 Me → Journey
 
@@ -76,19 +74,11 @@ Landing
 
 ↓
 
-Create Account / Guest
+Enter your Sky
 
 ↓
 
-Mirror
-
-↓
-
-Speak
-
-↓
-
-Review AI Reflection
+Write
 
 ↓
 
@@ -104,15 +94,15 @@ Return Tomorrow
 
 ------------------------------------------------------------------------
 
-# 6. Mirror Experience
+# 6. Write Experience
 
-Purpose: Transform voice into one meaningful Light.
+Purpose: Transform one written sentence into one meaningful Light.
 
 States:
 
 Idle
 
-Listening
+Writing
 
 Review
 

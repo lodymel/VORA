@@ -48,13 +48,28 @@ export function EnterRitualScreen({
   }
 
   useEffect(() => {
-    voraAudio.hydrate()
+    const preferred = voraAudio.hydrate()
+    voraAudio.warm()
     doneRef.current = false
     clearTimers()
 
+    // Try to start the bed as the gate appears; first gesture unlocks if blocked.
+    if (preferred) void voraAudio.beginSky()
+
+    const wake = () => {
+      if (!voraAudio.isEnabled()) return
+      void voraAudio.beginSky()
+    }
+    window.addEventListener('pointerdown', wake, { capture: true })
+    window.addEventListener('keydown', wake, { capture: true })
+
     if (reduceMotion) {
       setBeat('invite')
-      return () => clearTimers()
+      return () => {
+        clearTimers()
+        window.removeEventListener('pointerdown', wake, { capture: true })
+        window.removeEventListener('keydown', wake, { capture: true })
+      }
     }
 
     setBeat('void')
@@ -62,7 +77,11 @@ export function EnterRitualScreen({
     later(2900, () => setBeat('name'))
     later(4800, () => setBeat('invite'))
 
-    return () => clearTimers()
+    return () => {
+      clearTimers()
+      window.removeEventListener('pointerdown', wake, { capture: true })
+      window.removeEventListener('keydown', wake, { capture: true })
+    }
   }, [reduceMotion])
 
   async function enterWithSound() {
@@ -205,7 +224,7 @@ export function EnterRitualScreen({
                 <i className="vora-enter-cta-mark vora-enter-cta-mark--dot" />
               </span>
             </div>
-            <p className="vora-enter-sound-hint">Best with sound</p>
+            <p className="vora-enter-sound-hint">Sound is part of the sky</p>
           </motion.div>
         ) : null}
       </div>

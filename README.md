@@ -3,11 +3,11 @@
 **Look at yourself.**  
 **Your words become stars.**
 
-by LODY
+by LODY STUDIO.
 
 ---
 
-VORA means *look at yourself*. Speak one true sentence. It becomes a **Light**, then a star in your **Sky**.
+VORA means *look at yourself*. Write one true sentence. It becomes a **Light**, then a star in your **Sky**.
 
 - **Sky** — write a Light; watch stars gather
 - **Me** — your journey, reminders, and sky themes

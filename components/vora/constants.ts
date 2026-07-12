@@ -85,9 +85,10 @@ const SEED_SENTENCES = [
   'Some dreams wait patiently because they know exactly who you\'re becoming.',
 ] as const
 
-/** Build seven Lights dated before today (daysAgo 7 → 1). */
+/** Build seven Lights dated before today (daysAgo 7 → 1). Never includes today. */
 export function createSeedLights(now = new Date()): Light[] {
   return SEED_SENTENCES.map((sentence, index) => {
+    // Oldest → newest among past days: 7, 6, 5, 4, 3, 2, 1 (today = 0 excluded).
     const daysAgo = SEED_SENTENCES.length - index
     const d = new Date(now)
     d.setHours(12, 0, 0, 0)
@@ -101,8 +102,10 @@ export function createSeedLights(now = new Date()): Light[] {
   })
 }
 
-/** Empty until first visit — persistence calls createSeedLights() for new users. */
-export const SEED_LIGHTS: Light[] = []
+/** True when the sky has no Lights yet (needs the default constellation). */
+export function needsSeedLights(lights: Light[] | null | undefined): boolean {
+  return !Array.isArray(lights) || lights.length === 0
+}
 
 export function formatToday(): string {
   return 'Today'

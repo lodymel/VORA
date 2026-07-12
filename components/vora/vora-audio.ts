@@ -22,11 +22,14 @@ let enabled = false
 let started = false
 
 function loadEnabled(): boolean {
-  if (typeof window === 'undefined') return false
+  if (typeof window === 'undefined') return true
   try {
-    return window.localStorage.getItem(SOUND_KEY) === '1'
+    const raw = window.localStorage.getItem(SOUND_KEY)
+    // Explicit mute only — otherwise the sky prefers sound on.
+    if (raw === '0') return false
+    return true
   } catch {
-    return false
+    return true
   }
 }
 
@@ -257,6 +260,30 @@ export const voraAudio = {
   hydrate() {
     enabled = loadEnabled()
     return enabled
+  },
+
+  /** Preload the ambient bed so the first gesture can start instantly. */
+  warm() {
+    ensureContext()
+    ensureAmbientGraph()
+    try {
+      ambientEl?.load()
+    } catch {
+      // ignore
+    }
+  },
+
+  /**
+   * Fade the night-sky bed in (no chime).
+   * Call on gate mount / first gesture — browsers may still block until a tap.
+   */
+  async beginSky() {
+    if (!enabled) return false
+    const audio = await resume()
+    if (!audio) return false
+    started = true
+    await startAmbient()
+    return true
   },
 
   async enable() {

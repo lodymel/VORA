@@ -1,7 +1,7 @@
 {
   "name": "VORA",
   "short_name": "VORA",
-  "description": "Speak one sentence. It becomes one Light.",
+  "description": "Write one sentence. It becomes one Light.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0c0616",

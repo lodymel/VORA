@@ -9,4 +9,4 @@ export const VORA_WHISPER = 'A word to yourself becomes a star.'
 export const VORA_META_TITLE = 'VORA'
 
 export const VORA_META_DESCRIPTION =
-  'VORA means look at yourself. Speak one true sentence in the mirror. It becomes a Light, then a star in your sky.'
+  'VORA means look at yourself. Write one true sentence. It becomes a Light, then a star in your sky.'

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import type { Tab } from './nav-bar'
-import { SEED_LIGHTS, createSeedLights, dedupeLights, type Light, type NotificationPreference } from './constants'
+import { createSeedLights, dedupeLights, needsSeedLights, type Light, type NotificationPreference } from './constants'
 import {
   DEFAULT_LIGHT_REMINDER,
   migratePreferenceToReminder,
@@ -85,7 +85,8 @@ export function useVoraPersistence() {
   const [hydrated, setHydrated] = useState(false)
   const [stage, setStage] = useState<AppStage>('splash')
   const [tab, setTab] = useState<Tab>('sky')
-  const [lights, setLights] = useState<Light[]>(SEED_LIGHTS)
+  // Default sky: seven past Lights (never today) so newcomers see what a constellation is.
+  const [lights, setLights] = useState<Light[]>(() => createSeedLights())
   const [lightReminder, setLightReminder] = useState<LightReminder>(DEFAULT_LIGHT_REMINDER)
   const [skyTheme, setSkyTheme] = useState<SkyThemeId>(DEFAULT_SKY_THEME)
   const [startedAt, setStartedAt] = useState(todayIsoDate)
@@ -96,7 +97,9 @@ export function useVoraPersistence() {
     if (saved) {
       setStage(saved.stage === 'app' ? 'app' : 'splash')
       setTab(saved.tab === 'profile' ? 'profile' : 'sky')
-      setLights(dedupeLights(saved.lights ?? SEED_LIGHTS))
+      const loaded = dedupeLights(saved.lights)
+      // Empty saved sky → restore the default seven past Lights.
+      setLights(needsSeedLights(loaded) ? createSeedLights() : loaded)
       setLightReminder(resolveReminder(saved))
       const theme = normalizeSkyThemeId(saved.skyTheme)
       if (theme) setSkyTheme(theme)
@@ -104,7 +107,6 @@ export function useVoraPersistence() {
       else setStartedAt(todayIsoDate())
       if (saved.isSubscribed || saved.isMember) setIsSubscribed(true)
     } else {
-      // First visit — seed a week of past Lights so the constellation already reads.
       setLights(createSeedLights())
       setStartedAt(todayIsoDate())
     }
