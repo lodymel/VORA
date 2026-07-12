@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import type { Tab } from './nav-bar'
-import { createSeedLights, dedupeLights, needsSeedLights, type Light, type NotificationPreference } from './constants'
+import {
+  SKY_SEED_REVISION,
+  createSeedLights,
+  resolveSkyLights,
+  type Light,
+  type NotificationPreference,
+} from './constants'
 import {
   DEFAULT_LIGHT_REMINDER,
   migratePreferenceToReminder,
@@ -17,7 +23,7 @@ import {
 
 export type AppStage = 'splash' | 'onboarding' | 'app'
 
-const STORAGE_KEY = 'vora-app-v1'
+const STORAGE_KEY = 'vora-app-v2'
 
 type PersistedState = {
   stage: AppStage
@@ -33,6 +39,8 @@ type PersistedState = {
   /** Soft VORA+ — home/lock later; no account required */
   isSubscribed?: boolean
   isMember?: boolean
+  /** Default constellation revision — refresh seed-only skies when bumped. */
+  skySeedRevision?: number
 }
 
 function todayIsoDate() {
@@ -85,7 +93,7 @@ export function useVoraPersistence() {
   const [hydrated, setHydrated] = useState(false)
   const [stage, setStage] = useState<AppStage>('splash')
   const [tab, setTab] = useState<Tab>('sky')
-  // Default sky: seven past Lights (never today) so newcomers see what a constellation is.
+  // Default sky: seven category Lights across today and the two days before.
   const [lights, setLights] = useState<Light[]>(() => createSeedLights())
   const [lightReminder, setLightReminder] = useState<LightReminder>(DEFAULT_LIGHT_REMINDER)
   const [skyTheme, setSkyTheme] = useState<SkyThemeId>(DEFAULT_SKY_THEME)
@@ -97,9 +105,7 @@ export function useVoraPersistence() {
     if (saved) {
       setStage(saved.stage === 'app' ? 'app' : 'splash')
       setTab(saved.tab === 'profile' ? 'profile' : 'sky')
-      const loaded = dedupeLights(saved.lights)
-      // Empty saved sky → restore the default seven past Lights.
-      setLights(needsSeedLights(loaded) ? createSeedLights() : loaded)
+      setLights(resolveSkyLights(saved.lights))
       setLightReminder(resolveReminder(saved))
       const theme = normalizeSkyThemeId(saved.skyTheme)
       if (theme) setSkyTheme(theme)
@@ -123,6 +129,7 @@ export function useVoraPersistence() {
       skyTheme,
       startedAt,
       isSubscribed,
+      skySeedRevision: SKY_SEED_REVISION,
     })
   }, [hydrated, stage, tab, lights, lightReminder, skyTheme, startedAt, isSubscribed])
 

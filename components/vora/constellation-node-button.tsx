@@ -85,7 +85,7 @@ export function ConstellationNodeButton({
         opacity: dimmed ? 0.48 : 1,
         transitionDelay: `${Math.min(index * 0.06, 0.45)}s`,
       }}
-      aria-label={`${light.date}: ${light.sentence}`}
+      aria-label={`${formatStarDateLabel(light)}: ${light.sentence}`}
       aria-pressed={active}
     >
       <span className="vora-constellation-node-date" aria-hidden="true">

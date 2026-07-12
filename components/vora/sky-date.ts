@@ -1,24 +1,31 @@
 import type { Light } from './constants'
 
-const TODAY_WEEKDAY = new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(new Date())
-const TODAY_DATE = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date())
-
-export function formatSkyDate(light: Light | null) {
-  if (!light || light.daysAgo === 0) {
-    return { weekday: TODAY_WEEKDAY, date: TODAY_DATE }
-  }
-
-  const d = new Date()
+function calendarParts(daysAgo: number, now = new Date()) {
+  const d = new Date(now)
   d.setHours(12, 0, 0, 0)
-  d.setDate(d.getDate() - light.daysAgo)
-
+  const offset = Math.max(0, Math.floor(Number(daysAgo) || 0))
+  if (offset > 0) d.setDate(d.getDate() - offset)
   return {
     weekday: new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(d),
     date: new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(d),
   }
 }
 
-/** Short label above a constellation star on hover. */
+export function formatSkyDate(light: Light | null) {
+  if (!light) return calendarParts(0)
+
+  const daysAgo = Math.max(0, Math.floor(Number(light.daysAgo) || 0))
+  const parts = calendarParts(daysAgo)
+
+  // Prefer the stored month-day label when present (survives stale daysAgo bugs).
+  if (light.date && light.date !== 'Today') {
+    return { weekday: parts.weekday, date: light.date }
+  }
+
+  return parts
+}
+
+/** Short label above a constellation star. */
 export function formatStarDateLabel(light: Light): string {
   return formatSkyDate(light).date
 }

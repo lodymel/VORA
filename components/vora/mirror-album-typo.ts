@@ -226,6 +226,15 @@ function splitVoice(sentence: string): { primary: string; accent: string } {
   const trimmed = sentence.trim()
   if (!trimmed) return { primary: '', accent: '' }
 
+  // Two breaths: "…. …." — keep the second sentence as the accent voice.
+  const twoBreaths = trimmed.match(/^(.+?[.!?])\s+(\S[\s\S]*)$/)
+  if (twoBreaths && twoBreaths[2].split(/\s+/).filter(Boolean).length >= 2) {
+    return {
+      primary: twoBreaths[1].trim(),
+      accent: twoBreaths[2].trim(),
+    }
+  }
+
   const comma = trimmed.indexOf(',')
   if (comma !== -1) {
     return {
@@ -301,6 +310,23 @@ const LOCKED_ALBUM_TYPO: Record<
   'i attract success through who i am becoming': {
     primaryLines: ['I attract', 'success through'],
     accentLines: ['who I am', 'becoming.'],
+  },
+  // Keep “It arrives” + “quiet mornings” intact — no orphan mid-phrase wraps.
+  "success doesn't arrive with applause. it arrives after countless quiet mornings.": {
+    primaryLines: ["Success doesn't arrive with applause."],
+    accentLines: ['It arrives after', 'countless quiet mornings.'],
+  },
+  "success doesn't arrive with applause. it arrives after countless quiet mornings": {
+    primaryLines: ["Success doesn't arrive with applause."],
+    accentLines: ['It arrives after', 'countless quiet mornings.'],
+  },
+  'success belongs to those who keep showing up after the excitement fades.': {
+    primaryLines: ['Success belongs to', 'those who keep'],
+    accentLines: ['showing up after', 'the excitement fades.'],
+  },
+  'success belongs to those who keep showing up after the excitement fades': {
+    primaryLines: ['Success belongs to', 'those who keep'],
+    accentLines: ['showing up after', 'the excitement fades.'],
   },
 }
 
@@ -389,6 +415,16 @@ export const ALBUM_TYPO_REGRESSION = [
     sentence: 'I attract success through who I am becoming.',
     primaryLines: ['I attract', 'success through'],
     accentLines: ['who I am', 'becoming.'],
+  },
+  {
+    sentence: "Success doesn't arrive with applause. It arrives after countless quiet mornings.",
+    primaryLines: ["Success doesn't arrive with applause."],
+    accentLines: ['It arrives after', 'countless quiet mornings.'],
+  },
+  {
+    sentence: 'Success belongs to those who keep showing up after the excitement fades.',
+    primaryLines: ['Success belongs to', 'those who keep'],
+    accentLines: ['showing up after', 'the excitement fades.'],
   },
 ] as const
 

@@ -3,6 +3,7 @@ import { FUN_LIGHTS } from './light-quotes-fun'
 import { HEALTH_LIGHTS } from './light-quotes-health'
 import { LOVE_LIGHTS } from './light-quotes-love'
 import { SUCCESS_LIGHTS } from './light-quotes-success'
+import { hasHangul } from './text-script'
 
 export type Light = {
   id: string
@@ -74,32 +75,55 @@ export const SPARK_PROMPTS: SparkPrompt[] = [
   { title: 'What do you choose for yourself?', subtitle: 'Write with love. Only for you.' },
 ]
 
-/** First-sky Lights — seven past days so a new Sky already feels alive. */
-const SEED_SENTENCES = [
-  'Every step forward counts, even when it feels too small to matter.',
-  'Love grows strongest where honesty feels safe.',
-  'Keep following what makes your heart feel awake.',
-  'You\'re allowed to laugh before everything is figured out.',
-  'Your body has never asked for perfection. Only a little kindness.',
-  'Quiet determination will always outlast loud ambition.',
-  'Some dreams wait patiently because they know exactly who you\'re becoming.',
-] as const
+/** Bump when default Sky seed shape changes — refreshes seed-only skies. */
+export const SKY_SEED_REVISION = 5
 
-/** Build seven Lights dated before today (daysAgo 7 → 1). Never includes today. */
+/**
+ * Seven category quotes for the default constellation.
+ * Success is clearly present, plus Love / Dream / Fun / Health.
+ * Dates span today and the two days before (e.g. Jul 10 → Jul 12).
+ */
+const SEED_FROM_CATEGORIES: readonly { sentence: string; daysAgo: number }[] = [
+  { sentence: SUCCESS_LIGHTS[3], daysAgo: 2 },
+  { sentence: LOVE_LIGHTS[2], daysAgo: 2 },
+  { sentence: SUCCESS_LIGHTS[16], daysAgo: 1 },
+  { sentence: DREAM_LIGHTS[9], daysAgo: 1 },
+  { sentence: FUN_LIGHTS[1], daysAgo: 1 },
+  { sentence: HEALTH_LIGHTS[0], daysAgo: 0 },
+  { sentence: SUCCESS_LIGHTS[7], daysAgo: 0 },
+]
+
+function formatLightDateLabel(daysAgo: number, now: Date): string {
+  const d = new Date(now)
+  d.setHours(12, 0, 0, 0)
+  d.setDate(d.getDate() - daysAgo)
+  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(d)
+}
+
+/** Default Sky — 7 English category Lights dated across the last 3 days (incl. today). */
 export function createSeedLights(now = new Date()): Light[] {
-  return SEED_SENTENCES.map((sentence, index) => {
-    // Oldest → newest among past days: 7, 6, 5, 4, 3, 2, 1 (today = 0 excluded).
-    const daysAgo = SEED_SENTENCES.length - index
-    const d = new Date(now)
-    d.setHours(12, 0, 0, 0)
-    d.setDate(d.getDate() - daysAgo)
-    return {
-      id: `vora-seed-${daysAgo}`,
-      sentence,
-      date: new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(d),
-      daysAgo,
-    }
-  })
+  return SEED_FROM_CATEGORIES.map(({ sentence, daysAgo }, index) => ({
+    id: `vora-seed-r${SKY_SEED_REVISION}-${index}-d${daysAgo}`,
+    sentence,
+    date: formatLightDateLabel(daysAgo, now),
+    daysAgo,
+  }))
+}
+
+export function isSeedLight(light: Light): boolean {
+  const id = String(light.id)
+  return id.startsWith('vora-seed-') || id.startsWith('seed-')
+}
+
+/**
+ * Hangul out. Seed-only skies always regenerate so date labels cannot stick on “today”.
+ * Real user Lights (non-seed ids) are kept.
+ */
+export function resolveSkyLights(lights: Light[] | null | undefined): Light[] {
+  const cleaned = dedupeLights(lights).filter((light) => !hasHangul(light.sentence))
+  const userLights = cleaned.filter((light) => !isSeedLight(light))
+  if (userLights.length > 0) return userLights
+  return createSeedLights()
 }
 
 /** True when the sky has no Lights yet (needs the default constellation). */
@@ -131,7 +155,7 @@ export function hasLightToday(lights: Light[], sentence: string): boolean {
 
 export function addLightIfNew(lights: Light[], sentence: string): Light[] | null {
   const normalized = sentence.trim()
-  if (!normalized || hasLightToday(lights, normalized)) return null
+  if (!normalized || hasHangul(normalized) || hasLightToday(lights, normalized)) return null
   return [
     { id: `${Date.now()}`, sentence: normalized, date: formatToday(), daysAgo: 0 },
     ...lights,

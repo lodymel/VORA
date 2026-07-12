@@ -108,6 +108,19 @@ expectLines('I attract success through who I am becoming.', ['I attract', 'succe
   'becoming.',
 ])
 
+// Success couplet — keep “It arrives” and “quiet mornings” intact
+expectLines(
+  "Success doesn't arrive with applause. It arrives after countless quiet mornings.",
+  ["Success doesn't arrive with applause."],
+  ['It arrives after', 'countless quiet mornings.'],
+)
+
+expectLines(
+  'Success belongs to those who keep showing up after the excitement fades.',
+  ['Success belongs to', 'those who keep'],
+  ['showing up after', 'the excitement fades.'],
+)
+
 // Long soft bridge still binary-splits (over primary budget)
 expectLines('I attract success through who I am becoming', ['I attract', 'success through'], [
   'who I am',

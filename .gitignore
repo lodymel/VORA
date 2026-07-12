@@ -15,3 +15,7 @@ node_modules
 .DS_Store
 .pnpm-store/
 tsconfig.tsbuildinfo
+.cursor/
+.tmp-typo.mjs
+scripts/.album-typo.tmp.mjs
+scripts/text-script.mjs
