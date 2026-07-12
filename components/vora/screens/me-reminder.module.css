@@ -1,0 +1,145 @@
+/* Me reminder — multi-time list + switch (module avoids stale globals) */
+
+.switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 3.1rem;
+  height: 1.9rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgb(61 54 88 / 0.18);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.22s ease;
+}
+
+.switchOn {
+  background: var(--vora-me-accent, rgb(129 113 201 / 0.92));
+}
+
+.knob {
+  position: absolute;
+  top: 0.18rem;
+  left: 0.18rem;
+  width: 1.54rem;
+  height: 1.54rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(45 38 72 / 0.22);
+  transition: transform 0.22s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.switchOn .knob {
+  transform: translateX(1.2rem);
+}
+
+.timeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  color: inherit;
+}
+
+.timeClock {
+  font-family: var(--font-sky-hero);
+  font-size: 1.35rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--foreground);
+}
+
+.timeHint {
+  flex-shrink: 0;
+  font-family: var(--font-sky-label);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: rgb(61 54 88 / 0.4);
+}
+
+.remove {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: rgb(61 54 88 / 0.38);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.18s ease, background 0.18s ease;
+}
+
+.remove:active {
+  background: var(--vora-me-accent-soft, rgb(129 113 201 / 0.1));
+  color: rgb(61 54 88 / 0.7);
+}
+
+.add {
+  display: flex;
+  width: 100%;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0.7rem 1rem;
+  border: none;
+  background: transparent;
+  font-family: var(--font-sky-label);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  color: var(--vora-me-link, rgb(90 72 160 / 0.82));
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.35s ease;
+}
+
+.add:disabled {
+  color: rgb(61 54 88 / 0.28);
+  cursor: default;
+}
+
+.add:not(:disabled):active {
+  opacity: 0.75;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .timeBtn:hover .timeHint {
+    color: rgb(61 54 88 / 0.58);
+  }
+  .remove:hover {
+    color: rgb(61 54 88 / 0.62);
+    background: var(--vora-me-accent-mute, rgb(129 113 201 / 0.06));
+  }
+  .add:not(:disabled):hover {
+    color: var(--vora-me-tagline, rgb(70 55 130 / 0.95));
+  }
+}
+
+.note {
+  margin: 0.7rem 0.15rem 0;
+  font-family: var(--font-sky-label);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: -0.005em;
+  color: rgb(61 54 88 / 0.42);
+}

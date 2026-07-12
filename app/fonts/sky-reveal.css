@@ -1,0 +1,48 @@
+/* Sky reveal — licensed editorial fonts (woff2/otf in public/fonts/sky/) */
+
+@font-face {
+  font-family: 'Suisse Intl';
+  src:
+    local('Suisse Intl'),
+    local('Suisse International'),
+    local('SuisseIntl-Book'),
+    url('/fonts/sky/SuisseIntl-Book.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Canela Display';
+  src:
+    local('Canela Display'),
+    local('Canela Display Regular'),
+    local('Canela'),
+    url('/fonts/sky/CanelaDisplay-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Editorial New';
+  src:
+    local('Editorial New'),
+    local('EditorialNew-Regular'),
+    url('/fonts/sky/EditorialNew-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Saol Display';
+  src:
+    local('Saol Display Italic'),
+    local('Saol Display'),
+    local('SaolDisplay-RegularItalic'),
+    url('/fonts/sky/SaolDisplay-RegularItalic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}

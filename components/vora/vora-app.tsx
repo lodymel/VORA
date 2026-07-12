@@ -1,0 +1,273 @@
+'use client'
+
+import { useEffect, useMemo, useState } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
+import { PenLine, Volume2, VolumeX } from 'lucide-react'
+import { AppShell } from './app-shell'
+import { NavBar } from './nav-bar'
+import { VoraHeader } from './vora-header'
+import { EnterRitualScreen } from './screens/enter-ritual-screen'
+import { SkyScreen } from './screens/sky-screen'
+import { ProfileScreen } from './screens/profile-screen'
+import { SignupScreen } from './screens/signup-screen'
+import { addLightIfNew, getTodaysLight, hasLightToday, removeLight } from './constants'
+import { useVoraPersistence } from './use-vora-persistence'
+import { voraAudio } from './vora-audio'
+import { skyThemeUsesLightChrome } from './light-card-theme'
+import { cancelWebReminder, scheduleWebReminder } from './web-reminder'
+import { hasKnownWriteOwn, markWriteOwnKnown } from './write-own-hint'
+
+const fade = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+  transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
+}
+
+export function VoraApp() {
+  const {
+    hydrated,
+    stage,
+    setStage,
+    tab,
+    setTab,
+    lights,
+    setLights,
+    lightReminder,
+    setLightReminder,
+    skyTheme,
+    setSkyTheme,
+    days,
+    isSubscribed,
+    setIsSubscribed,
+  } = useVoraPersistence()
+  const todaysLight = useMemo(() => getTodaysLight(), [])
+  const [writing, setWriting] = useState(false)
+  const [signup, setSignup] = useState(false)
+  const [skyHomeNonce, setSkyHomeNonce] = useState(0)
+  const [soundOn, setSoundOn] = useState(false)
+  const [writeInvite, setWriteInvite] = useState(false)
+
+  useEffect(() => {
+    setSoundOn(voraAudio.hydrate())
+  }, [])
+
+  useEffect(() => {
+    setWriteInvite(!hasKnownWriteOwn())
+  }, [hydrated])
+
+  function openWriting() {
+    markWriteOwnKnown()
+    setWriteInvite(false)
+    if (tab === 'profile') setTab('sky')
+    setWriting(true)
+  }
+
+  function toggleWriting() {
+    setWriting((w) => {
+      if (!w) {
+        markWriteOwnKnown()
+        setWriteInvite(false)
+        if (tab === 'profile') setTab('sky')
+        return true
+      }
+      return false
+    })
+  }
+
+  useEffect(() => {
+    if (!hydrated) return
+    scheduleWebReminder({
+      reminder: lightReminder,
+      getBody: () => todaysLight,
+    })
+    return () => cancelWebReminder()
+  }, [hydrated, lightReminder, todaysLight])
+
+  useEffect(() => {
+    if (stage === 'app') setSoundOn(voraAudio.isEnabled())
+  }, [stage])
+
+  function addLight(sentence: string): boolean {
+    let added = false
+    setLights((prev) => {
+      const next = addLightIfNew(prev, sentence)
+      if (!next) return prev
+      added = true
+      return next
+    })
+    return added
+  }
+
+  function handleSaveLight(sentence: string): boolean {
+    return addLight(sentence)
+  }
+
+  function handleDeleteLight(id: string) {
+    setLights((prev) => removeLight(prev, id))
+  }
+
+  function handleFinishWrite(sentence: string) {
+    addLight(sentence)
+    setWriting(false)
+  }
+
+  function goHome() {
+    setWriting(false)
+    if (tab === 'sky') {
+      setSkyHomeNonce((n) => n + 1)
+      return
+    }
+    setTab('sky')
+  }
+
+  function returnToGate() {
+    setWriting(false)
+    setSignup(false)
+    setTab('sky')
+    setStage('splash')
+  }
+
+  async function toggleSound() {
+    const next = !voraAudio.isEnabled()
+    if (next) await voraAudio.enable()
+    else await voraAudio.disable()
+    setSoundOn(voraAudio.isEnabled())
+  }
+
+  const skyLightChrome = skyThemeUsesLightChrome(skyTheme)
+
+  const cursorSurface = stage === 'app' && tab === 'profile' ? 'me' : 'sky'
+
+  if (!hydrated) {
+    return (
+      <AppShell skyTheme={skyTheme}>
+        <div className="flex h-full items-center justify-center" />
+      </AppShell>
+    )
+  }
+
+  return (
+    <AppShell ambient={stage === 'app'} skyTheme={skyTheme} cursorSurface={cursorSurface}>
+      <AnimatePresence mode="wait">
+        {(stage === 'splash' || stage === 'onboarding') && (
+          <motion.div key="enter" className="h-full w-full" {...fade}>
+            <EnterRitualScreen
+              skyTheme={skyTheme}
+              onDone={() => {
+                setSoundOn(voraAudio.isEnabled())
+                setStage('app')
+              }}
+            />
+          </motion.div>
+        )}
+
+        {stage === 'app' && (
+          <motion.div
+            key="app"
+            className="h-full w-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.95, ease: [0.22, 1, 0.36, 1] as const }}
+          >
+            <div className="relative h-full w-full">
+              {!signup && (
+                <VoraHeader
+                  tone={tab === 'sky' ? (skyLightChrome ? 'light' : 'night') : 'light'}
+                  onHome={goHome}
+                  trailing={
+                    <div className="vora-header-actions">
+                      <button
+                        type="button"
+                        onClick={() => void toggleSound()}
+                        className={`vora-header-sound-btn ${soundOn ? 'vora-header-sound-btn--on' : ''}`}
+                        aria-label={soundOn ? 'Mute sound' : 'Enable sound'}
+                        aria-pressed={soundOn}
+                      >
+                        {soundOn ? (
+                          <Volume2 size={16} strokeWidth={1.35} aria-hidden="true" />
+                        ) : (
+                          <VolumeX size={16} strokeWidth={1.35} aria-hidden="true" />
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={toggleWriting}
+                        className={`vora-header-write-btn${writing ? ' vora-header-write-btn--active' : ''}${
+                          writeInvite && !writing ? ' vora-header-write-btn--invite' : ''
+                        }`}
+                        aria-label={writing ? 'Close writing' : 'Write your own Light'}
+                        aria-pressed={writing}
+                      >
+                        <PenLine size={17} strokeWidth={1.35} aria-hidden="true" />
+                      </button>
+                    </div>
+                  }
+                />
+              )}
+
+              <AnimatePresence mode="wait">
+                {tab === 'sky' && (
+                  <motion.div key="sky" className="h-full w-full" {...fade}>
+                    <SkyScreen
+                      lights={lights}
+                      todaysLight={todaysLight}
+                      alreadyInSky={hasLightToday(lights, todaysLight)}
+                      onSaveLight={handleSaveLight}
+                      onDeleteLight={handleDeleteLight}
+                      isWriting={writing}
+                      onFinishWrite={handleFinishWrite}
+                      onCancelWrite={() => setWriting(false)}
+                      onWriteOwn={openWriting}
+                      homeNonce={skyHomeNonce}
+                      skyTheme={skyTheme}
+                    />
+                  </motion.div>
+                )}
+                {tab === 'profile' && (
+                  <motion.div key="profile" className="h-full w-full" {...fade}>
+                    <ProfileScreen
+                      days={days}
+                      lights={lights}
+                      todaysLight={todaysLight}
+                      isSubscribed={isSubscribed}
+                      onSubscribe={() => setIsSubscribed(true)}
+                      lightReminder={lightReminder}
+                      onLightReminderChange={setLightReminder}
+                      skyTheme={skyTheme}
+                      onSkyThemeChange={setSkyTheme}
+                      onReturnToGate={returnToGate}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {!signup && (
+                <NavBar
+                  active={tab}
+                  onChange={setTab}
+                  tone={tab === 'sky' ? (skyLightChrome ? 'light' : 'dark') : 'light'}
+                  skyTheme={skyTheme}
+                  onBeginAgain={returnToGate}
+                />
+              )}
+
+              <AnimatePresence>
+                {signup && (
+                  <SignupScreen
+                    onComplete={() => {
+                      setSignup(false)
+                      setTab('sky')
+                    }}
+                    onBack={() => setSignup(false)}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </AppShell>
+  )
+}

@@ -1,0 +1,394 @@
+import { hasHangul, measureTypoWidth } from './text-script'
+
+export type AlbumTypoLines = {
+  /** Setup — quieter lead-in (Instrument). Joined for aria / legacy. */
+  primary: string
+  /** Landing — the feeling (Rosemartin). */
+  accent: string
+  /** Explicit visual lines — Sky + Card MUST render these, never CSS-wrap freely. */
+  primaryLines: string[]
+  accentLines: string[]
+}
+
+const TINY = /^(am|is|me|my|to|a|an|the|of|in|on|at|for|and|or|with)$/i
+/** Pronouns / copulas that must not end a visual line (unless before a punch word). */
+const DANGLING = /^(i|i'm|im|am|is|are|was|were|be|to|my|me|that)$/i
+
+/**
+ * Strong landing openers — the punch often begins here.
+ * “every step I take”, “never alone”, “always enough”
+ */
+const LANDING_HEAD =
+  /^(every|never|always|only|still|once|again|already|finally|truly|fully)$/i
+
+/**
+ * Soft prepositional landings.
+ * When a relative follows (`through who…`), soft stays on primary —
+ * accent type is larger; “through who I am” overflows the mobile card.
+ */
+const SOFT_LANDING =
+  /^(with|through|into|toward|towards|beyond|without|within|under|over|from|like|when|until|before|after|across|along)$/i
+
+/** Relative heads — accent often starts here after a soft setup word. */
+const RELATIVE_HEAD = /^(who|what|which|whose)$/i
+
+/**
+ * Soft budget — Sky + Card share identical breaks.
+ * Card accent is larger type in a narrow inset; keep lines short enough for mobile.
+ */
+const LINE_BUDGET = 22
+/** Accent (Rosemartin) reads wider — tighter char budget than primary. */
+const ACCENT_LINE_BUDGET = 18
+/** Hangul squares — optical width budget (see measureTypoWidth). */
+const KR_LINE_BUDGET = 14
+const KR_ACCENT_LINE_BUDGET = 12
+
+function cleanWord(word: string) {
+  return word.replace(/[^\w']/g, '')
+}
+
+function isPunchWord(word: string) {
+  const w = cleanWord(word)
+  return (
+    w.length >= 6 &&
+    !TINY.test(w) &&
+    !DANGLING.test(w) &&
+    !RELATIVE_HEAD.test(w) &&
+    !SOFT_LANDING.test(w)
+  )
+}
+
+function findLastIndex(words: string[], test: (w: string) => boolean) {
+  for (let i = words.length - 1; i >= 1; i--) {
+    if (test(cleanWord(words[i] ?? ''))) return i
+  }
+  return -1
+}
+
+function scoreSplit(left: string[], right: string[]): number {
+  if (left.length === 0 || right.length === 0) return -Infinity
+  const l = left.join(' ')
+  const r = right.join(' ')
+  const lastL = cleanWord(left[left.length - 1] ?? '')
+  const firstR = cleanWord(right[0] ?? '')
+  let score = -Math.abs(l.length - r.length)
+
+  // Prefer multi-word halves over stranding a lone weak word
+  if (left.length === 1) score -= 18
+  if (right.length === 1) score -= 22
+
+  // Soft landing word alone (“through”) feels like a dropped stitch
+  if (left.length === 1 && SOFT_LANDING.test(lastL)) score -= 36
+  if (right.length === 1 && SOFT_LANDING.test(firstR)) score -= 48
+
+  // Poster punch: substantial last word alone (“becoming.”) is intentional
+  const punchAlone = right.length === 1 && isPunchWord(right[0] ?? '')
+  if (punchAlone) score += 42
+
+  // Never end a line on a hanging word — unless the next line is the punch
+  if (DANGLING.test(lastL)) {
+    score -= punchAlone && /^(i|am)$/i.test(lastL) ? 8 : 60
+  } else if (TINY.test(lastL)) {
+    score -= punchAlone ? 10 : 40
+  } else if (/^(who|what|that)$/i.test(lastL)) {
+    score -= 20
+  }
+
+  if (left.length === 1 && (TINY.test(lastL) || DANGLING.test(lastL))) score -= 20
+  if (right.length === 1 && !punchAlone && (TINY.test(firstR) || DANGLING.test(firstR) || firstR.length <= 3)) {
+    score -= 35
+  }
+
+  // “I am …” / “who I am” as a landing phrase is good
+  if (firstR.toLowerCase() === 'i' && right.length >= 2) score += 10
+  if (RELATIVE_HEAD.test(firstR) && right.length >= 2) score += 6
+
+  return score
+}
+
+/** Best mid split for short phrases — poster balance over greedy wrap. */
+function balancedBinary(words: string[]): string[] | null {
+  if (words.length < 3 || words.length > 6) return null
+  let bestAt = -1
+  let bestScore = -Infinity
+  for (let i = 1; i < words.length; i++) {
+    const score = scoreSplit(words.slice(0, i), words.slice(i))
+    if (score > bestScore) {
+      bestScore = score
+      bestAt = i
+    }
+  }
+  if (bestAt < 1) return null
+  return [words.slice(0, bestAt).join(' '), words.slice(bestAt).join(' ')]
+}
+
+/**
+ * Pack words into visual lines. Never leave a short orphan alone on the last line.
+ * This is the only place Sky/Card wrap is decided — CSS must not re-break.
+ */
+export function balancePhraseLines(text: string, maxChars = LINE_BUDGET): string[] {
+  const words = text
+    .replace(/\u00A0/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+  if (words.length === 0) return []
+
+  const joined = words.join(' ')
+  if (words.length <= 2) return [joined]
+
+  // Fits the measure → one line.
+  // Never force a couplet just because there are 4 words — “I can do it” is one breath.
+  // Long tails (“I attract success through”, 25+) still binary-split below.
+  if (measureTypoWidth(joined) <= maxChars) return [joined]
+
+  // 3–6 words over budget: balanced binary poster split
+  if (words.length <= 6) {
+    const binary = balancedBinary(words)
+    if (binary && binary.every((line) => measureTypoWidth(line) <= maxChars + 8)) {
+      const weakCouplet = binary.some((line, index) => {
+        if (index === 0) return false
+        const first = cleanWord(line.split(/\s+/)[0] ?? '')
+        return DANGLING.test(first) || (TINY.test(first) && first.length <= 3)
+      })
+      // Prefer one slightly long line over “that lift” / “me higher.”
+      if (weakCouplet && measureTypoWidth(joined) <= maxChars + 6) return [joined]
+      return binary
+    }
+  }
+
+  const lines: string[] = []
+  let current: string[] = []
+  let len = 0
+
+  for (const word of words) {
+    const add =
+      current.length === 0 ? measureTypoWidth(word) : measureTypoWidth(` ${word}`)
+    if (current.length > 0 && len + add > maxChars) {
+      lines.push(current.join(' '))
+      current = [word]
+      len = measureTypoWidth(word)
+    } else {
+      current.push(word)
+      len += add
+    }
+  }
+  if (current.length) lines.push(current.join(' '))
+
+  // Pull orphan last line back — tiny last line is never ok (except a punch word)
+  if (lines.length >= 2) {
+    const lastParts = lines[lines.length - 1].split(' ')
+    const lastWord = lastParts[0] ?? ''
+    const orphan =
+      lastParts.length === 1 &&
+      !isPunchWord(lastWord) &&
+      (lastWord.length <= 5 || TINY.test(cleanWord(lastWord)) || DANGLING.test(cleanWord(lastWord)))
+
+    if (orphan) {
+      const prevParts = lines[lines.length - 2].split(' ')
+      if (prevParts.length >= 2) {
+        const moved = prevParts.pop()!
+        lines[lines.length - 2] = prevParts.join(' ')
+        lines[lines.length - 1] = `${moved} ${lines[lines.length - 1]}`
+      } else {
+        lines[lines.length - 2] = `${lines[lines.length - 2]} ${lines[lines.length - 1]}`
+        lines.pop()
+      }
+    }
+  }
+
+  // If a line still ends on a hanging word, pull that word onto the next line
+  // (keep “who I am” | “becoming” — punch alone is intentional)
+  for (let i = 0; i < lines.length - 1; i++) {
+    const parts = lines[i].split(' ')
+    const end = cleanWord(parts[parts.length - 1] ?? '')
+    if (parts.length < 2) continue
+    if (!(DANGLING.test(end) || TINY.test(end))) continue
+
+    const nextParts = lines[i + 1].split(' ')
+    if (
+      nextParts.length === 1 &&
+      isPunchWord(nextParts[0] ?? '') &&
+      /^(i|am)$/i.test(end)
+    ) {
+      continue
+    }
+
+    const moved = parts.pop()!
+    lines[i] = parts.join(' ')
+    lines[i + 1] = `${moved} ${lines[i + 1]}`
+  }
+
+  return lines.filter(Boolean)
+}
+
+function splitVoice(sentence: string): { primary: string; accent: string } {
+  const trimmed = sentence.trim()
+  if (!trimmed) return { primary: '', accent: '' }
+
+  const comma = trimmed.indexOf(',')
+  if (comma !== -1) {
+    return {
+      primary: trimmed.slice(0, comma + 1).trim(),
+      accent: trimmed.slice(comma + 1).trim(),
+    }
+  }
+
+  const words = trimmed.split(/\s+/).filter(Boolean)
+  if (words.length <= 1) return { primary: words[0] ?? '', accent: '' }
+  if (words.length === 2) return { primary: words[0], accent: words[1] }
+  if (words.length === 3) {
+    return { primary: words.slice(0, 2).join(' '), accent: words[2] }
+  }
+
+  const strongAt = findLastIndex(words, (w) => LANDING_HEAD.test(w))
+  if (strongAt !== -1 && words.length - strongAt >= 2 && strongAt >= 2) {
+    return {
+      primary: words.slice(0, strongAt).join(' '),
+      accent: words.slice(strongAt).join(' '),
+    }
+  }
+
+  const softAt = findLastIndex(words, (w) => SOFT_LANDING.test(w))
+  if (softAt !== -1 && softAt >= 2 && words.length - softAt >= 2) {
+    const next = cleanWord(words[softAt + 1] ?? '')
+    // Soft + relative: keep soft on primary (fits mobile card); accent from who/what…
+    // Keep soft on primary — then primary may binary to “I attract” / “success through”
+    if (RELATIVE_HEAD.test(next) && softAt + 1 < words.length - 1) {
+      return {
+        primary: words.slice(0, softAt + 1).join(' '),
+        accent: words.slice(softAt + 1).join(' '),
+      }
+    }
+    return {
+      primary: words.slice(0, softAt).join(' '),
+      accent: words.slice(softAt).join(' '),
+    }
+  }
+
+  let accentCount = words.length >= 7 ? 3 : words.length >= 5 ? 2 : 1
+  const last = words[words.length - 1] ?? ''
+  if (TINY.test(cleanWord(last)) && accentCount < 2) accentCount = 2
+
+  while (
+    accentCount < Math.min(5, words.length - 1) &&
+    DANGLING.test(cleanWord(words[words.length - accentCount - 1] ?? ''))
+  ) {
+    accentCount += 1
+  }
+
+  if (accentCount === 1 && words.length >= 5) accentCount = 2
+
+  return {
+    primary: words.slice(0, -accentCount).join(' '),
+    accent: words.slice(-accentCount).join(' '),
+  }
+}
+
+/**
+ * LOCKED poster breaks — never re-open these via algorithm drift.
+ * Mobile card measure is law: accent must not start with soft+relative
+ * (“through who I am” overflows the card).
+ */
+const LOCKED_ALBUM_TYPO: Record<
+  string,
+  { primaryLines: string[]; accentLines: string[] }
+> = {
+  'i attract success through who i am becoming.': {
+    primaryLines: ['I attract', 'success through'],
+    accentLines: ['who I am', 'becoming.'],
+  },
+  'i attract success through who i am becoming': {
+    primaryLines: ['I attract', 'success through'],
+    accentLines: ['who I am', 'becoming.'],
+  },
+}
+
+function normalizeAlbumKey(sentence: string) {
+  return sentence.replace(/\u00A0/g, ' ').trim().replace(/\s+/g, ' ').toLowerCase()
+}
+
+/**
+ * Safety net — if accent leaked a soft landing before a relative
+ * (`through who…`), pull soft back onto primary. Mobile card overflow guard.
+ */
+function reclaimSoftBeforeRelative(
+  primaryLines: string[],
+  accentLines: string[],
+): { primaryLines: string[]; accentLines: string[] } {
+  if (accentLines.length === 0) return { primaryLines, accentLines }
+
+  const firstWords = accentLines[0].split(/\s+/).filter(Boolean)
+  if (firstWords.length < 2) return { primaryLines, accentLines }
+
+  const soft = cleanWord(firstWords[0] ?? '')
+  const next = cleanWord(firstWords[1] ?? '')
+  if (!SOFT_LANDING.test(soft) || !RELATIVE_HEAD.test(next)) {
+    return { primaryLines, accentLines }
+  }
+
+  const softToken = firstWords[0] ?? ''
+  const restFirst = firstWords.slice(1).join(' ')
+  const mergedAccent = [restFirst, ...accentLines.slice(1)].filter(Boolean)
+  const mergedPrimary =
+    primaryLines.length === 0
+      ? [softToken]
+      : [
+          ...primaryLines.slice(0, -1),
+          `${primaryLines[primaryLines.length - 1]} ${softToken}`.trim(),
+        ]
+
+  return {
+    primaryLines: balancePhraseLines(
+      mergedPrimary.join(' '),
+      hasHangul(mergedPrimary.join(' ')) ? KR_LINE_BUDGET : LINE_BUDGET,
+    ),
+    accentLines: balancePhraseLines(
+      mergedAccent.join(' '),
+      hasHangul(mergedAccent.join(' ')) ? KR_ACCENT_LINE_BUDGET : ACCENT_LINE_BUDGET,
+    ),
+  }
+}
+
+/**
+ * SINGLE SOURCE OF TRUTH for Light sentence line breaks.
+ * Sky main + Light card (+ export) MUST render primaryLines / accentLines.
+ */
+export function getAlbumTypoLines(sentence: string): AlbumTypoLines {
+  const key = normalizeAlbumKey(sentence)
+  const locked = LOCKED_ALBUM_TYPO[key]
+  if (locked) {
+    return {
+      primary: locked.primaryLines.join(' '),
+      accent: locked.accentLines.join(' '),
+      primaryLines: [...locked.primaryLines],
+      accentLines: [...locked.accentLines],
+    }
+  }
+
+  const { primary, accent } = splitVoice(sentence)
+  const hangul = hasHangul(sentence)
+  const primaryBudget = hangul ? KR_LINE_BUDGET : LINE_BUDGET
+  const accentBudget = hangul ? KR_ACCENT_LINE_BUDGET : ACCENT_LINE_BUDGET
+  let primaryLines = balancePhraseLines(primary, primaryBudget)
+  let accentLines = balancePhraseLines(accent, accentBudget)
+
+  ;({ primaryLines, accentLines } = reclaimSoftBeforeRelative(primaryLines, accentLines))
+
+  return {
+    primary: primaryLines.join(' '),
+    accent: accentLines.join(' '),
+    primaryLines,
+    accentLines,
+  }
+}
+
+/** Fixtures for regression — keep in sync with LOCKED_ALBUM_TYPO. */
+export const ALBUM_TYPO_REGRESSION = [
+  {
+    sentence: 'I attract success through who I am becoming.',
+    primaryLines: ['I attract', 'success through'],
+    accentLines: ['who I am', 'becoming.'],
+  },
+] as const
+

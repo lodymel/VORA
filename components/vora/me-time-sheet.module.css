@@ -1,0 +1,265 @@
+/* VORA time sheet — morning mist, Instrument clock, branded wheels (no OS select) */
+
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 240;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 0.85rem max(1.1rem, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  background: rgb(45 38 72 / 0.28);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 24rem);
+  padding: 1.35rem 1.35rem 1.15rem;
+  border-radius: 1.35rem;
+  background: rgb(255 252 255 / 0.96);
+  box-shadow:
+    0 24px 48px rgb(61 54 88 / 0.18),
+    inset 0 1px 0 rgb(255 255 255 / 0.95);
+  backdrop-filter: blur(28px) saturate(1.2);
+  -webkit-backdrop-filter: blur(28px) saturate(1.2);
+}
+
+.kicker {
+  margin: 0;
+  font-family: var(--font-sky-label);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgb(61 54 88 / 0.42);
+  text-align: center;
+}
+
+.clock {
+  margin: 0.85rem 0 0;
+  font-family: var(--font-sky-hero);
+  font-size: clamp(2.6rem, 10vw, 3.15rem);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--foreground);
+  text-align: center;
+}
+
+.wheels {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.85rem;
+  margin-top: 1.25rem;
+}
+
+.wheel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 5.75rem;
+}
+
+.wheelLabel {
+  font-family: var(--font-sky-label);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgb(61 54 88 / 0.4);
+}
+
+.columnShell {
+  position: relative;
+  width: 5.75rem;
+  height: calc(44px * 3);
+  border-radius: 0.95rem;
+  background: var(--vora-me-accent-mute, rgb(129 113 201 / 0.06));
+  box-shadow: inset 0 0 0 1px rgb(61 54 88 / 0.05);
+  overflow: hidden;
+}
+
+.columnFocus {
+  position: absolute;
+  left: 0.35rem;
+  right: 0.35rem;
+  top: 50%;
+  height: 44px;
+  margin-top: -22px;
+  border-radius: 0.65rem;
+  background: rgb(255 255 255 / 0.72);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.9) inset,
+    0 0 0 1px color-mix(in srgb, var(--vora-me-accent, rgb(129 113 201)) 14%, transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.column {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  outline: none;
+  mask-image: linear-gradient(
+    180deg,
+    transparent 0%,
+    #000 18%,
+    #000 82%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    transparent 0%,
+    #000 18%,
+    #000 82%,
+    transparent 100%
+  );
+}
+
+.column::-webkit-scrollbar {
+  display: none;
+}
+
+.columnPad {
+  height: 44px;
+  flex-shrink: 0;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  scroll-snap-align: center;
+  font-family: var(--font-sky-hero);
+  font-size: 1.35rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: rgb(61 54 88 / 0.32);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.18s ease;
+}
+
+.itemOn {
+  color: var(--foreground);
+}
+
+.colon {
+  align-self: center;
+  padding-top: 1.15rem;
+  font-family: var(--font-sky-hero);
+  font-size: 1.85rem;
+  color: rgb(61 54 88 / 0.28);
+  line-height: 1;
+}
+
+.presets {
+  display: flex;
+  justify-content: center;
+  gap: 0.45rem;
+  margin-top: 1.15rem;
+}
+
+.preset {
+  min-height: 2.15rem;
+  padding: 0.45rem 0.85rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  font-family: var(--font-sky-label);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: rgb(61 54 88 / 0.55);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.presetOn {
+  background: var(--vora-me-accent-soft, rgb(129 113 201 / 0.14));
+  color: var(--vora-me-tagline, rgb(70 55 130 / 0.92));
+}
+
+.preset:active {
+  opacity: 0.85;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+  margin-top: 1.35rem;
+}
+
+.ghost,
+.done {
+  min-height: 2.85rem;
+  border: none;
+  border-radius: 0.85rem;
+  font-family: var(--font-sky-label);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ghost {
+  background: transparent;
+  color: rgb(61 54 88 / 0.55);
+}
+
+.done {
+  background: var(--vora-me-accent-soft, rgb(129 113 201 / 0.16));
+  color: rgb(45 38 72 / 0.92);
+}
+
+.ghost:active,
+.done:active {
+  opacity: 0.84;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .item:hover {
+    color: rgb(61 54 88 / 0.55);
+  }
+  .itemOn:hover {
+    color: var(--foreground);
+  }
+  .preset:hover {
+    background: var(--vora-me-accent-mute, rgb(129 113 201 / 0.08));
+  }
+  .ghost:hover {
+    color: rgb(45 38 72 / 0.82);
+  }
+  .done:hover {
+    background: var(--vora-me-accent-soft, rgb(129 113 201 / 0.22));
+  }
+}
