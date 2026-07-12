@@ -3,16 +3,14 @@
 **Look at yourself.**  
 **Your words become stars.**
 
-하루 한 문장이 Light가 되고, Sky에 별처럼 쌓이는 기록 앱입니다.  
 by LODY STUDIO.
 
 ---
 
 VORA means *look at yourself*. Speak one true sentence. It becomes a **Light**, then a star in your **Sky**.
 
-- **Mirror** — today’s moment
-- **Sky** — Lights as memory
-- **Me** — your journey
+- **Sky** — write a Light; watch stars gather
+- **Me** — your journey, reminders, and sky themes
 
 One sentence. One light. Your sky.
 
