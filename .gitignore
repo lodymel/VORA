@@ -19,3 +19,6 @@ tsconfig.tsbuildinfo
 .tmp-typo.mjs
 scripts/.album-typo.tmp.mjs
 scripts/text-script.mjs
+.cursorrules
+AGENTS.md
+.cursorignore

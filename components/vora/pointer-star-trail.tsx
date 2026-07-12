@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { DEFAULT_SKY_THEME, type SkyThemeId } from './light-card-theme'
 
-export type CursorSurface = 'sky' | 'me'
+export type PointerSurface = 'sky' | 'me'
 
 type Rgb = { r: number; g: number; b: number }
 
@@ -137,21 +137,21 @@ function makeParticle(): Particle {
 }
 
 /**
- * Cursor presence — surface + sky-theme mote trail + one VORA O-star tip.
+ * Pointer presence — surface + sky-theme mote trail + one VORA O-star tip.
  * Portaled to body (above Light card) — carries data-sky-theme for tip tokens.
  */
-export function CursorStarTrail({
+export function PointerStarTrail({
   enabled = true,
   surface = 'sky',
   skyTheme = DEFAULT_SKY_THEME,
 }: {
   enabled?: boolean
-  surface?: CursorSurface
+  surface?: PointerSurface
   skyTheme?: SkyThemeId
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const starRef = useRef<HTMLSpanElement>(null)
-  const surfaceRef = useRef<CursorSurface>(surface)
+  const surfaceRef = useRef<PointerSurface>(surface)
   const themeRef = useRef<SkyThemeId>(skyTheme)
   const [mounted, setMounted] = useState(false)
 
@@ -406,15 +406,15 @@ export function CursorStarTrail({
     <>
       <canvas
         ref={canvasRef}
-        className="vora-cursor-star-trail"
-        data-vora-cursor-surface={surface}
+        className="vora-pointer-star-trail"
+        data-vora-pointer-surface={surface}
         data-sky-theme={skyTheme}
         aria-hidden="true"
       />
       <span
         ref={starRef}
-        className={`vora-cursor-o-star${surface === 'me' ? ' vora-cursor-o-star--me' : ''}`}
-        data-vora-cursor-surface={surface}
+        className={`vora-pointer-o-star${surface === 'me' ? ' vora-pointer-o-star--me' : ''}`}
+        data-vora-pointer-surface={surface}
         data-sky-theme={skyTheme}
         aria-hidden="true"
       >

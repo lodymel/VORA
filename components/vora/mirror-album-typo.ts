@@ -311,14 +311,14 @@ const LOCKED_ALBUM_TYPO: Record<
     primaryLines: ['I attract', 'success through'],
     accentLines: ['who I am', 'becoming.'],
   },
-  // Keep “It arrives” + “quiet mornings” intact — no orphan mid-phrase wraps.
+  // Keep phrase chunks intact — Success couplet poster break.
   "success doesn't arrive with applause. it arrives after countless quiet mornings.": {
-    primaryLines: ["Success doesn't arrive with applause."],
-    accentLines: ['It arrives after', 'countless quiet mornings.'],
+    primaryLines: ["Success doesn't arrive", 'with applause.'],
+    accentLines: ['It arrives', 'after countless', 'quiet mornings.'],
   },
   "success doesn't arrive with applause. it arrives after countless quiet mornings": {
-    primaryLines: ["Success doesn't arrive with applause."],
-    accentLines: ['It arrives after', 'countless quiet mornings.'],
+    primaryLines: ["Success doesn't arrive", 'with applause.'],
+    accentLines: ['It arrives', 'after countless', 'quiet mornings.'],
   },
   'success belongs to those who keep showing up after the excitement fades.': {
     primaryLines: ['Success belongs to', 'those who keep'],
@@ -418,8 +418,8 @@ export const ALBUM_TYPO_REGRESSION = [
   },
   {
     sentence: "Success doesn't arrive with applause. It arrives after countless quiet mornings.",
-    primaryLines: ["Success doesn't arrive with applause."],
-    accentLines: ['It arrives after', 'countless quiet mornings.'],
+    primaryLines: ["Success doesn't arrive", 'with applause.'],
+    accentLines: ['It arrives', 'after countless', 'quiet mornings.'],
   },
   {
     sentence: 'Success belongs to those who keep showing up after the excitement fades.',

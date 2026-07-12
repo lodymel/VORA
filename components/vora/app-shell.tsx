@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { CursorStarTrail, type CursorSurface } from './cursor-star-trail'
+import { PointerStarTrail, type PointerSurface } from './pointer-star-trail'
 import { DEFAULT_SKY_THEME, type SkyThemeId } from './light-card-theme'
 
 /**
@@ -12,24 +12,24 @@ export function AppShell({
   children,
   ambient = false,
   skyTheme = DEFAULT_SKY_THEME,
-  cursorSurface = 'sky',
+  pointerSurface = 'sky',
 }: {
   children: ReactNode
   ambient?: boolean
   skyTheme?: SkyThemeId
-  /** Sky night glow vs Me morning ink — cursor palette follows the surface. */
-  cursorSurface?: CursorSurface
+  /** Sky night glow vs Me morning ink — pointer palette follows the surface. */
+  pointerSurface?: PointerSurface
 }) {
   return (
     <div
       className={`vora-app-root ${ambient ? 'vora-app-root--ambient' : ''}`}
       data-sky-theme={skyTheme}
-      data-vora-surface={cursorSurface}
+      data-vora-surface={pointerSurface}
     >
       <div className="vora-app-canvas">
         {children}
         {/* Inside canvas host — never a flex sibling of the app surface */}
-        <CursorStarTrail surface={cursorSurface} skyTheme={skyTheme} />
+        <PointerStarTrail surface={pointerSurface} skyTheme={skyTheme} />
       </div>
     </div>
   )

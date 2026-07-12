@@ -111,8 +111,8 @@ expectLines('I attract success through who I am becoming.', ['I attract', 'succe
 // Success couplet — keep “It arrives” and “quiet mornings” intact
 expectLines(
   "Success doesn't arrive with applause. It arrives after countless quiet mornings.",
-  ["Success doesn't arrive with applause."],
-  ['It arrives after', 'countless quiet mornings.'],
+  ["Success doesn't arrive", 'with applause.'],
+  ['It arrives', 'after countless', 'quiet mornings.'],
 )
 
 expectLines(

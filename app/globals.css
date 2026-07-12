@@ -451,8 +451,8 @@
   --vora-me-drift-hi: rgb(203 184 255 / 20%);
   --vora-me-drift-lo: rgb(203 184 255 / 16%);
   --vora-me-mote: rgb(129 113 201 / 40%);
-  --vora-cursor-me-core: rgb(90 72 140 / 92%);
-  --vora-cursor-me-glow: rgb(129 113 201 / 0.45);
+  --vora-pointer-me-core: rgb(90 72 140 / 92%);
+  --vora-pointer-me-glow: rgb(129 113 201 / 0.45);
 }
 /*
  * Pure vs Default:
@@ -501,8 +501,8 @@
   --vora-o-star-glow-0: rgb(255 255 255 / 92%);
   --vora-o-star-glow-1: rgb(196 175 255 / 52%);
   --vora-o-star-glow-2: rgb(203 184 255 / 0%);
-  --vora-cursor-me-core: rgb(110 90 170 / 92%);
-  --vora-cursor-me-glow: rgb(160 140 220 / 0.48);
+  --vora-pointer-me-core: rgb(110 90 170 / 92%);
+  --vora-pointer-me-glow: rgb(160 140 220 / 0.48);
 }
 /*
  * Pink vs Default:
@@ -569,8 +569,8 @@
   --vora-me-drift-hi: rgb(255 200 224 / 22%);
   --vora-me-drift-lo: rgb(255 220 236 / 18%);
   --vora-me-mote: rgb(220 120 170 / 38%);
-  --vora-cursor-me-core: rgb(180 90 140 / 92%);
-  --vora-cursor-me-glow: rgb(220 120 170 / 0.48);
+  --vora-pointer-me-core: rgb(180 90 140 / 92%);
+  --vora-pointer-me-glow: rgb(220 120 170 / 0.48);
 }
 /*
  * Black — quiet ink night.
@@ -615,8 +615,8 @@
   --vora-me-drift-hi: rgb(200 196 220 / 14%);
   --vora-me-drift-lo: rgb(180 178 200 / 12%);
   --vora-me-mote: rgb(120 110 150 / 36%);
-  --vora-cursor-me-core: rgb(90 82 130 / 92%);
-  --vora-cursor-me-glow: rgb(120 110 150 / 0.45);
+  --vora-pointer-me-core: rgb(90 82 130 / 92%);
+  --vora-pointer-me-glow: rgb(120 110 150 / 0.45);
 }
 /*
  * Aurora vs Default:
@@ -662,8 +662,8 @@
   --vora-me-drift-hi: rgb(160 230 210 / 18%);
   --vora-me-drift-lo: rgb(140 200 220 / 14%);
   --vora-me-mote: rgb(50 170 150 / 36%);
-  --vora-cursor-me-core: rgb(35 140 125 / 92%);
-  --vora-cursor-me-glow: rgb(50 170 150 / 0.48);
+  --vora-pointer-me-core: rgb(35 140 125 / 92%);
+  --vora-pointer-me-glow: rgb(50 170 150 / 0.48);
 }
 
 .vora-app-canvas {
@@ -690,7 +690,7 @@
 }
 
 /* Lavender mote trail — portaled to body; above Light card (z 200) */
-.vora-cursor-star-trail {
+.vora-pointer-star-trail {
   position: fixed !important;
   inset: 0 !important;
   width: 100% !important;
@@ -702,7 +702,7 @@
 }
 
 /* One VORA O-star tip — always readable, including over open card */
-.vora-cursor-o-star {
+.vora-pointer-o-star {
   position: fixed !important;
   top: 0;
   left: 0;
@@ -719,37 +719,37 @@
     drop-shadow(0 0 7px var(--vora-o-star-glow-1, rgb(203 184 255 / 0.5)));
 }
 
-.vora-cursor-o-star svg {
+.vora-pointer-o-star svg {
   display: block;
   width: 100%;
   height: 100%;
 }
 
 /* Me — themed ink tip on morning mist (not night-white glow) */
-.vora-cursor-o-star--me {
-  --vora-o-star-core: var(--vora-cursor-me-core, rgb(90 72 140 / 92%));
+.vora-pointer-o-star--me {
+  --vora-o-star-core: var(--vora-pointer-me-core, rgb(90 72 140 / 92%));
   filter:
     drop-shadow(0 0 1.5px rgb(61 53 88 / 0.35))
-    drop-shadow(0 0 8px var(--vora-cursor-me-glow, rgb(129 113 201 / 0.45)));
+    drop-shadow(0 0 8px var(--vora-pointer-me-glow, rgb(129 113 201 / 0.45)));
 }
 
 @media (hover: none), (pointer: coarse) {
-  .vora-cursor-star-trail,
-  .vora-cursor-o-star {
+  .vora-pointer-star-trail,
+  .vora-pointer-o-star {
     display: none !important;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vora-cursor-star-trail,
-  .vora-cursor-o-star {
+  .vora-pointer-star-trail,
+  .vora-pointer-o-star {
     display: none !important;
   }
 }
 
 /* Card open — trail stays full; tip may glow a touch brighter on the dark card */
-body:has(.vora-light-card-reveal) .vora-cursor-o-star:not(.vora-cursor-o-star--me),
-body[data-vora-card-open='true'] .vora-cursor-o-star:not(.vora-cursor-o-star--me) {
+body:has(.vora-light-card-reveal) .vora-pointer-o-star:not(.vora-pointer-o-star--me),
+body[data-vora-card-open='true'] .vora-pointer-o-star:not(.vora-pointer-o-star--me) {
   filter:
     drop-shadow(0 0 2px var(--vora-o-star-glow-0, rgb(255 255 255 / 0.98)))
     drop-shadow(0 0 9px var(--vora-o-star-glow-1, rgb(203 184 255 / 0.6)));

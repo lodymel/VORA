@@ -134,7 +134,7 @@ export function VoraApp() {
 
   const skyLightChrome = skyThemeUsesLightChrome(skyTheme)
 
-  const cursorSurface = stage === 'app' && tab === 'profile' ? 'me' : 'sky'
+  const pointerSurface = stage === 'app' && tab === 'profile' ? 'me' : 'sky'
 
   if (!hydrated) {
     return (
@@ -145,7 +145,7 @@ export function VoraApp() {
   }
 
   return (
-    <AppShell ambient={stage === 'app'} skyTheme={skyTheme} cursorSurface={cursorSurface}>
+    <AppShell ambient={stage === 'app'} skyTheme={skyTheme} pointerSurface={pointerSurface}>
       <AnimatePresence mode="wait">
         {(stage === 'splash' || stage === 'onboarding') && (
           <motion.div key="enter" className="h-full w-full" {...fade}>
