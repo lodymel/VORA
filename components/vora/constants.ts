@@ -74,7 +74,34 @@ export const SPARK_PROMPTS: SparkPrompt[] = [
   { title: 'What do you choose for yourself?', subtitle: 'Write with love. Only for you.' },
 ]
 
-/** Empty by default — Sky grows as users save or write Lights */
+/** First-sky Lights — seven past days so a new Sky already feels alive. */
+const SEED_SENTENCES = [
+  'Every step forward counts, even when it feels too small to matter.',
+  'Love grows strongest where honesty feels safe.',
+  'Keep following what makes your heart feel awake.',
+  'You\'re allowed to laugh before everything is figured out.',
+  'Your body has never asked for perfection. Only a little kindness.',
+  'Quiet determination will always outlast loud ambition.',
+  'Some dreams wait patiently because they know exactly who you\'re becoming.',
+] as const
+
+/** Build seven Lights dated before today (daysAgo 7 → 1). */
+export function createSeedLights(now = new Date()): Light[] {
+  return SEED_SENTENCES.map((sentence, index) => {
+    const daysAgo = SEED_SENTENCES.length - index
+    const d = new Date(now)
+    d.setHours(12, 0, 0, 0)
+    d.setDate(d.getDate() - daysAgo)
+    return {
+      id: `vora-seed-${daysAgo}`,
+      sentence,
+      date: new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(d),
+      daysAgo,
+    }
+  })
+}
+
+/** Empty until first visit — persistence calls createSeedLights() for new users. */
 export const SEED_LIGHTS: Light[] = []
 
 export function formatToday(): string {

@@ -126,7 +126,7 @@ export function OnboardingScreen({
               </motion.p>
 
               <motion.p
-                className="vora-enter-tagline mt-3"
+                className="vora-enter-tagline"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 1, ease, delay: 0.65 }}

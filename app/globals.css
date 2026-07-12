@@ -2,6 +2,33 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 
+/* Register sky stops so theme swaps can interpolate instead of snapping. */
+@property --vora-sky-0 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #05060e;
+}
+@property --vora-sky-1 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #081028;
+}
+@property --vora-sky-2 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #12183a;
+}
+@property --vora-sky-3 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #1e2448;
+}
+@property --vora-sky-4 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #2a2758;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -3366,18 +3393,23 @@ body[data-vora-card-open='true'] .vora-cursor-o-star:not(.vora-cursor-o-star--me
 .vora-enter-tagline {
   margin: 0;
   margin-inline: auto;
-  max-width: min(100%, 22rem);
+  max-width: none;
   padding-inline: var(--vora-chrome-x);
   font-family: var(--font-sky-accent);
-  font-size: clamp(1.35rem, 5vw, 1.75rem);
+  /* Quieter than the headline — one line on a phone, no orphan “stars.” */
+  font-size: clamp(0.9rem, 2.6vw + 0.42rem, 1.2rem);
   font-weight: 400;
   font-style: normal;
-  line-height: var(--vora-typo-accent-leading);
-  letter-spacing: var(--vora-typo-accent-tracking);
-  color: rgb(220 208 255 / 0.88);
-  text-shadow:
-    1px 0 rgb(160 210 255 / 0.22),
-    -1px 0 rgb(203 184 255 / 0.28);
+  line-height: 1.2;
+  letter-spacing: 0.028em;
+  color: rgb(220 208 255 / 0.72);
+  white-space: nowrap;
+  text-wrap: nowrap;
+  text-shadow: none;
+}
+/* Brand couplet — close enough to read as one breath */
+.vora-enter-headline + .vora-enter-tagline {
+  margin-top: 0.32rem;
 }
 .vora-enter-actions {
   gap: 1.05rem;
@@ -3666,7 +3698,17 @@ body[data-vora-card-open='true'] .vora-cursor-o-star:not(.vora-cursor-o-star--me
 }
 .vora-enter-ritual-address {
   margin-top: 3.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.32rem;
+  text-align: center;
+}
+.vora-enter-ritual-address .vora-enter-headline {
   min-height: 1.15em;
+}
+.vora-enter-ritual-address .vora-enter-tagline {
+  margin-top: 0;
 }
 .vora-enter-ritual .vora-enter-actions {
   position: absolute;
@@ -3742,6 +3784,18 @@ body[data-vora-card-open='true'] .vora-cursor-o-star:not(.vora-cursor-o-star--me
     var(--vora-sky-3) 78%,
     var(--vora-sky-4) 100%
   );
+  transition:
+    --vora-sky-0 0.45s var(--vora-ease),
+    --vora-sky-1 0.45s var(--vora-ease),
+    --vora-sky-2 0.45s var(--vora-ease),
+    --vora-sky-3 0.45s var(--vora-ease),
+    --vora-sky-4 0.45s var(--vora-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .vora-sky-gradient,
+  .vora-sky-theme-studio {
+    transition: none !important;
+  }
 }
 /* Pink — dense rose ladder (same as --vora-sky-gradient); no mid cliff */
 [data-sky-theme='pink'] .vora-sky-gradient {
@@ -5996,15 +6050,16 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   text-wrap: balance;
 }
 .vora-me-identity-sub {
-  margin: 0.55rem 0 0;
-  max-width: 14rem;
+  margin: 0.32rem 0 0;
+  max-width: none;
   font-family: var(--font-sky-accent);
-  font-size: clamp(1.05rem, 3.8vw, 1.25rem);
+  font-size: clamp(0.9rem, 2.6vw + 0.42rem, 1.15rem);
   font-weight: 400;
-  letter-spacing: var(--vora-typo-accent-tracking, 0.03em);
-  line-height: var(--vora-typo-accent-leading, 1.28);
+  letter-spacing: 0.028em;
+  line-height: 1.2;
   color: var(--vora-me-tagline, rgb(91 78 132 / 0.68));
-  text-wrap: balance;
+  white-space: nowrap;
+  text-wrap: nowrap;
   transition: color 0.35s ease;
 }
 /* Pink Me — soft rose tagline (pink, not loud) */
@@ -6186,6 +6241,16 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   overflow: hidden;
   background: var(--vora-sky-0);
   color: var(--vora-sky-fg);
+  transition: background-color 0.45s var(--vora-ease), color 0.35s var(--vora-ease);
+}
+/* Pause ambient sky motion while scrubbing themes — keeps thumb switches smooth */
+.vora-sky-theme-studio .vora-sky-dust-star,
+.vora-sky-theme-studio .vora-sky-drift,
+.vora-sky-theme-studio .vora-sky-aurora,
+.vora-sky-theme-studio .vora-sky-horizon-breath,
+.vora-sky-theme-studio .vora-sky-color-shift,
+.vora-sky-theme-studio .vora-sky-veil {
+  animation-play-state: paused !important;
 }
 .vora-sky-theme-studio-close {
   position: absolute;
@@ -6258,18 +6323,17 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   color: var(--vora-sky-fg);
 }
 .vora-sky-theme-studio-sample-accent {
-  margin: 0.55rem 0 0;
+  margin: 0.32rem 0 0;
   box-sizing: border-box;
   max-width: 100%;
   width: 100%;
   padding-inline: 0.15rem;
   font-family: var(--font-sky-accent);
-  /* Fit one line inside stage padding — never bleed the screen edge */
-  font-size: clamp(1rem, 3.35vw, 1.4rem);
+  font-size: clamp(0.9rem, 2.6vw + 0.42rem, 1.2rem);
   font-weight: 400;
-  letter-spacing: 0.015em;
-  line-height: 1.25;
-  color: var(--vora-sky-accent);
+  letter-spacing: 0.028em;
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--vora-sky-accent) 78%, transparent);
   white-space: nowrap;
   text-wrap: nowrap;
   overflow: hidden;

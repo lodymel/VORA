@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { startTransition, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { X } from 'lucide-react'
@@ -76,7 +76,7 @@ export function SkyThemePicker({
   }
 
   function applyAndClose() {
-    onChange(draft)
+    startTransition(() => onChange(draft))
     setOpen(false)
   }
 
@@ -96,7 +96,8 @@ export function SkyThemePicker({
               exit={reduceMotion ? { opacity: 0 } : { opacity: 0 }}
               transition={{ duration: 0.35, ease: soft }}
             >
-              <SkyAtmosphere key={draft} className="absolute inset-0" depth="sky" />
+              {/* Keep one atmosphere instance — remounting on every theme was the main jank. */}
+              <SkyAtmosphere className="absolute inset-0" depth="sky" />
 
               <button
                 type="button"
@@ -136,10 +137,7 @@ export function SkyThemePicker({
                         role="radio"
                         aria-checked={active}
                         aria-label={theme.label}
-                        onClick={() => {
-                        setDraft(theme.id)
-                        onChange(theme.id)
-                      }}
+                        onClick={() => setDraft(theme.id)}
                         className={`vora-sky-theme-studio-option ${
                           active ? 'vora-sky-theme-studio-option--active' : ''
                         }`}

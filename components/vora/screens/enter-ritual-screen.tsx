@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { SkyAtmosphere } from '../sky-atmosphere'
 import { VoraOStar, VoraWordmark } from '../logo'
-import { VORA_SLOGAN } from '../brand'
+import { VORA_SLOGAN, VORA_TAGLINE } from '../brand'
 import { EnterChrome } from '../enter-chrome'
 import { DEFAULT_SKY_THEME, type SkyThemeId } from '../light-card-theme'
 import { voraAudio } from '../vora-audio'
@@ -150,8 +150,8 @@ export function EnterRitualScreen({
           </div>
 
           {showFrame ? (
-            <motion.p
-              className="vora-enter-headline vora-enter-ritual-address"
+            <motion.div
+              className="vora-enter-ritual-address"
               initial={false}
               animate={{
                 opacity: inviting ? 1 : 0,
@@ -162,8 +162,9 @@ export function EnterRitualScreen({
               }}
               aria-hidden={!inviting}
             >
-              {VORA_SLOGAN}
-            </motion.p>
+              <p className="vora-enter-headline">{VORA_SLOGAN}</p>
+              <p className="vora-enter-tagline">{VORA_TAGLINE}</p>
+            </motion.div>
           ) : null}
         </div>
 

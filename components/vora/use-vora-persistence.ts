@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import type { Tab } from './nav-bar'
-import { SEED_LIGHTS, dedupeLights, type Light, type NotificationPreference } from './constants'
+import { SEED_LIGHTS, createSeedLights, dedupeLights, type Light, type NotificationPreference } from './constants'
 import {
   DEFAULT_LIGHT_REMINDER,
   migratePreferenceToReminder,
@@ -104,6 +104,8 @@ export function useVoraPersistence() {
       else setStartedAt(todayIsoDate())
       if (saved.isSubscribed || saved.isMember) setIsSubscribed(true)
     } else {
+      // First visit — seed a week of past Lights so the constellation already reads.
+      setLights(createSeedLights())
       setStartedAt(todayIsoDate())
     }
     setHydrated(true)
