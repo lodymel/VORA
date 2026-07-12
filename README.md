@@ -3,7 +3,7 @@
 **Look at yourself.**  
 **Your words become stars.**
 
-by LODY STUDIO.
+by LODY
 
 ---
 
