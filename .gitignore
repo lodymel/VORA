@@ -12,6 +12,7 @@ __v0_jsx-dev-runtime.ts
 # Common ignores
 node_modules
 .next/
+out/
 .DS_Store
 .pnpm-store/
 tsconfig.tsbuildinfo
@@ -22,3 +23,15 @@ scripts/text-script.mjs
 .cursorrules
 AGENTS.md
 .cursorignore
+
+# Android / Capacitor build artifacts
+android/app/build/
+android/build/
+android/.gradle/
+android/captures/
+android/local.properties
+*.keystore
+*.jks
+android/app/*.keystore
+android/app/*.jks
+

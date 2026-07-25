@@ -32,15 +32,20 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* Self-hosted Hangul faces (see lib/fonts/gowun.css) */
+  --font-gowun-batang: 'Gowun Batang';
+  --font-gowun-dodum: 'Gowun Dodum';
   --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI',
     sans-serif;
   --font-display: var(--font-instrument), 'New York', ui-serif, Georgia, serif;
   --font-didone: var(--font-bodoni), 'Bodoni MT', Didot, 'Playfair Display', serif;
   --font-script: var(--font-pinyon), 'Snell Roundhand', cursive;
-  --font-label: 'Satoshi', var(--font-jost), ui-sans-serif, -apple-system, 'SF Pro Text', sans-serif;
+  --font-label: var(--font-satoshi), 'Satoshi', var(--font-jost), ui-sans-serif, -apple-system,
+    'SF Pro Text', sans-serif;
   /* Sky — Instrument Serif (hero) + Rosemartin (wordmark/accent) + Satoshi (UI) */
   --font-sky-label:
-    'Satoshi', 'Pretendard Variable', Pretendard, var(--font-jost), ui-sans-serif, -apple-system,
+    var(--font-satoshi), 'Satoshi', var(--font-pretendard), Pretendard, var(--font-jost),
+    ui-sans-serif, -apple-system,
     'Apple SD Gothic Neo', 'SF Pro Text', sans-serif;
   --font-sky-hero:
     var(--font-instrument), 'Instrument Serif', var(--font-gowun-batang), 'Gowun Batang', 'New York',
@@ -54,7 +59,8 @@
   --font-ko-accent:
     var(--font-gowun-dodum), 'Gowun Dodum', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
   --font-ko-label:
-    'Pretendard Variable', Pretendard, 'Satoshi', var(--font-jost), 'Apple SD Gothic Neo',
+    var(--font-pretendard), Pretendard, var(--font-satoshi), 'Satoshi', var(--font-jost),
+    'Apple SD Gothic Neo',
     sans-serif;
   --color-light: var(--light);
   --color-light-soft: var(--light-soft);
@@ -1297,7 +1303,8 @@ body[data-vora-card-open='true'] .vora-pointer-o-star:not(.vora-pointer-o-star--
   position: absolute;
   inset-inline: 0;
   top: 0;
-  z-index: 40;
+  /* Above meta sheets (80) so the logo stays tappable as home */
+  z-index: 85;
   display: flex;
   align-items: flex-end;
   justify-content: flex-start;
@@ -1337,6 +1344,9 @@ body[data-vora-card-open='true'] .vora-pointer-o-star:not(.vora-pointer-o-star--
 }
 .vora-app-header-home:hover {
   opacity: 0.78;
+}
+.vora-app-header-home--ack {
+  opacity: 0.5;
 }
 .vora-app-header-trailing {
   pointer-events: auto;
@@ -6024,11 +6034,14 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
 }
 .vora-me-scroll {
   position: relative;
+  display: flex;
+  flex-direction: column;
   min-height: 100%;
   isolation: isolate;
 }
 .vora-me-inner {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 1.85rem;
   width: 100%;
@@ -6037,7 +6050,7 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   padding:
     max(4.75rem, calc(env(safe-area-inset-top) + 3.75rem))
     max(1.15rem, var(--vora-chrome-x, 1.25rem))
-    max(7.5rem, calc(env(safe-area-inset-bottom) + 6.5rem));
+    max(7.75rem, calc(env(safe-area-inset-bottom) + 6.75rem));
 }
 .vora-me-header {
   display: flex;
@@ -6781,32 +6794,80 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   width: 1.125rem;
   height: 1.125rem;
 }
-.vora-me-footer {
+/* Me → entrance: last quiet beat — air, then two words */
+.vora-me-opening {
   display: flex;
   justify-content: center;
-  padding: 0.5rem 0.5rem 0;
+  margin-top: auto;
+  padding: 3.25rem 1rem 0.5rem;
+  border-top: 1px solid rgb(129 113 201 / 0.12);
 }
-.vora-me-footer-link {
+@media (min-width: 640px) {
+  .vora-me-opening {
+    padding-top: 3.75rem;
+  }
+}
+
+.vora-opening-again {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  width: max-content;
+  max-width: 100%;
+  padding-top: 1.35rem;
+}
+.vora-opening-again-kicker {
   margin: 0;
-  padding: 0.65rem 0.75rem;
+  font-family: var(--font-sky-label);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: rgb(61 54 88 / 0.42);
+}
+.vora-opening-again-btn {
+  margin: 0;
+  padding: 0.55rem 0.85rem;
+  min-height: 2.75rem;
   border: none;
   background: transparent;
-  font-family: var(--font-sky-label);
-  font-size: 0.9375rem;
+  font-family: var(--font-sky-accent);
+  font-size: clamp(1.15rem, 2.2vw + 0.7rem, 1.35rem);
   font-weight: 400;
-  letter-spacing: -0.01em;
-  color: var(--vora-me-link, rgb(129 113 201 / 0.88));
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+  color: rgb(61 54 88 / 0.72);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: color 0.35s ease;
+  transition: color 0.4s var(--vora-ease);
 }
-.vora-me-footer-link:active {
-  opacity: 0.65;
+.vora-opening-again-btn:active {
+  color: rgb(61 54 88 / 0.48);
+}
+.vora-opening-again-btn:focus-visible {
+  outline: none;
+  color: rgb(61 54 88 / 0.95);
 }
 @media (hover: hover) and (pointer: fine) {
-  .vora-me-footer-link:hover {
-    color: var(--vora-me-tagline, rgb(91 78 132 / 0.98));
+  .vora-opening-again-btn:hover {
+    color: rgb(61 54 88 / 0.95);
   }
+}
+[data-sky-theme='pink'] .vora-me-opening {
+  border-top-color: rgb(195 125 160 / 0.14);
+}
+[data-sky-theme='pink'] .vora-opening-again-kicker {
+  color: rgb(120 70 95 / 0.45);
+}
+[data-sky-theme='pink'] .vora-opening-again-btn {
+  color: rgb(120 70 95 / 0.72);
+}
+[data-sky-theme='pink'] .vora-opening-again-btn:active {
+  color: rgb(120 70 95 / 0.48);
+}
+[data-sky-theme='pink'] .vora-opening-again-btn:focus-visible,
+[data-sky-theme='pink'] .vora-opening-again-btn:hover {
+  color: rgb(120 70 95 / 0.95);
 }
 
 .vora-profile-section-title {
@@ -7842,4 +7903,176 @@ body[data-vora-card-open='true'] .vora-app-header {
   height: 1920px;
   pointer-events: none;
   opacity: 1;
+}
+
+/* Full policy lives in the sheet (never a flat external document jump). */
+.vora-enter-panel-sheet:has(.vora-enter-panel-policy) {
+  max-height: min(88dvh, 42rem);
+  display: flex;
+  flex-direction: column;
+}
+.vora-enter-panel-sheet:has(.vora-enter-panel-policy) .vora-enter-panel-content {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-bottom: 0.35rem;
+  gap: 0;
+}
+.vora-enter-panel-policy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.vora-enter-panel-updated {
+  margin: 0.1rem 0 0.35rem;
+  font-family: var(--font-sky-label);
+  font-size: 0.5625rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgb(221 232 255 / 0.32);
+}
+.vora-enter-panel-chapters {
+  margin-top: 0.35rem;
+}
+.vora-enter-panel-chapters .vora-legal-chapter {
+  margin: 0 0 1.35rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid rgb(221 232 255 / 0.1);
+}
+.vora-enter-panel-chapters .vora-legal-chapter:first-child {
+  margin-top: 0.25rem;
+}
+.vora-enter-panel-chapters .vora-legal-chapter-title {
+  font-size: 1.05rem;
+  color: rgb(255 250 247 / 0.9);
+}
+.vora-enter-panel-chapters .vora-legal-chapter-body p {
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  color: var(--sheet-muted);
+  max-width: 22rem;
+}
+.vora-enter-panel-chapters .vora-legal-list li {
+  font-size: 0.8125rem;
+  color: var(--sheet-muted);
+  max-width: 22rem;
+}
+.vora-enter-panel-whisper {
+  margin-top: 0.2rem !important;
+  color: rgb(221 232 255 / 0.45) !important;
+  font-size: 0.75rem !important;
+}
+
+
+/* ── Legal public pages: same sky + sheet as in-app Privacy ─ */
+html:has(.vora-legal-stage),
+body:has(.vora-legal-stage) {
+  overflow: hidden;
+  height: 100%;
+  max-height: 100dvh;
+  background: #0c0616 !important;
+}
+body:has(.vora-legal-stage).bg-background {
+  background-color: #0c0616 !important;
+}
+.vora-legal-stage {
+  position: relative;
+  min-height: 100dvh;
+  height: 100dvh;
+  overflow: hidden;
+  background: #0c0616;
+}
+.vora-legal-stage-sky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--vora-sky-gradient, linear-gradient(180deg, #12183a 0%, #2a2758 42%, #5a4a9a 78%, #3d3568 100%));
+}
+.vora-legal-stage .vora-app-header {
+  position: absolute;
+  /* Above the policy sheet so logo → home works */
+  z-index: 85;
+}
+/* Sheet already fixed; keep it above the stage sky */
+.vora-legal-panel {
+  z-index: 80;
+}
+.vora-legal-sheet-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem 0.15rem;
+  margin-top: 1.35rem;
+  padding-top: 0.85rem;
+}
+.vora-legal-sheet-meta .vora-enter-meta-link {
+  text-decoration: none;
+}
+/* Chapter styles shared by sheet + public page */
+.vora-legal-chapter {
+  margin: 0 0 1.35rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid rgb(221 232 255 / 0.1);
+}
+.vora-legal-chapter:first-child {
+  margin-top: 0.25rem;
+}
+.vora-legal-chapter-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.vora-legal-chapter-index {
+  flex: none;
+  font-family: var(--font-sky-label), sans-serif;
+  font-size: 0.5625rem;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  color: rgb(221 232 255 / 0.34);
+}
+.vora-legal-chapter-title {
+  font-family: var(--font-sky-hero), serif;
+  font-size: 1.05rem;
+  font-weight: 400;
+  line-height: 1.25;
+  color: rgb(255 250 247 / 0.9);
+  margin: 0;
+}
+.vora-legal-chapter-body p {
+  font-family: var(--font-sky-label), sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.65;
+  color: var(--sheet-muted, rgb(221 232 255 / 0.62));
+  margin: 0 0 0.75rem;
+  max-width: 22rem;
+}
+.vora-legal-chapter-body p:last-child {
+  margin-bottom: 0;
+}
+.vora-legal-list {
+  margin: 0 0 0.85rem;
+  padding-left: 1.15rem;
+}
+.vora-legal-list li {
+  font-family: var(--font-sky-label), sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--sheet-muted, rgb(221 232 255 / 0.62));
+  margin: 0 0 0.35rem;
+  max-width: 22rem;
+}
+.vora-legal-whisper {
+  margin-top: 0.2rem !important;
+  color: rgb(221 232 255 / 0.45) !important;
+  font-size: 0.75rem !important;
+  line-height: 1.6 !important;
 }

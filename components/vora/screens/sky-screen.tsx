@@ -71,6 +71,7 @@ export function SkyScreen({
   selectedRef.current = selected
 
   useEffect(() => {
+    if (homeNonce === 0) return
     setSelected(null)
     setReveal(null)
     setSkyUnderCard(false)
@@ -79,6 +80,7 @@ export function SkyScreen({
     pendingRevealAfterWrite.current = null
     pendingHold.current = null
     setAscent(null)
+    pageRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
   }, [homeNonce])
 
   useEffect(() => {

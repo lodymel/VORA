@@ -7,10 +7,12 @@ import {
   DEFAULT_SKY_THEME,
   type SkyThemeId,
 } from './light-card-theme'
+import { PRIVACY_LEDE, PRIVACY_UPDATED, PrivacyChapters } from './privacy-content'
+import { TERMS_LEDE, TERMS_UPDATED, TermsChapters } from './terms-content'
 
 const ease = [0.22, 1, 0.36, 1] as const
 
-export type EnterSheetId = 'made' | 'privacy' | 'status'
+export type EnterSheetId = 'made' | 'privacy' | 'terms' | 'status'
 
 const STATUS_LINES = [
   { label: 'Sky', value: 'Clear' },
@@ -121,16 +123,31 @@ function EnterSheetPanel({
 
           <div className="vora-enter-panel-content">
             {sheet === 'privacy' ? (
-              <>
+              <div className="vora-enter-panel-policy">
                 <p id="vora-enter-panel-title" className="vora-enter-panel-kicker">
                   Privacy
                 </p>
-                <h2 className="vora-enter-panel-headline">Your Lights stay with you.</h2>
-                <p className="vora-enter-panel-copy">
-                  Nothing is posted for you. What you write lives on this device, until you choose
-                  to share a card.
+                <h2 className="vora-enter-panel-headline">Privacy Policy</h2>
+                <p className="vora-enter-panel-copy">{PRIVACY_LEDE}</p>
+                <p className="vora-enter-panel-updated">{PRIVACY_UPDATED}</p>
+                <div className="vora-enter-panel-chapters">
+                  <PrivacyChapters whisperClassName="vora-enter-panel-whisper" />
+                </div>
+              </div>
+            ) : null}
+
+            {sheet === 'terms' ? (
+              <div className="vora-enter-panel-policy">
+                <p id="vora-enter-panel-title" className="vora-enter-panel-kicker">
+                  Terms
                 </p>
-              </>
+                <h2 className="vora-enter-panel-headline">Terms of Use</h2>
+                <p className="vora-enter-panel-copy">{TERMS_LEDE}</p>
+                <p className="vora-enter-panel-updated">{TERMS_UPDATED}</p>
+                <div className="vora-enter-panel-chapters">
+                  <TermsChapters whisperClassName="vora-enter-panel-whisper" />
+                </div>
+              </div>
             ) : null}
 
             {sheet === 'status' ? (
@@ -242,6 +259,14 @@ function useEnterSheet() {
     return () => window.removeEventListener('keydown', onKey)
   }, [sheet])
 
+  useEffect(() => {
+    function onCloseSheets() {
+      setSheet(null)
+    }
+    window.addEventListener('vora:close-sheets', onCloseSheets)
+    return () => window.removeEventListener('vora:close-sheets', onCloseSheets)
+  }, [])
+
   function openSheet(id: EnterSheetId) {
     setSheet((prev) => (prev === id ? null : id))
   }
@@ -280,6 +305,14 @@ export function EnterChrome({
             ·
           </span>
           <MetaLink
+            label="Terms"
+            active={sheet === 'terms'}
+            onClick={() => openSheet('terms')}
+          />
+          <span className="vora-enter-meta-dot" aria-hidden="true">
+            ·
+          </span>
+          <MetaLink
             label="Who made this?"
             active={sheet === 'made'}
             onClick={() => openSheet('made')}
@@ -304,42 +337,7 @@ export function EnterChrome({
   )
 }
 
-/** Me. Return to the opening ritual. */
-export function EnterMetaFooter({
-  onBeginAgain,
-}: {
-  onBeginAgain?: () => void
-}) {
-  const reduceMotion = useReducedMotion()
-  if (!onBeginAgain) return null
-
-  return (
-    <div className="vora-enter-meta-footer">
-      <p className="vora-profile-begin-kicker">Opening</p>
-      <motion.button
-        type="button"
-        className="vora-profile-begin-again"
-        onClick={onBeginAgain}
-        whileTap={{ scale: 0.97 }}
-        transition={{ duration: 0.18 }}
-      >
-        <motion.span
-          className="vora-profile-begin-star"
-          aria-hidden="true"
-          animate={
-            reduceMotion
-              ? undefined
-              : { rotate: [0, 18, -12, 0], scale: [1, 1.15, 0.95, 1] }
-          }
-          transition={{ duration: 3.8, ease: 'easeInOut', repeat: Infinity }}
-        />
-        Once more.
-      </motion.button>
-    </div>
-  )
-}
-
-/** Sits under the bottom nav. Privacy / Who made this? / Status. */
+/** Sits under the bottom nav. Privacy / Terms / Who made this? / Status. */
 export function AppMetaBar({
   tone = 'night',
   skyTheme = DEFAULT_SKY_THEME,
@@ -359,6 +357,15 @@ export function AppMetaBar({
           tone={tone}
           active={sheet === 'privacy'}
           onClick={() => openSheet('privacy')}
+        />
+        <span className="vora-enter-meta-dot" aria-hidden="true">
+          ·
+        </span>
+        <MetaLink
+          label="Terms"
+          tone={tone}
+          active={sheet === 'terms'}
+          onClick={() => openSheet('terms')}
         />
         <span className="vora-enter-meta-dot" aria-hidden="true">
           ·

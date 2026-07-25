@@ -13,7 +13,6 @@ import { addLightIfNew, getTodaysLight, hasLightToday, isSeedLight, removeLight,
 import { useVoraPersistence } from './use-vora-persistence'
 import { voraAudio } from './vora-audio'
 import { skyThemeUsesLightChrome } from './light-card-theme'
-import { cancelWebReminder, scheduleWebReminder } from './web-reminder'
 import { hasKnownWriteOwn, markWriteOwnKnown } from './write-own-hint'
 
 const fade = {
@@ -32,13 +31,10 @@ export function VoraApp() {
     setTab,
     lights,
     setLights,
-    lightReminder,
-    setLightReminder,
     skyTheme,
     setSkyTheme,
     days,
     isSubscribed,
-    setIsSubscribed,
   } = useVoraPersistence()
   const todaysLight = useMemo(() => getTodaysLight(), [])
   const [writing, setWriting] = useState(false)
@@ -54,9 +50,14 @@ export function VoraApp() {
     setWriteInvite(!hasKnownWriteOwn())
   }, [hydrated])
 
+  function closeMetaSheets() {
+    window.dispatchEvent(new Event('vora:close-sheets'))
+  }
+
   function openWriting() {
     markWriteOwnKnown()
     setWriteInvite(false)
+    closeMetaSheets()
     if (tab === 'profile') setTab('sky')
     setWriting(true)
   }
@@ -66,21 +67,13 @@ export function VoraApp() {
       if (!w) {
         markWriteOwnKnown()
         setWriteInvite(false)
+        closeMetaSheets()
         if (tab === 'profile') setTab('sky')
         return true
       }
       return false
     })
   }
-
-  useEffect(() => {
-    if (!hydrated) return
-    scheduleWebReminder({
-      reminder: lightReminder,
-      getBody: () => todaysLight,
-    })
-    return () => cancelWebReminder()
-  }, [hydrated, lightReminder, todaysLight])
 
   useEffect(() => {
     if (stage === 'app') setSoundOn(voraAudio.isEnabled())
@@ -118,12 +111,11 @@ export function VoraApp() {
   }
 
   function goHome() {
+    // Logo = Sky home: clear write/card/selection/pan, leave Me, close meta sheets.
     setWriting(false)
-    if (tab === 'sky') {
-      setSkyHomeNonce((n) => n + 1)
-      return
-    }
     setTab('sky')
+    setSkyHomeNonce((n) => n + 1)
+    closeMetaSheets()
   }
 
   function returnToGate() {
@@ -234,9 +226,6 @@ export function VoraApp() {
                       lights={lights}
                       todaysLight={todaysLight}
                       isSubscribed={isSubscribed}
-                      onSubscribe={() => setIsSubscribed(true)}
-                      lightReminder={lightReminder}
-                      onLightReminderChange={setLightReminder}
                       skyTheme={skyTheme}
                       onSkyThemeChange={setSkyTheme}
                       onReturnToGate={returnToGate}
