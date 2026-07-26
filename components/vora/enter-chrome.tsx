@@ -1,16 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import {
   DEFAULT_SKY_THEME,
   type SkyThemeId,
 } from './light-card-theme'
+import { useCoarsePointer } from './pointer-env'
 import { PRIVACY_LEDE, PRIVACY_UPDATED, PrivacyChapters } from './privacy-content'
 import { TERMS_LEDE, TERMS_UPDATED, TermsChapters } from './terms-content'
 
 const ease = [0.22, 1, 0.36, 1] as const
+/** Snappy sheet ease — cubic-bezier that stays on the GPU path */
+const sheetEase = [0.32, 0.72, 0, 1] as const
+const sheetEasePhone = [0.22, 1, 0.36, 1] as const
 
 export type EnterSheetId = 'made' | 'privacy' | 'terms' | 'status'
 
@@ -59,16 +63,25 @@ function EnterSheetPanel({
   onBeginAgain?: () => void
 }) {
   const reduceMotion = useReducedMotion()
+  const coarse = useCoarsePointer()
+  // Fixed px lift — percentage y + mid-flight layout changes caused Android snaps.
+  const lift = useMemo(() => {
+    if (typeof window === 'undefined') return 900
+    return Math.max(640, Math.round(window.innerHeight))
+  }, [])
+
   const slide = reduceMotion
-    ? { duration: 0.2, ease }
-    : { duration: 0.52, ease: [0.32, 0.72, 0, 1] as const }
+    ? { type: 'tween' as const, duration: 0.2, ease }
+    : coarse
+      ? { type: 'tween' as const, duration: 0.42, ease: sheetEasePhone }
+      : { type: 'tween' as const, duration: 0.5, ease: sheetEase }
   const scrim = reduceMotion
-    ? { duration: 0.18, ease }
-    : { duration: 0.38, ease }
+    ? { type: 'tween' as const, duration: 0.16, ease }
+    : { type: 'tween' as const, duration: coarse ? 0.32 : 0.38, ease }
 
   return (
     <motion.div
-      className="vora-enter-panel"
+      className={`vora-enter-panel${coarse ? ' vora-enter-panel--lite' : ''}`}
       data-sky-theme={skyTheme}
       role="dialog"
       aria-modal="true"
@@ -76,7 +89,6 @@ function EnterSheetPanel({
       initial={false}
       animate={{ opacity: 1 }}
       exit={{ opacity: 1 }}
-      transition={slide}
     >
       <motion.button
         type="button"
@@ -91,21 +103,26 @@ function EnterSheetPanel({
 
       <motion.div
         className="vora-enter-panel-dock"
-        initial={reduceMotion ? { opacity: 0 } : { y: '100%' }}
+        initial={reduceMotion ? { opacity: 0 } : { y: lift }}
         animate={reduceMotion ? { opacity: 1 } : { y: 0 }}
-        exit={reduceMotion ? { opacity: 0 } : { y: '100%' }}
+        exit={reduceMotion ? { opacity: 0 } : { y: lift }}
         transition={slide}
+        style={{ willChange: 'transform' }}
       >
         <aside className="vora-enter-panel-sheet">
           <div className="vora-enter-panel-wash" aria-hidden="true" />
-          <div className="vora-enter-panel-glow" aria-hidden="true" />
-          <div className="vora-enter-panel-dust" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-            <span />
-          </div>
-          <div className="vora-enter-panel-grain" aria-hidden="true" />
+          {!coarse ? (
+            <>
+              <div className="vora-enter-panel-glow" aria-hidden="true" />
+              <div className="vora-enter-panel-dust" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+                <span />
+              </div>
+              <div className="vora-enter-panel-grain" aria-hidden="true" />
+            </>
+          ) : null}
           <div className="vora-enter-panel-edge" aria-hidden="true" />
 
           <div className="vora-enter-panel-top">
@@ -157,18 +174,12 @@ function EnterSheetPanel({
                 </p>
                 <h2 className="vora-enter-panel-headline">Sky is clear.</h2>
                 <ul className="vora-enter-status-list">
-                  {STATUS_LINES.map((line, i) => (
-                    <motion.li
-                      key={line.label}
-                      className="vora-enter-status-row"
-                      initial={reduceMotion ? false : { opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, ease, delay: 0.14 + i * 0.05 }}
-                    >
+                  {STATUS_LINES.map((line) => (
+                    <li key={line.label} className="vora-enter-status-row">
                       <span className="vora-enter-status-dot" aria-hidden="true" />
                       <span className="vora-enter-status-label">{line.label}</span>
                       <span className="vora-enter-status-value">{line.value}</span>
-                    </motion.li>
+                    </li>
                   ))}
                 </ul>
               </>

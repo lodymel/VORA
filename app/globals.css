@@ -746,6 +746,58 @@
   .vora-pointer-o-star {
     display: none !important;
   }
+
+  /* Android / touch — lighter sky: keep gradient, drop live blur motion */
+  .vora-sky-atmosphere--lite .vora-sky-color-shift,
+  .vora-sky-atmosphere--lite .vora-sky-color-shift--b,
+  .vora-sky-atmosphere--lite .vora-sky-horizon-breath,
+  .vora-sky-atmosphere--lite .vora-sky-veil,
+  .vora-sky-atmosphere--lite .vora-sky-aurora,
+  .vora-sky-atmosphere--lite .vora-sky-drift,
+  .vora-sky-atmosphere--lite .vora-sky-dust--far,
+  .vora-sky-atmosphere--lite .vora-sky-dust--near,
+  .vora-sky-atmosphere--lite .vora-sky-dust-star {
+    animation: none !important;
+  }
+  .vora-sky-atmosphere--lite .vora-sky-aurora,
+  .vora-sky-atmosphere--lite .vora-sky-drift {
+    display: none;
+  }
+  .vora-sky-atmosphere--lite .vora-sky-color-shift,
+  .vora-sky-atmosphere--lite .vora-sky-color-shift--b {
+    opacity: 0.45;
+    filter: none;
+  }
+  .vora-sky-atmosphere--lite .vora-sky-horizon-breath {
+    opacity: 0.4;
+    filter: none;
+  }
+  .vora-sky-atmosphere--lite .vora-sky-veil {
+    opacity: 0.18;
+    filter: none;
+  }
+
+  /* Glass chrome is expensive over animated sky on WebView */
+  .vora-tabbar-list,
+  .vora-tabbar-liquid,
+  .vora-sky-theme-studio-done,
+  .vora-tabbar--day .vora-tabbar-list,
+  .vora-tabbar--day .vora-tabbar-liquid,
+  [data-sky-theme='pink'] .vora-tabbar--night .vora-tabbar-list {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .vora-tabbar-list,
+  .vora-sky-theme-studio-done {
+    background: rgb(22 16 48 / 0.72) !important;
+  }
+  .vora-tabbar--day .vora-tabbar-list {
+    background: rgb(255 252 255 / 0.88) !important;
+  }
+
+  .vora-constellation-star--twinkle {
+    animation: none !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1685,6 +1737,17 @@ body[data-vora-card-open='true'] .vora-pointer-o-star:not(.vora-pointer-o-star--
   width: 100%;
   pointer-events: none;
   will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+/* Phone sheet — fewer paint layers while sliding up */
+.vora-enter-panel--lite .vora-enter-panel-sheet {
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.08),
+    0 -12px 28px color-mix(in srgb, var(--vora-sky-0) 55%, transparent);
+}
+.vora-enter-panel--lite .vora-enter-panel-wash {
+  background: var(--vora-sky-1);
 }
 .vora-enter-panel-sheet {
   --sheet-ink: var(--vora-sky-fg);
@@ -4106,6 +4169,14 @@ body[data-vora-card-open='true'] .vora-pointer-o-star:not(.vora-pointer-o-star--
     radial-gradient(ellipse 70% 50% at 48% 40%, var(--vora-sky-wash-b), transparent 58%),
     radial-gradient(ellipse 55% 40% at 70% 25%, var(--vora-sky-wash-a), transparent 55%);
 }
+/* Static wash for phone lite sky — no animation, no oversized blur layers */
+.vora-sky-veil--lite {
+  inset: 0;
+  opacity: 0.34;
+  animation: none !important;
+  filter: none !important;
+  will-change: auto;
+}
 .vora-sky-atmosphere--alive .vora-sky-veil {
   animation: vora-sky-veil-drift 22s ease-in-out infinite;
 }
@@ -4632,9 +4703,9 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   touch-action: pan-y;
 }
 .vora-sky-constellation-band {
-  padding-top: calc(var(--vora-header-total) + 0.85rem);
-  /* Air between stars and the Light — don’t let the sky sit on the CTA */
-  padding-bottom: 0.85rem;
+  padding-top: calc(var(--vora-header-total) + 0.65rem);
+  /* Air between stars and the Light — keep copy from sinking toward the tab bar */
+  padding-bottom: 0.5rem;
   width: 100%;
   overflow: visible;
   flex-shrink: 0;
@@ -4680,8 +4751,8 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
 }
 .vora-sky-constellation-stage {
   position: relative;
-  /* Rem-based band — short windows shrink via max-height queries below */
-  height: 13.5rem;
+  /* Phone-first: a touch shorter so date → Light → Write sits higher optically */
+  height: 11.75rem;
   width: 100%;
   overflow: visible;
   /* Flat hit testing — perspective made star edges flicker cursors */
@@ -4738,9 +4809,9 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   padding-inline: 0;
 }
 .vora-sky-ritual--editorial {
-  /* Bias air upward — short desktop windows were sinking the Light */
-  --vora-sky-copy-y-top: 0.85rem;
-  --vora-sky-copy-y-bottom: 1.65rem;
+  /* Bias the whole ritual block slightly up — less tab-bar gravity */
+  --vora-sky-copy-y-top: 0.4rem;
+  --vora-sky-copy-y-bottom: 1.05rem;
   display: flex;
   flex: 0 0 auto;
   flex-direction: column;
@@ -4989,7 +5060,7 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  margin: 0 0 1.1rem;
+  margin: 0 0 0.85rem;
   font-family: var(--font-sky-label);
   font-size: 0.625rem;
   font-weight: 300;
@@ -5163,8 +5234,14 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   align-items: center;
   justify-content: flex-start;
   width: 100%;
-  margin-top: 2.75rem;
-  gap: 0.65rem;
+  margin-top: 2.15rem;
+  gap: 0.55rem;
+}
+@media (min-width: 640px) {
+  .vora-sky-ritual-actions {
+    margin-top: 2.55rem;
+    gap: 0.65rem;
+  }
 }
 .vora-sky-ritual-action-primary,
 .vora-sky-ritual-action-secondary {

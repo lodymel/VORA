@@ -57,9 +57,11 @@ export function SkyTodaysLightPanel({
   const [releaseArmed, setReleaseArmed] = useState(false)
   const [writeInvite, setWriteInvite] = useState(false)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const caretToEndRef = useRef(false)
   const wasInSky = useRef(alreadyInSky)
   const isToday = !viewingLight && !isWriting
-  const inSky = isToday && (alreadyInSky || savedFlash)
+  // Flash is visual only — never keep Hold/Release chrome after the Light leaves the sky.
+  const inSky = isToday && alreadyInSky
   const releaseTarget = viewingLight ?? (isToday && inSky ? heldTodayLight : null)
   const displaySentence = viewingLight?.sentence ?? todaysLight
   const dateStamp = useMemo(() => formatSkyDate(viewingLight), [viewingLight])
@@ -79,7 +81,11 @@ export function SkyTodaysLightPanel({
   }, [isWriting])
 
   useEffect(() => {
-    if (!wasInSky.current && alreadyInSky && isToday) setSavedFlash(true)
+    if (!wasInSky.current && alreadyInSky && isToday) {
+      setSavedFlash(true)
+    } else if (wasInSky.current && !alreadyInSky) {
+      setSavedFlash(false)
+    }
     wasInSky.current = alreadyInSky
   }, [alreadyInSky, isToday])
 
@@ -101,7 +107,14 @@ export function SkyTodaysLightPanel({
 
   useLayoutEffect(() => {
     if (!isWriting) return
-    resizeDiaryField(inputRef.current)
+    const el = inputRef.current
+    resizeDiaryField(el)
+    if (caretToEndRef.current && el) {
+      caretToEndRef.current = false
+      const end = el.value.length
+      el.focus()
+      el.setSelectionRange(end, end)
+    }
   }, [draft, isWriting, writingHangul])
 
   useEffect(() => {
@@ -129,11 +142,10 @@ export function SkyTodaysLightPanel({
   function handlePlanet(planet: WritePlanet) {
     if (ascending) return
     setPlanetId(planet.id)
-    setDraft((prev) => pickCategoryLight(planet.id, prev).slice(0, MAX_DRAFT))
-    window.requestAnimationFrame(() => {
-      resizeDiaryField(inputRef.current)
-      inputRef.current?.focus()
-    })
+    const next = pickCategoryLight(planet.id, draft).slice(0, MAX_DRAFT)
+    // Android/WebView leave the caret at 0 after programmatic fill — pin to end after commit.
+    caretToEndRef.current = true
+    setDraft(next)
   }
 
   function handleReleaseClick() {

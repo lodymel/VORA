@@ -1,6 +1,6 @@
 /** Shared Privacy Policy for sheet and public page. Calm, plain legal English. */
 
-export const PRIVACY_UPDATED = 'July 25, 2026'
+export const PRIVACY_UPDATED = 'July 26, 2026'
 
 export const PRIVACY_LEDE =
   'VORA is provided by LODY STUDIO. This policy explains what information the app handles and how.'
@@ -39,7 +39,10 @@ export function PrivacyChapters({ whisperClassName }: { whisperClassName?: strin
             <li>Sentences you write (“Lights”)</li>
             <li>Sky theme and similar preferences</li>
             <li>Basic app state (such as whether you have entered the main experience)</li>
-            <li>Subscription status once store billing is connected</li>
+            <li>
+              Subscription or entitlement status on your device, if and when store billing is
+              connected in a future update
+            </li>
           </ul>
           <p>
             We do not operate a VORA login in this version. We do not upload your Lights to LODY
@@ -63,8 +66,8 @@ export function PrivacyChapters({ whisperClassName }: { whisperClassName?: strin
           </p>
           <p>
             You can remove locally stored data by clearing the app or site data, or by uninstalling
-            VORA. Subscriptions purchased through Google Play (or another app store) are managed in
-            your store account settings.
+            VORA. If you later purchase a subscription through Google Play (or another app store),
+            that purchase is managed in your store account settings.
           </p>
         </div>
       </section>
@@ -78,9 +81,10 @@ export function PrivacyChapters({ whisperClassName }: { whisperClassName?: strin
         </header>
         <div className="vora-legal-chapter-body">
           <p>
-            Paid features (VORA+) are intended to be processed by the platform store (for example
-            Google Play). Payment card details are handled by the store and its payment partners, not
-            entered into VORA directly.
+            VORA may offer paid features (VORA+) in the future. When that happens, purchases are
+            intended to be processed by the platform store (for example Google Play Billing). Payment
+            card details are handled by the store and its payment partners, not entered into VORA
+            directly. The current version does not process payments inside the app.
           </p>
         </div>
       </section>

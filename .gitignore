@@ -30,6 +30,7 @@ android/build/
 android/.gradle/
 android/captures/
 android/local.properties
+android/key.properties
 *.keystore
 *.jks
 android/app/*.keystore

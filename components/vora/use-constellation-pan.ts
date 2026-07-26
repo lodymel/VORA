@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
+import { isCoarsePointer } from './pointer-env'
 
 export type WorldScale = {
   x: number
@@ -22,8 +23,13 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
 }
 
-function writeWorldTransform(el: HTMLElement | null, x: number, y: number) {
+function writeWorldTransform(el: HTMLElement | null, x: number, y: number, flat: boolean) {
   if (!el) return
+  // Phone: pure 2D pan — 3D tilt is too expensive for Android WebView.
+  if (flat) {
+    el.style.transform = `translate3d(calc(-50% + ${x}px), calc(-50% + ${y}px), 0)`
+    return
+  }
   // Quiet cinematic tilt — explore as graphic motion, not UI chrome.
   // Skip tiny rotates: 3D + perspective makes star hit-testing flicker the cursor.
   const yaw = clamp(x * 0.01, -2.4, 2.4)
@@ -58,6 +64,7 @@ export function useConstellationPan(
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [explore, setExplore] = useState({ x: 0, y: 0 })
   const panRef = useRef(pan)
+  const flatRef = useRef(false)
   const didDrag = useRef(false)
   const dragging = useRef(false)
   const pointerId = useRef<number | null>(null)
@@ -68,6 +75,10 @@ export function useConstellationPan(
   const exploreFrame = useRef(0)
 
   panRef.current = pan
+
+  useEffect(() => {
+    flatRef.current = isCoarsePointer()
+  }, [])
 
   const boundsFor = useCallback(
     (el: HTMLElement | null) => {
@@ -87,6 +98,8 @@ export function useConstellationPan(
   )
 
   const publishExplore = useCallback((x: number, y: number) => {
+    // Touch devices skip atmosphere parallax — don't re-render Sky each frame.
+    if (flatRef.current) return
     if (exploreFrame.current) return
     exploreFrame.current = window.requestAnimationFrame(() => {
       exploreFrame.current = 0
@@ -106,7 +119,7 @@ export function useConstellationPan(
   const applyPan = useCallback(
     (x: number, y: number, commit = false) => {
       panRef.current = { x, y }
-      writeWorldTransform(worldRef.current, x, y)
+      writeWorldTransform(worldRef.current, x, y, flatRef.current)
       publishExplore(x, y)
       if (commit) setPan({ x, y })
     },

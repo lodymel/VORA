@@ -25,4 +25,4 @@ npx cap sync android
 
 echo ""
 echo "AAB: android/app/build/outputs/bundle/release/app-release.aab"
-echo "Note: currently debug-signed for pipeline proof. Add a Play upload keystore before store release."
+echo "Requires android/key.properties (see android/key.properties.example)."

@@ -1,0 +1,4 @@
+storePassword=YOUR_KEYSTORE_PASSWORD
+keyPassword=YOUR_KEYSTORE_PASSWORD
+keyAlias=vora
+storeFile=/absolute/path/to/vora-upload.jks

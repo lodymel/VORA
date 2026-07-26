@@ -1,6 +1,6 @@
 /** Shared Terms of Use for the public page. Calm, plain legal English. */
 
-export const TERMS_UPDATED = 'July 25, 2026'
+export const TERMS_UPDATED = 'July 26, 2026'
 
 export const TERMS_LEDE =
   'These Terms of Use govern your use of VORA, an app by LODY STUDIO. By using VORA, you agree to these Terms.'
@@ -65,13 +65,19 @@ export function TermsChapters({ whisperClassName }: { whisperClassName?: string 
         </header>
         <div className="vora-legal-chapter-body">
           <p>
-            Some features may be offered as paid subscriptions (VORA+) through an app store such as
-            Google Play. Price, free trial length (if any), and renewal terms are shown in the store
-            purchase flow before you confirm.
+            Some features may later be offered as paid subscriptions (VORA+) through an app store
+            such as Google Play. The current version does not require a purchase to use the core
+            experience. If a subscription is offered, price, free trial length (if any), and renewal
+            terms will be shown in the store purchase flow before you confirm.
           </p>
           <ul className="vora-legal-list">
-            <li>Subscriptions renew automatically unless you cancel in your store account settings</li>
-            <li>If a free trial is offered, it converts to a paid plan unless cancelled before it ends</li>
+            <li>
+              If you subscribe, renewals are automatic unless you cancel in your store account
+              settings
+            </li>
+            <li>
+              If a free trial is offered, it converts to a paid plan unless cancelled before it ends
+            </li>
             <li>Refunds are handled under the applicable store’s refund policies</li>
           </ul>
         </div>

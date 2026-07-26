@@ -20,6 +20,7 @@ let ambientSource: MediaElementAudioSourceNode | null = null
 let ambientGain: GainNode | null = null
 let enabled = false
 let started = false
+let visibilityBound = false
 
 function loadEnabled(): boolean {
   if (typeof window === 'undefined') return true
@@ -252,6 +253,22 @@ const CUE_PLAY: Record<Cue, () => void> = {
   spark: playSpark,
 }
 
+function bindVisibilityPause() {
+  if (typeof document === 'undefined' || visibilityBound) return
+  visibilityBound = true
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      try {
+        ambientEl?.pause()
+      } catch {
+        // ignore
+      }
+      return
+    }
+    if (enabled && started) void startAmbient()
+  })
+}
+
 export const voraAudio = {
   isEnabled() {
     return enabled
@@ -259,6 +276,7 @@ export const voraAudio = {
 
   hydrate() {
     enabled = loadEnabled()
+    bindVisibilityPause()
     return enabled
   },
 
