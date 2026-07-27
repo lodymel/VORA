@@ -3,13 +3,9 @@
 import { motion } from 'motion/react'
 import { AppMetaBar } from './enter-chrome'
 import { DEFAULT_SKY_THEME, type SkyThemeId } from './light-card-theme'
+import { useVoraLocale } from './vora-locale'
 
 export type Tab = 'sky' | 'profile'
-
-const items: { id: Tab; label: string }[] = [
-  { id: 'sky', label: 'Sky' },
-  { id: 'profile', label: 'Me' },
-]
 
 /** Soft liquid settle — weight in the middle, quiet land */
 const liquidSpring = {
@@ -26,14 +22,22 @@ export function NavBar({
   tone = 'dark',
   skyTheme = DEFAULT_SKY_THEME,
   onBeginAgain,
+  locked = false,
 }: {
   active: Tab
   onChange: (t: Tab) => void
   tone?: 'light' | 'dark'
   skyTheme?: SkyThemeId
   onBeginAgain?: () => void
+  /** Soft-lock tabs during Hold ascent so the Light can land. */
+  locked?: boolean
 }) {
   const dark = tone === 'dark'
+  const { t } = useVoraLocale()
+  const items: { id: Tab; label: string }[] = [
+    { id: 'sky', label: t.tabSky },
+    { id: 'profile', label: t.tabMe },
+  ]
   const index = Math.max(
     0,
     items.findIndex((item) => item.id === active),
@@ -63,7 +67,11 @@ export function NavBar({
               type="button"
               role="tab"
               aria-selected={current}
-              onClick={() => onChange(id)}
+              disabled={locked && !current}
+              onClick={() => {
+                if (locked) return
+                onChange(id)
+              }}
               className={`vora-tabbar-item ${current ? 'vora-tabbar-item--current' : ''}`}
             >
               <span className="vora-tabbar-label">{label}</span>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="vora-tile" x1="512" y1="0" x2="512" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#12183a"/>
+      <stop offset="42%" stop-color="#2a2758"/>
+      <stop offset="72%" stop-color="#5a4a9a"/>
+      <stop offset="100%" stop-color="#8171c9"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#vora-tile)"/>
+  <g transform="translate(512 512) scale(14.933333) translate(-24 -24)">
+    <path
+      d="M24 8 C24.55 15.2 32.8 23.45 40 24 C32.8 24.55 24.55 32.8 24 40 C23.45 32.8 15.2 24.55 8 24 C15.2 23.45 23.45 15.2 24 8 Z"
+      fill="#fffaf7"
+    />
+  </g>
+</svg>

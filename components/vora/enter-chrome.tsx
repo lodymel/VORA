@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import {
@@ -10,11 +10,11 @@ import {
 import { useCoarsePointer } from './pointer-env'
 import { PRIVACY_LEDE, PRIVACY_UPDATED, PrivacyChapters } from './privacy-content'
 import { TERMS_LEDE, TERMS_UPDATED, TermsChapters } from './terms-content'
+import { useVoraLocale } from './vora-locale'
 
 const ease = [0.22, 1, 0.36, 1] as const
-/** Snappy sheet ease — cubic-bezier that stays on the GPU path */
+/** iOS-sheet dismiss — decisive, no bounce */
 const sheetEase = [0.32, 0.72, 0, 1] as const
-const sheetEasePhone = [0.22, 1, 0.36, 1] as const
 
 export type EnterSheetId = 'made' | 'privacy' | 'terms' | 'status'
 
@@ -64,87 +64,89 @@ function EnterSheetPanel({
 }) {
   const reduceMotion = useReducedMotion()
   const coarse = useCoarsePointer()
-  // Fixed px lift — percentage y + mid-flight layout changes caused Android snaps.
+  const { t } = useVoraLocale()
+  // Freeze content for this mount — never swap copy mid-dismiss.
+  const lockedSheet = useRef(sheet).current
   const lift = useMemo(() => {
     if (typeof window === 'undefined') return 900
-    return Math.max(640, Math.round(window.innerHeight))
+    return Math.max(720, Math.round(window.innerHeight + 48))
   }, [])
-
   const slide = reduceMotion
-    ? { type: 'tween' as const, duration: 0.2, ease }
-    : coarse
-      ? { type: 'tween' as const, duration: 0.42, ease: sheetEasePhone }
-      : { type: 'tween' as const, duration: 0.5, ease: sheetEase }
-  const scrim = reduceMotion
-    ? { type: 'tween' as const, duration: 0.16, ease }
-    : { type: 'tween' as const, duration: coarse ? 0.32 : 0.38, ease }
+    ? { type: 'tween' as const, duration: 0.18, ease }
+    : {
+        type: 'tween' as const,
+        duration: coarse ? 0.34 : 0.4,
+        ease: sheetEase,
+      }
+  const scrimFade = reduceMotion
+    ? { type: 'tween' as const, duration: 0.14, ease }
+    : { type: 'tween' as const, duration: coarse ? 0.26 : 0.32, ease }
 
   return (
     <motion.div
       className={`vora-enter-panel${coarse ? ' vora-enter-panel--lite' : ''}`}
       data-sky-theme={skyTheme}
+      data-vora-sheet="opaque-slide-v2"
       role="dialog"
       aria-modal="true"
       aria-labelledby="vora-enter-panel-title"
+      // Presence host only — stay fully opaque so ink never ghosts through.
       initial={false}
       animate={{ opacity: 1 }}
       exit={{ opacity: 1 }}
+      transition={slide}
     >
+      {/* Scrim fades alone — never the sheet ink */}
       <motion.button
         type="button"
         className="vora-enter-panel-scrim"
-        aria-label="Close"
+        aria-label={t.close}
         onClick={onClose}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={scrim}
+        transition={scrimFade}
       />
 
+      {/* Sheet: transform only. Opacity on dismiss = text ghosting. */}
       <motion.div
         className="vora-enter-panel-dock"
-        initial={reduceMotion ? { opacity: 0 } : { y: lift }}
-        animate={reduceMotion ? { opacity: 1 } : { y: 0 }}
-        exit={reduceMotion ? { opacity: 0 } : { y: lift }}
+        initial={reduceMotion ? false : { y: lift }}
+        animate={{ y: 0 }}
+        exit={reduceMotion ? undefined : { y: lift }}
         transition={slide}
         style={{ willChange: 'transform' }}
       >
         <aside className="vora-enter-panel-sheet">
           <div className="vora-enter-panel-wash" aria-hidden="true" />
-          {!coarse ? (
-            <>
-              <div className="vora-enter-panel-glow" aria-hidden="true" />
-              <div className="vora-enter-panel-dust" aria-hidden="true">
-                <span />
-                <span />
-                <span />
-                <span />
-              </div>
-              <div className="vora-enter-panel-grain" aria-hidden="true" />
-            </>
-          ) : null}
+          <div className="vora-enter-panel-glow" aria-hidden="true" />
+          <div className="vora-enter-panel-dust" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
+          <div className="vora-enter-panel-grain" aria-hidden="true" />
           <div className="vora-enter-panel-edge" aria-hidden="true" />
 
           <div className="vora-enter-panel-top">
-            <motion.button
+            <button
               type="button"
               className="vora-enter-panel-close"
               onClick={onClose}
-              aria-label="Close"
-              whileTap={{ opacity: 0.55 }}
-              transition={{ duration: 0.16 }}
+              aria-label={t.close}
             >
               <span aria-hidden="true">×</span>
-            </motion.button>
+            </button>
           </div>
 
           <div className="vora-enter-panel-content">
-            {sheet === 'privacy' ? (
+            {lockedSheet === 'privacy' ? (
               <div className="vora-enter-panel-policy">
                 <p id="vora-enter-panel-title" className="vora-enter-panel-kicker">
-                  Privacy
+                  {t.privacy}
                 </p>
-                <h2 className="vora-enter-panel-headline">Privacy Policy</h2>
+                <h2 className="vora-enter-panel-headline">{t.privacyPolicy}</h2>
                 <p className="vora-enter-panel-copy">{PRIVACY_LEDE}</p>
                 <p className="vora-enter-panel-updated">{PRIVACY_UPDATED}</p>
                 <div className="vora-enter-panel-chapters">
@@ -153,12 +155,12 @@ function EnterSheetPanel({
               </div>
             ) : null}
 
-            {sheet === 'terms' ? (
+            {lockedSheet === 'terms' ? (
               <div className="vora-enter-panel-policy">
                 <p id="vora-enter-panel-title" className="vora-enter-panel-kicker">
-                  Terms
+                  {t.terms}
                 </p>
-                <h2 className="vora-enter-panel-headline">Terms of Use</h2>
+                <h2 className="vora-enter-panel-headline">{t.termsOfUse}</h2>
                 <p className="vora-enter-panel-copy">{TERMS_LEDE}</p>
                 <p className="vora-enter-panel-updated">{TERMS_UPDATED}</p>
                 <div className="vora-enter-panel-chapters">
@@ -167,12 +169,12 @@ function EnterSheetPanel({
               </div>
             ) : null}
 
-            {sheet === 'status' ? (
+            {lockedSheet === 'status' ? (
               <>
                 <p id="vora-enter-panel-title" className="vora-enter-panel-kicker">
-                  Status
+                  {t.status}
                 </p>
-                <h2 className="vora-enter-panel-headline">Sky is clear.</h2>
+                <h2 className="vora-enter-panel-headline">{t.skyClear}</h2>
                 <ul className="vora-enter-status-list">
                   {STATUS_LINES.map((line) => (
                     <li key={line.label} className="vora-enter-status-row">
@@ -185,34 +187,32 @@ function EnterSheetPanel({
               </>
             ) : null}
 
-            {sheet === 'made' ? (
+            {lockedSheet === 'made' ? (
               <>
                 <p id="vora-enter-panel-title" className="vora-enter-panel-kicker">
-                  Who made this?
+                  {t.whoMade}
                 </p>
                 <h2 className="vora-enter-panel-headline">
                   <span className="vora-enter-panel-brand">VORA</span>
                   <span className="vora-enter-panel-by"> by LODY STUDIO.</span>
                 </h2>
                 <p className="vora-enter-panel-copy vora-enter-panel-copy--verse">
-                  Look at yourself.
+                  {t.slogan}
                   {'\n'}
-                  Your words become stars.
+                  {t.tagline}
                 </p>
                 {onBeginAgain ? (
-                  <motion.button
+                  <button
                     type="button"
                     className="vora-enter-panel-begin"
                     onClick={() => {
                       onClose()
                       onBeginAgain()
                     }}
-                    whileTap={{ opacity: 0.7 }}
-                    transition={{ duration: 0.16 }}
                   >
                     <span className="vora-enter-panel-begin-star" aria-hidden="true" />
-                    Once more.
-                  </motion.button>
+                    {t.onceMore}
+                  </button>
                 ) : null}
               </>
             ) : null}
@@ -224,30 +224,45 @@ function EnterSheetPanel({
 }
 
 function SheetPortal({
+  open,
   sheet,
   skyTheme,
   onClose,
+  onExitComplete,
   onBeginAgain,
 }: {
+  open: boolean
   sheet: EnterSheetId | null
   skyTheme: SkyThemeId
   onClose: () => void
+  onExitComplete: () => void
   onBeginAgain?: () => void
 }) {
   const [mounted, setMounted] = useState(false)
+  const frozen = useRef<EnterSheetId | null>(sheet)
+  if (sheet) frozen.current = sheet
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
+  useEffect(() => {
+    if (!open) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [open])
+
   if (!mounted) return null
 
   return createPortal(
-    <AnimatePresence>
-      {sheet ? (
+    <AnimatePresence mode="wait" onExitComplete={onExitComplete}>
+      {open && frozen.current ? (
         <EnterSheetPanel
-          key="vora-meta-sheet"
-          sheet={sheet}
+          key={frozen.current}
+          sheet={frozen.current}
           skyTheme={skyTheme}
           onClose={onClose}
           onBeginAgain={onBeginAgain}
@@ -259,30 +274,44 @@ function SheetPortal({
 }
 
 function useEnterSheet() {
+  const [open, setOpen] = useState(false)
   const [sheet, setSheet] = useState<EnterSheetId | null>(null)
 
   useEffect(() => {
-    if (!sheet) return
+    if (!open) return
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setSheet(null)
+      if (e.key === 'Escape') setOpen(false)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [sheet])
+  }, [open])
 
   useEffect(() => {
     function onCloseSheets() {
-      setSheet(null)
+      setOpen(false)
     }
     window.addEventListener('vora:close-sheets', onCloseSheets)
     return () => window.removeEventListener('vora:close-sheets', onCloseSheets)
   }, [])
 
   function openSheet(id: EnterSheetId) {
-    setSheet((prev) => (prev === id ? null : id))
+    if (open && sheet === id) {
+      setOpen(false)
+      return
+    }
+    setSheet(id)
+    setOpen(true)
   }
 
-  return { sheet, setSheet, openSheet }
+  function closeSheet() {
+    setOpen(false)
+  }
+
+  function clearSheet() {
+    if (!open) setSheet(null)
+  }
+
+  return { open, sheet, openSheet, closeSheet, clearSheet }
 }
 
 /** Gate chrome. Same bottom meta as the main app. */
@@ -294,7 +323,8 @@ export function EnterChrome({
   skyTheme?: SkyThemeId
 }) {
   const reduceMotion = useReducedMotion()
-  const { sheet, setSheet, openSheet } = useEnterSheet()
+  const { open, sheet, openSheet, closeSheet, clearSheet } = useEnterSheet()
+  const { t } = useVoraLocale()
 
   if (!visible) return null
 
@@ -308,7 +338,7 @@ export function EnterChrome({
       >
         <div className="vora-enter-chrome-meta">
           <MetaLink
-            label="Privacy"
+            label={t.privacy}
             active={sheet === 'privacy'}
             onClick={() => openSheet('privacy')}
           />
@@ -316,7 +346,7 @@ export function EnterChrome({
             ·
           </span>
           <MetaLink
-            label="Terms"
+            label={t.terms}
             active={sheet === 'terms'}
             onClick={() => openSheet('terms')}
           />
@@ -324,7 +354,7 @@ export function EnterChrome({
             ·
           </span>
           <MetaLink
-            label="Who made this?"
+            label={t.whoMade}
             active={sheet === 'made'}
             onClick={() => openSheet('made')}
           />
@@ -332,7 +362,7 @@ export function EnterChrome({
             ·
           </span>
           <MetaLink
-            label="Status"
+            label={t.status}
             active={sheet === 'status'}
             onClick={() => openSheet('status')}
           />
@@ -340,9 +370,11 @@ export function EnterChrome({
       </motion.div>
 
       <SheetPortal
+        open={open}
         sheet={sheet}
         skyTheme={skyTheme}
-        onClose={() => setSheet(null)}
+        onClose={closeSheet}
+        onExitComplete={clearSheet}
       />
     </>
   )
@@ -358,13 +390,14 @@ export function AppMetaBar({
   skyTheme?: SkyThemeId
   onBeginAgain?: () => void
 }) {
-  const { sheet, setSheet, openSheet } = useEnterSheet()
+  const { open, sheet, openSheet, closeSheet, clearSheet } = useEnterSheet()
+  const { t } = useVoraLocale()
 
   return (
     <>
       <div className={`vora-app-meta-bar vora-app-meta-bar--${tone}`}>
         <MetaLink
-          label="Privacy"
+          label={t.privacy}
           tone={tone}
           active={sheet === 'privacy'}
           onClick={() => openSheet('privacy')}
@@ -373,7 +406,7 @@ export function AppMetaBar({
           ·
         </span>
         <MetaLink
-          label="Terms"
+          label={t.terms}
           tone={tone}
           active={sheet === 'terms'}
           onClick={() => openSheet('terms')}
@@ -382,7 +415,7 @@ export function AppMetaBar({
           ·
         </span>
         <MetaLink
-          label="Who made this?"
+          label={t.whoMade}
           tone={tone}
           active={sheet === 'made'}
           onClick={() => openSheet('made')}
@@ -391,16 +424,18 @@ export function AppMetaBar({
           ·
         </span>
         <MetaLink
-          label="Status"
+          label={t.status}
           tone={tone}
           active={sheet === 'status'}
           onClick={() => openSheet('status')}
         />
       </div>
       <SheetPortal
+        open={open}
         sheet={sheet}
         skyTheme={skyTheme}
-        onClose={() => setSheet(null)}
+        onClose={closeSheet}
+        onExitComplete={clearSheet}
         onBeginAgain={onBeginAgain}
       />
     </>

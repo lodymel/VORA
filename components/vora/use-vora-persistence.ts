@@ -20,6 +20,7 @@ import {
   normalizeSkyThemeId,
   type SkyThemeId,
 } from './light-card-theme'
+import { normalizeLocale, type VoraLocale } from './locale'
 
 export type AppStage = 'splash' | 'onboarding' | 'app'
 
@@ -41,6 +42,8 @@ type PersistedState = {
   isMember?: boolean
   /** Default constellation revision — refresh seed-only skies when bumped. */
   skySeedRevision?: number
+  /** App language — gates Hangul Hold + UI copy. */
+  locale?: VoraLocale
 }
 
 function todayIsoDate() {
@@ -93,20 +96,27 @@ export function useVoraPersistence() {
   const [hydrated, setHydrated] = useState(false)
   const [stage, setStage] = useState<AppStage>('splash')
   const [tab, setTab] = useState<Tab>('sky')
-  // Default sky: seven category Lights across today and the two days before.
+  // Default sky: seven Today's Star seeds across recent days.
   const [lights, setLights] = useState<Light[]>(() => createSeedLights())
   const [lightReminder, setLightReminder] = useState<LightReminder>(DEFAULT_LIGHT_REMINDER)
   const [skyTheme, setSkyTheme] = useState<SkyThemeId>(DEFAULT_SKY_THEME)
   const [startedAt, setStartedAt] = useState(todayIsoDate)
   const [isSubscribed, setIsSubscribed] = useState(false)
+  const [locale, setLocale] = useState<VoraLocale>('en')
 
   useEffect(() => {
     const saved = loadState()
     if (saved) {
       setStage(saved.stage === 'app' ? 'app' : 'splash')
       setTab(saved.tab === 'profile' ? 'profile' : 'sky')
+      const nextLocale = saved.locale
+        ? normalizeLocale(saved.locale)
+        : typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('ko')
+          ? 'ko'
+          : 'en'
+      setLocale(nextLocale)
       // Always resolve — restores the default seven when the sky went sparse.
-      setLights(resolveSkyLights(saved.lights))
+      setLights(resolveSkyLights(saved.lights, { locale: nextLocale }))
       setLightReminder(resolveReminder(saved))
       const theme = normalizeSkyThemeId(saved.skyTheme)
       if (theme) setSkyTheme(theme)
@@ -114,7 +124,12 @@ export function useVoraPersistence() {
       else setStartedAt(todayIsoDate())
       if (saved.isSubscribed || saved.isMember) setIsSubscribed(true)
     } else {
-      setLights(createSeedLights())
+      const nextLocale =
+        typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('ko')
+          ? 'ko'
+          : 'en'
+      setLocale(nextLocale)
+      setLights(createSeedLights(new Date(), nextLocale))
       setStartedAt(todayIsoDate())
     }
     setHydrated(true)
@@ -130,9 +145,10 @@ export function useVoraPersistence() {
       skyTheme,
       startedAt,
       isSubscribed,
+      locale,
       skySeedRevision: SKY_SEED_REVISION,
     })
-  }, [hydrated, stage, tab, lights, lightReminder, skyTheme, startedAt, isSubscribed])
+  }, [hydrated, stage, tab, lights, lightReminder, skyTheme, startedAt, isSubscribed, locale])
 
   return {
     hydrated,
@@ -150,5 +166,7 @@ export function useVoraPersistence() {
     days: daysWithVora(startedAt),
     isSubscribed,
     setIsSubscribed,
+    locale,
+    setLocale,
   }
 }

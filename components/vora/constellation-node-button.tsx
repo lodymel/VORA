@@ -4,6 +4,7 @@ import { ConstellationStar } from './constellation-star'
 import { formatStarDateLabel } from './sky-date'
 import type { Light } from './constants'
 import type { MouseEvent } from 'react'
+import { useVoraLocale } from './vora-locale'
 
 const HIT = 44 // px — fixed seat, centered with margins (no transform)
 
@@ -58,6 +59,9 @@ export function ConstellationNodeButton({
   index: number
   onToggle: (origin: { x: number; y: number }) => void
 }) {
+  const { locale } = useVoraLocale()
+  const dateLabel = formatStarDateLabel(light, locale)
+
   function handleClick(event: MouseEvent<HTMLButtonElement>) {
     const rect = event.currentTarget.getBoundingClientRect()
     onToggle({
@@ -85,11 +89,11 @@ export function ConstellationNodeButton({
         opacity: dimmed ? 0.48 : 1,
         transitionDelay: `${Math.min(index * 0.06, 0.45)}s`,
       }}
-      aria-label={`${formatStarDateLabel(light)}: ${light.sentence}`}
+      aria-label={`${dateLabel}: ${light.sentence}`}
       aria-pressed={active}
     >
       <span className="vora-constellation-node-date" aria-hidden="true">
-        {formatStarDateLabel(light)}
+        {dateLabel}
       </span>
       <span className="vora-constellation-node-shimmer" aria-hidden="true" />
       <ConstellationStar

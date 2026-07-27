@@ -52,7 +52,7 @@ export function SkyHoldAscent({
         x: [0, dx * 0.15, dx * 0.55, dx],
         y: [0, dy * 0.08, dy * 0.45, dy],
       }}
-      transition={{ duration: 1.65, ease, times: [0, 0.18, 0.55, 0.82, 1] }}
+      transition={{ duration: 1.15, ease, times: [0, 0.18, 0.55, 0.82, 1] }}
       onAnimationComplete={finish}
       aria-hidden="true"
     >

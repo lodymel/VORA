@@ -1,18 +1,16 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { AnimatePresence, motion } from 'motion/react'
-import { hasMeaningfulContent } from './distill-reflection'
+import { motion } from 'motion/react'
+import { hasMeaningfulContent, normalizeLightSentence } from './distill-reflection'
 import { getAlbumTypoLines, MirrorTodaysLight } from './mirror-todays-light'
 import { formatSkyDate } from './sky-date'
-import { pickCategoryLight, type Light } from './constants'
-import {
-  WriteKeywordPlanets,
-  type WritePlanet,
-  type WritePlanetId,
-} from './write-keyword-planets'
+import type { Light } from './constants'
 import { hasKnownWriteOwn, markWriteOwnKnown } from './write-own-hint'
 import { hasHangul } from './text-script'
+import { allowsHangul } from './locale'
+import { useVoraLocale } from './vora-locale'
+import { useKeyboardInset } from './use-keyboard-inset'
 
 const MAX_DRAFT = 280
 const WRITE_EASE = [0.22, 1, 0.36, 1] as const
@@ -21,11 +19,13 @@ const WRITE_FADE = { duration: 0.55, ease: WRITE_EASE }
 
 function resizeDiaryField(el: HTMLTextAreaElement | null) {
   if (!el) return
-  el.style.height = '0px'
-  el.style.height = `${el.scrollHeight}px`
+  // Grow with wrapped lines — never leave a one-line chip that scrolls sideways.
+  el.style.height = 'auto'
+  const next = Math.max(el.scrollHeight, el.clientHeight)
+  el.style.height = `${next}px`
 }
 
-/** Today&apos;s Light hero — diary write, browse stars, hold ritual. */
+/** Today's Star hero — diary write, browse stars, hold ritual. */
 export function SkyTodaysLightPanel({
   todaysLight,
   alreadyInSky = false,
@@ -34,10 +34,14 @@ export function SkyTodaysLightPanel({
   isWriting = false,
   ascending = false,
   skyBeganWhisper = false,
+  quietAfterRelease = false,
+  draft = '',
+  onDraftChange,
   onHoldLight,
   onWriteOwn,
   onCancelWrite,
   onDeleteLight,
+  isDuplicateToday = false,
 }: {
   todaysLight: string
   alreadyInSky?: boolean
@@ -46,36 +50,65 @@ export function SkyTodaysLightPanel({
   isWriting?: boolean
   ascending?: boolean
   skyBeganWhisper?: boolean
+  /** Last today Light was Released — rest the hero; don’t re-show Hold on the same line. */
+  quietAfterRelease?: boolean
+  /** Lifted draft — survives leaving Write without discard. */
+  draft?: string
+  onDraftChange?: (next: string) => void
   onHoldLight?: (sentence: string, source: 'today' | 'diary') => void
   onWriteOwn?: () => void
   onCancelWrite?: () => void
   onDeleteLight?: (id: string) => void
+  /** Draft matches a Light already held today. */
+  isDuplicateToday?: boolean
 }) {
+  const { locale, setLocale, t } = useVoraLocale()
+  useKeyboardInset(isWriting)
+
   const [savedFlash, setSavedFlash] = useState(false)
-  const [draft, setDraft] = useState('')
-  const [planetId, setPlanetId] = useState<WritePlanetId | null>(null)
   const [releaseArmed, setReleaseArmed] = useState(false)
+  const [discardArmed, setDiscardArmed] = useState(false)
   const [writeInvite, setWriteInvite] = useState(false)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const caretToEndRef = useRef(false)
   const wasInSky = useRef(alreadyInSky)
   const isToday = !viewingLight && !isWriting
+  const isQuiet = isToday && quietAfterRelease && !alreadyInSky
   // Flash is visual only — never keep Hold/Release chrome after the Light leaves the sky.
   const inSky = isToday && alreadyInSky
   const releaseTarget = viewingLight ?? (isToday && inSky ? heldTodayLight : null)
   const displaySentence = viewingLight?.sentence ?? todaysLight
-  const dateStamp = useMemo(() => formatSkyDate(viewingLight), [viewingLight])
-  const albumLines = useMemo(() => getAlbumTypoLines(displaySentence), [displaySentence])
-  /** Stable while writing so cancel returns to the same Light without a second swap */
-  const contentKey = viewingLight?.id ?? 'today'
+  const dateStamp = useMemo(
+    () => formatSkyDate(viewingLight ?? heldTodayLight, locale),
+    [viewingLight, heldTodayLight, locale],
+  )
+  const albumLines = useMemo(
+    () => (displaySentence.trim() ? getAlbumTypoLines(displaySentence) : null),
+    [displaySentence],
+  )
+  /** Remount copy when the held Light changes (Hold / Release / quiet) */
+  const contentKey =
+    viewingLight?.id ??
+    heldTodayLight?.id ??
+    (isQuiet ? 'quiet-after-release' : `prompt:${todaysLight}`)
   const writingHangul = isWriting && hasHangul(draft)
+  const hangulBlocked = writingHangul && !allowsHangul(locale)
+  const draftReady = hasMeaningfulContent(draft)
+  const duplicateBlocked = draftReady && isDuplicateToday
+  const canHoldDiary =
+    draftReady && !duplicateBlocked && (!hasHangul(draft) || allowsHangul(locale))
+  const showSentenceHint = isWriting && !ascending && !hangulBlocked && !draftReady
+  const showDuplicateHint = isWriting && !ascending && !hangulBlocked && duplicateBlocked
 
   useEffect(() => {
     setWriteInvite(!hasKnownWriteOwn())
   }, [])
 
   useEffect(() => {
-    if (!isWriting) return
+    if (!isWriting) {
+      setDiscardArmed(false)
+      return
+    }
     markWriteOwnKnown()
     setWriteInvite(false)
   }, [isWriting])
@@ -96,13 +129,14 @@ export function SkyTodaysLightPanel({
   }, [savedFlash])
 
   useEffect(() => {
-    if (!isWriting) {
-      setDraft('')
-      setPlanetId(null)
-      return
-    }
-    const timer = window.setTimeout(() => inputRef.current?.focus(), 580)
-    return () => window.clearTimeout(timer)
+    if (!isWriting) return
+    if (draft.trim()) caretToEndRef.current = true
+    const frame = window.requestAnimationFrame(() => {
+      inputRef.current?.focus()
+    })
+    return () => window.cancelAnimationFrame(frame)
+    // Snapshot draft only when entering write — caret goes to end on restore.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional
   }, [isWriting])
 
   useLayoutEffect(() => {
@@ -128,24 +162,21 @@ export function SkyTodaysLightPanel({
     setReleaseArmed(false)
   }, [viewingLight?.id, heldTodayLight?.id, isWriting])
 
+  function setDraft(next: string) {
+    onDraftChange?.(next)
+  }
+
   function handleSaveToday() {
-    if (!isToday || inSky || ascending) return
-    onHoldLight?.(todaysLight, 'today')
+    if (!isToday || inSky || ascending || isQuiet) return
+    const sentence = todaysLight.trim()
+    if (!sentence) return
+    onHoldLight?.(sentence, 'today')
   }
 
   function handleHoldDiary() {
-    const trimmed = draft.trim()
-    if (!hasMeaningfulContent(trimmed) || ascending) return
+    const trimmed = normalizeLightSentence(draft)
+    if (!canHoldDiary || ascending) return
     onHoldLight?.(trimmed, 'diary')
-  }
-
-  function handlePlanet(planet: WritePlanet) {
-    if (ascending) return
-    setPlanetId(planet.id)
-    const next = pickCategoryLight(planet.id, draft).slice(0, MAX_DRAFT)
-    // Android/WebView leave the caret at 0 after programmatic fill — pin to end after commit.
-    caretToEndRef.current = true
-    setDraft(next)
   }
 
   function handleReleaseClick() {
@@ -159,211 +190,245 @@ export function SkyTodaysLightPanel({
     setReleaseArmed(false)
   }
 
+  function handleCancelClick() {
+    if (ascending) return
+    if (hasMeaningfulContent(draft)) {
+      setDiscardArmed(true)
+      return
+    }
+    onCancelWrite?.()
+  }
+
+  function handleConfirmDiscard() {
+    setDiscardArmed(false)
+    setDraft('')
+    onCancelWrite?.()
+  }
+
   return (
     <section
       className={`vora-sky-todays-light w-full text-center ${
         ascending ? 'vora-sky-todays-light--ascending' : ''
-      }${isWriting ? ' vora-sky-todays-light--writing' : ''}`}
+      }${isWriting ? ' vora-sky-todays-light--writing' : ''}${
+        locale === 'ko' || writingHangul ? ' vora-lang-ko' : ''
+      }`}
     >
-      <p className="vora-sky-date">
-        <span>{dateStamp.weekday}</span>
-        <span className="vora-sky-date-sep" aria-hidden="true">
-          ·
-        </span>
-        <span>{dateStamp.date}</span>
-      </p>
+      <div className="vora-sky-todays-main">
+        {isToday && !isWriting && !isQuiet && !inSky ? (
+          <p className="vora-sky-todays-kicker">{t.todaysStar}</p>
+        ) : null}
 
-      <WriteKeywordPlanets
-        visible={isWriting && !ascending}
-        disabled={ascending}
-        activeId={planetId}
-        onPick={handlePlanet}
-      />
+        <p className="vora-sky-date">
+          <span>{dateStamp.weekday}</span>
+          <span className="vora-sky-date-sep" aria-hidden="true">
+            ·
+          </span>
+          <span>{dateStamp.date}</span>
+        </p>
 
-      <div className="vora-sky-headline-slot">
-        <AnimatePresence mode="sync" initial={false}>
+        <div className="vora-sky-headline-slot">
           {isWriting ? (
-            <motion.div
+            <div
               key="writing"
               className={`vora-sky-headline-layer vora-mirror-headline vora-mirror-headline--writing${
                 writingHangul ? ' vora-lang-ko' : ''
               }`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={WRITE_FADE}
             >
-              <div className="vora-mirror-album-title">
+              <div className="vora-mirror-album-title vora-sky-write-field">
                 <textarea
                   ref={inputRef}
                   value={draft}
                   onChange={(e) => {
                     setDraft(e.target.value)
-                    setPlanetId(null)
+                    setDiscardArmed(false)
                   }}
                   maxLength={MAX_DRAFT}
-                  rows={1}
+                  rows={4}
                   disabled={ascending}
-                  lang={writingHangul ? 'ko' : undefined}
-                  className={`vora-sky-diary-input vora-mirror-album-primary text-balance${
-                    writingHangul ? ' vora-lang-ko' : ''
-                  }`}
-                  placeholder="One sentence, only for you…"
-                  aria-label="Write your Light"
+                  lang={writingHangul || locale === 'ko' ? 'ko' : undefined}
+                  className={`vora-sky-diary-input${writingHangul ? ' vora-lang-ko' : ''}`}
+                  placeholder={t.writePlaceholder}
+                  aria-label={t.writeOwnAria}
+                  enterKeyHint="done"
+                  autoCapitalize="sentences"
                 />
               </div>
-            </motion.div>
+            </div>
           ) : (
             <motion.div
               key={contentKey}
               className="vora-sky-headline-layer"
               initial={{ opacity: 0 }}
               animate={{ opacity: ascending ? 0.55 : 1 }}
-              exit={{ opacity: 0 }}
               transition={WRITE_FADE}
             >
-              <MirrorTodaysLight
-                lines={albumLines}
-                glowing={isToday && (savedFlash || ascending)}
-                saveStar={isToday && savedFlash}
-                tappable={isToday && !alreadyInSky && !ascending}
-                tapDisabled={inSky || ascending}
-                onTap={handleSaveToday}
-              />
+              {isQuiet || !albumLines ? (
+                <p className="vora-sky-quiet-line">{t.releasedQuiet}</p>
+              ) : (
+                <MirrorTodaysLight
+                  lines={albumLines}
+                  glowing={isToday && (savedFlash || ascending)}
+                  saveStar={isToday && savedFlash}
+                  tappable={isToday && !alreadyInSky && !ascending && !isQuiet}
+                  tapDisabled={inSky || ascending || isQuiet}
+                  onTap={handleSaveToday}
+                />
+              )}
             </motion.div>
           )}
-        </AnimatePresence>
+        </div>
       </div>
 
-      <div className="vora-sky-ritual-actions">
-        {releaseArmed && releaseTarget && onDeleteLight ? (
+      <div
+        className="vora-sky-ritual-actions"
+        data-vora-cta-shelf={isWriting ? 'write' : 'browse'}
+      >
+        {discardArmed && isWriting ? (
+          <>
+            <div className="vora-sky-ritual-action-primary">
+              <p className="vora-sky-leave-prompt" role="status">
+                {t.leaveLight}
+              </p>
+              <button
+                type="button"
+                onClick={() => setDiscardArmed(false)}
+                className="vora-sky-diary-hold vora-whisper-chip"
+                aria-label={t.keepWriting}
+              >
+                {t.keepWriting}
+              </button>
+            </div>
+            <div className="vora-sky-ritual-action-secondary">
+              <button
+                type="button"
+                onClick={handleConfirmDiscard}
+                className="vora-sky-release-link"
+                aria-label={t.leave}
+              >
+                {t.leave}
+              </button>
+            </div>
+          </>
+        ) : releaseArmed && releaseTarget && onDeleteLight ? (
           <>
             <div className="vora-sky-ritual-action-primary">
               <button
                 type="button"
                 onClick={() => setReleaseArmed(false)}
-                className="vora-sky-release-link"
-                aria-label="Keep this Light"
+                className="vora-sky-diary-hold vora-whisper-chip"
+                aria-label={t.keep}
               >
-                Keep
+                {t.keep}
               </button>
             </div>
             <div className="vora-sky-ritual-action-secondary">
               <button
                 type="button"
                 onClick={handleConfirmRelease}
-                className="vora-sky-release-confirm-chip"
-                aria-label="Release this Light from Sky"
+                className="vora-sky-release-link"
+                aria-label={t.release}
               >
-                Release
+                {t.release}
+              </button>
+            </div>
+          </>
+        ) : isWriting ? (
+          <>
+            <div className="vora-sky-ritual-action-primary">
+              <button
+                type="button"
+                onClick={handleHoldDiary}
+                disabled={!canHoldDiary || ascending}
+                className="vora-sky-diary-hold vora-whisper-chip"
+              >
+                {ascending ? t.holding : t.holdToSky}
+              </button>
+            </div>
+            <div className="vora-sky-ritual-action-secondary">
+              {hangulBlocked ? (
+                <button
+                  type="button"
+                  className="vora-sky-write-hint vora-sky-write-hint--action"
+                  onClick={() => setLocale('ko')}
+                >
+                  <span className="vora-sky-write-hint-label">{t.writeHangulHint}</span>
+                  <span className="vora-sky-write-hint-cta">{t.writeSwitchKo}</span>
+                </button>
+              ) : showDuplicateHint ? (
+                <p className="vora-sky-write-hint vora-sky-write-hint--sentence" role="status">
+                  {t.writeDuplicateHint}
+                </p>
+              ) : showSentenceHint ? (
+                <p className="vora-sky-write-hint vora-sky-write-hint--sentence" role="status">
+                  {t.writeSentenceHint}
+                </p>
+              ) : null}
+              <button
+                type="button"
+                onClick={handleCancelClick}
+                disabled={ascending}
+                className="vora-sky-diary-cancel"
+              >
+                {t.cancel}
               </button>
             </div>
           </>
         ) : (
           <>
             <div className="vora-sky-ritual-action-primary">
-              <AnimatePresence mode="sync" initial={false}>
-                {isWriting ? (
-                  <motion.button
-                    key="hold-diary"
-                    type="button"
-                    onClick={handleHoldDiary}
-                    disabled={!draft.trim() || ascending}
-                    className="vora-sky-diary-hold vora-whisper-chip"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={WRITE_FADE}
-                  >
-                    {ascending ? 'Holding…' : 'Hold to Sky'}
-                  </motion.button>
-                ) : skyBeganWhisper ? (
-                  <motion.p
-                    key="sky-begins"
-                    className="vora-mirror-tap-hint vora-whisper-chip vora-whisper-chip--rising"
-                    aria-live="polite"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={WRITE_FADE}
-                  >
-                    Your sky begins.
-                  </motion.p>
-                ) : releaseTarget && onDeleteLight ? (
-                  <motion.button
-                    key="release"
-                    type="button"
-                    onClick={handleReleaseClick}
-                    className="vora-sky-release-link"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={WRITE_FADE}
-                  >
-                    Release from Sky
-                  </motion.button>
-                ) : isToday && !inSky ? (
-                  <motion.button
-                    key="hold-today"
-                    type="button"
-                    onClick={handleSaveToday}
-                    disabled={ascending}
-                    className={`vora-mirror-tap-hint vora-whisper-chip ${
-                      ascending ? 'vora-whisper-chip--rising' : ''
-                    }`}
-                    aria-live="polite"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={WRITE_FADE}
-                  >
-                    {ascending ? 'Rising…' : 'Hold this Light'}
-                  </motion.button>
-                ) : (
-                  <span key="primary-spacer" className="vora-sky-ritual-action-spacer" aria-hidden="true" />
-                )}
-              </AnimatePresence>
+              {/* Release always wins — never hide it behind “Your sky begins.” */}
+              {releaseTarget && onDeleteLight ? (
+                <button
+                  type="button"
+                  onClick={handleReleaseClick}
+                  className="vora-sky-release-link"
+                >
+                  {t.releaseFromSky}
+                </button>
+              ) : skyBeganWhisper ? (
+                <p
+                  className="vora-mirror-tap-hint vora-whisper-chip vora-whisper-chip--rising"
+                  aria-live="polite"
+                >
+                  {t.skyBegins}
+                </p>
+              ) : isQuiet ? (
+                <span className="vora-sky-ritual-action-spacer" aria-hidden="true" />
+              ) : isToday && !inSky && todaysLight.trim() ? (
+                <button
+                  type="button"
+                  onClick={handleSaveToday}
+                  disabled={ascending}
+                  className={`vora-mirror-tap-hint vora-whisper-chip ${
+                    ascending ? 'vora-whisper-chip--rising' : ''
+                  }`}
+                  aria-live="polite"
+                >
+                  {ascending ? t.rising : t.holdThisLight}
+                </button>
+              ) : (
+                <span className="vora-sky-ritual-action-spacer" aria-hidden="true" />
+              )}
             </div>
 
             <div className="vora-sky-ritual-action-secondary">
-              <AnimatePresence mode="wait" initial={false}>
-                {isWriting ? (
-                  <motion.button
-                    key="cancel-write"
-                    type="button"
-                    onClick={onCancelWrite}
-                    disabled={ascending}
-                    className="vora-sky-diary-cancel"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={WRITE_FADE}
-                  >
-                    Cancel
-                  </motion.button>
-                ) : onWriteOwn ? (
-                  <motion.button
-                    key="write-own"
-                    type="button"
-                    onClick={() => {
-                      markWriteOwnKnown()
-                      setWriteInvite(false)
-                      onWriteOwn()
-                    }}
-                    disabled={ascending}
-                    className={`vora-sky-write-own${writeInvite ? ' vora-sky-write-own--invite' : ''}`}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={WRITE_FADE}
-                  >
-                    <span className="vora-sky-write-own-liquid" aria-hidden="true" />
-                    <span className="vora-sky-write-own-label">Write your own</span>
-                  </motion.button>
-                ) : (
-                  <span key="secondary-spacer" className="vora-sky-ritual-action-spacer" aria-hidden="true" />
-                )}
-              </AnimatePresence>
+              {onWriteOwn ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    markWriteOwnKnown()
+                    setWriteInvite(false)
+                    onWriteOwn()
+                  }}
+                  disabled={ascending}
+                  className={`vora-sky-write-own${writeInvite || isQuiet ? ' vora-sky-write-own--invite' : ''}`}
+                >
+                  <span className="vora-sky-write-own-liquid" aria-hidden="true" />
+                  <span className="vora-sky-write-own-label">{t.writeYourOwn}</span>
+                </button>
+              ) : (
+                <span className="vora-sky-ritual-action-spacer" aria-hidden="true" />
+              )}
             </div>
           </>
         )}

@@ -1318,6 +1318,62 @@ body[data-vora-card-open='true'] .vora-pointer-o-star:not(.vora-pointer-o-star--
   letter-spacing: 0.02em;
 }
 
+/*
+ * Korean chrome labels — Hangul must not inherit Latin all-caps tracking.
+ * html.vora-lang-ko covers tab bar / enter / constellation; islands keep local too.
+ */
+html.vora-lang-ko .vora-sky-date,
+html.vora-lang-ko .vora-sky-todays-kicker,
+html.vora-lang-ko .vora-mirror-tap-hint,
+html.vora-lang-ko .vora-sky-diary-hold,
+html.vora-lang-ko .vora-sky-write-own,
+html.vora-lang-ko .vora-sky-write-own-label,
+html.vora-lang-ko .vora-sky-diary-cancel,
+html.vora-lang-ko .vora-sky-release-link,
+html.vora-lang-ko .vora-sky-leave-prompt,
+html.vora-lang-ko .vora-sky-write-hint,
+html.vora-lang-ko .vora-sky-write-hint-label,
+html.vora-lang-ko .vora-sky-write-hint-cta,
+html.vora-lang-ko .vora-constellation-node-date,
+html.vora-lang-ko .vora-light-card-date,
+html.vora-lang-ko .vora-tabbar-item,
+html.vora-lang-ko .vora-tabbar-label,
+html.vora-lang-ko .vora-enter-cta,
+html.vora-lang-ko .vora-enter-sound-hint,
+html.vora-lang-ko .vora-whisper-chip,
+.vora-lang-ko .vora-sky-date,
+.vora-lang-ko .vora-sky-todays-kicker,
+.vora-lang-ko .vora-mirror-tap-hint,
+.vora-lang-ko .vora-sky-diary-hold,
+.vora-lang-ko .vora-sky-write-own,
+.vora-lang-ko .vora-sky-write-own-label,
+.vora-lang-ko .vora-sky-diary-cancel,
+.vora-lang-ko .vora-sky-release-link,
+.vora-lang-ko .vora-sky-leave-prompt,
+.vora-lang-ko .vora-sky-write-hint:not(.vora-sky-write-hint--sentence),
+.vora-lang-ko .vora-sky-write-hint-label,
+.vora-lang-ko .vora-sky-write-hint-cta,
+.vora-lang-ko .vora-constellation-node-date,
+.vora-lang-ko .vora-light-card-date,
+.vora-lang-ko .vora-whisper-chip {
+  text-transform: none;
+  letter-spacing: 0.04em;
+  font-weight: 400;
+}
+html.vora-lang-ko .vora-tabbar-item,
+html.vora-lang-ko .vora-tabbar-label {
+  letter-spacing: 0.06em;
+  font-weight: 500;
+}
+html.vora-lang-ko .vora-enter-cta {
+  letter-spacing: 0.08em;
+}
+html.vora-lang-ko .vora-constellation-node-date,
+.vora-lang-ko .vora-constellation-node-date {
+  letter-spacing: 0.02em;
+  padding-inline-start: 0;
+}
+
 .vora-mirror-page {
   --vora-mirror-headline-width: min(100%, 22rem);
   --vora-mirror-portal-width: min(78%, 18rem);
@@ -1421,9 +1477,9 @@ body[data-vora-card-open='true'] .vora-pointer-o-star:not(.vora-pointer-o-star--
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition:
-    color 0.55s var(--vora-ease),
-    background 0.55s var(--vora-ease),
-    transform 0.35s var(--vora-ease);
+    color 0.2s var(--vora-ease),
+    background 0.2s var(--vora-ease),
+    transform 0.25s var(--vora-ease);
 }
 /* First visits — readable, still no glow circus */
 .vora-header-write-btn--invite {
@@ -1740,14 +1796,20 @@ body[data-vora-card-open='true'] .vora-pointer-o-star:not(.vora-pointer-o-star--
   transform: translateZ(0);
   backface-visibility: hidden;
 }
-/* Phone sheet — fewer paint layers while sliding up */
+/* Phone sheet — fewer paint layers; keep DOM stable so close doesn't flicker */
 .vora-enter-panel--lite .vora-enter-panel-sheet {
   box-shadow:
     0 1px 0 rgb(255 255 255 / 0.08),
     0 -12px 28px color-mix(in srgb, var(--vora-sky-0) 55%, transparent);
 }
 .vora-enter-panel--lite .vora-enter-panel-wash {
-  background: var(--vora-sky-1);
+  /* Solid floor on phone — gradient wash was flashing ink on dismiss */
+  background: var(--vora-sky-1) !important;
+}
+.vora-enter-panel--lite .vora-enter-panel-glow,
+.vora-enter-panel--lite .vora-enter-panel-dust,
+.vora-enter-panel--lite .vora-enter-panel-grain {
+  display: none;
 }
 .vora-enter-panel-sheet {
   --sheet-ink: var(--vora-sky-fg);
@@ -1769,6 +1831,7 @@ body[data-vora-card-open='true'] .vora-pointer-o-star:not(.vora-pointer-o-star--
   border-radius: 1.45rem 1.45rem 0 0;
   border: none;
   border-bottom: none;
+  /* Opaque floor — dismiss must never reveal sky through the type */
   background: var(--vora-sky-1);
   box-shadow:
     0 1px 0 rgb(255 255 255 / 0.1),
@@ -1777,6 +1840,9 @@ body[data-vora-card-open='true'] .vora-pointer-o-star:not(.vora-pointer-o-star--
   overflow: hidden;
   pointer-events: auto;
   color: var(--sheet-ink);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 .vora-enter-panel-wash {
   position: absolute;
@@ -4047,9 +4113,9 @@ body[data-vora-card-open='true'] .vora-pointer-o-star:not(.vora-pointer-o-star--
   text-shadow: 0 1px 14px rgb(40 16 50 / 0.45);
 }
 [data-sky-theme='pink'] .vora-sky-todays-light .vora-sky-write-own {
-  border-color: rgb(255 255 255 / 0.28);
-  background: rgb(255 255 255 / 0.1);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22);
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 [data-sky-theme='pink'] .vora-sky-todays-light .vora-whisper-chip,
 [data-sky-theme='pink'] .vora-sky-todays-light button.vora-whisper-chip {
@@ -4065,27 +4131,32 @@ body[data-vora-card-open='true'] .vora-pointer-o-star:not(.vora-pointer-o-star--
   background: rgb(255 255 255 / 0.12);
   color: #ffffff;
 }
-/* Release + Write — solid white, quiet edge (no hard rim) */
+/* Release primary white; Write stays a quieter text link */
 [data-sky-theme='pink'] .vora-sky-todays-light .vora-sky-release-link,
 [data-sky-theme='pink'] .vora-sky-todays-light .vora-mirror-tap-hint,
-[data-sky-theme='pink'] .vora-sky-todays-light .vora-sky-write-own,
-[data-sky-theme='pink'] .vora-sky-todays-light .vora-sky-write-own-label,
 [data-sky-theme='pink'] .vora-sky-todays-light .vora-sky-diary-cancel {
   color: #ffffff;
   -webkit-text-fill-color: #ffffff;
   text-shadow: none;
 }
-[data-sky-theme='pink'] .vora-sky-todays-light .vora-sky-write-own {
-  border-color: rgb(255 255 255 / 0.28);
-  background: rgb(255 255 255 / 0.1);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22);
+[data-sky-theme='pink'] .vora-sky-todays-light .vora-sky-write-own,
+[data-sky-theme='pink'] .vora-sky-todays-light .vora-sky-write-own-label {
+  color: rgb(255 255 255 / 0.48);
+  -webkit-text-fill-color: rgb(255 255 255 / 0.48);
+  text-shadow: none;
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 [data-sky-theme='pink'] .vora-sky-todays-light .vora-sky-write-own-liquid {
-  opacity: 0.32;
+  display: none;
 }
-[data-sky-theme='pink'] .vora-sky-todays-light .vora-sky-release-link:active,
-[data-sky-theme='pink'] .vora-sky-todays-light .vora-sky-write-own:active:not(:disabled) {
+[data-sky-theme='pink'] .vora-sky-todays-light .vora-sky-release-link:active {
   color: #ffffff;
+}
+[data-sky-theme='pink'] .vora-sky-todays-light .vora-sky-write-own:active:not(:disabled) {
+  color: rgb(255 255 255 / 0.78);
+  -webkit-text-fill-color: rgb(255 255 255 / 0.78);
 }
 @media (hover: hover) and (pointer: fine) {
   [data-sky-theme='pink'] .vora-tabbar--night .vora-tabbar-item:not(.vora-tabbar-item--current):hover {
@@ -4096,13 +4167,14 @@ body[data-vora-card-open='true'] .vora-pointer-o-star:not(.vora-pointer-o-star--
     background: rgb(255 255 255 / 0.12);
     color: #ffffff;
   }
-  [data-sky-theme='pink'] .vora-sky-todays-light .vora-sky-release-link:hover,
-  [data-sky-theme='pink'] .vora-sky-todays-light .vora-sky-write-own:hover:not(:disabled) {
+  [data-sky-theme='pink'] .vora-sky-todays-light .vora-sky-release-link:hover {
     color: #ffffff;
   }
   [data-sky-theme='pink'] .vora-sky-todays-light .vora-sky-write-own:hover:not(:disabled) {
-    border-color: rgb(255 255 255 / 0.4);
-    background: rgb(255 255 255 / 0.14);
+    color: rgb(255 255 255 / 0.72);
+    -webkit-text-fill-color: rgb(255 255 255 / 0.72);
+    border: none;
+    background: transparent;
   }
 }
 [data-sky-theme='pink'] .vora-sky-theme-studio-option-name {
@@ -4556,7 +4628,7 @@ body[data-vora-card-open='true'] .vora-pointer-o-star:not(.vora-pointer-o-star--
 .vora-constellation-node > * {
   pointer-events: none;
 }
-/* Date sits above the star; hidden until hover / focus / press / selected */
+/* Date sits above the star — invisible until touch / hover / select (Apple quiet sky) */
 .vora-constellation-node-date {
   position: absolute;
   left: 50%;
@@ -4565,9 +4637,8 @@ body[data-vora-card-open='true'] .vora-pointer-o-star:not(.vora-pointer-o-star--
   box-sizing: content-box;
   width: max-content;
   max-width: none;
-  margin: 0 0 0.3rem;
-  /* Match letter-spacing so tracked caps sit optically centered */
-  padding: 0 0 0 0.12em;
+  margin: 0 0 0.28rem;
+  padding: 0;
   border: 0;
   transform: translateX(-50%);
   text-align: center;
@@ -4579,28 +4650,27 @@ body[data-vora-card-open='true'] .vora-pointer-o-star:not(.vora-pointer-o-star--
   text-transform: uppercase;
   white-space: nowrap;
   color: var(--vora-sky-fg);
-  /* Soft always-on date so newcomers can read the sky without hovering */
-  opacity: 0.42;
-  visibility: visible;
+  opacity: 0;
+  visibility: hidden;
   transition:
-    opacity 0.28s var(--vora-ease),
-    visibility 0.28s var(--vora-ease);
+    opacity 0.32s var(--vora-ease),
+    visibility 0.32s var(--vora-ease);
 }
 @media (hover: hover) and (pointer: fine) {
   .vora-constellation-node:hover .vora-constellation-node-date,
   .vora-constellation-node:focus-visible .vora-constellation-node-date {
-    opacity: 0.72;
+    opacity: 0.58;
     visibility: visible;
   }
 }
 .vora-constellation-node:active .vora-constellation-node-date,
 .vora-constellation-node--active .vora-constellation-node-date {
-  opacity: 0.72;
+  opacity: 0.62;
   visibility: visible;
 }
 .vora-constellation-node--dimmed .vora-constellation-node-date {
-  opacity: 0.18;
-  visibility: visible;
+  opacity: 0;
+  visibility: hidden;
 }
 .vora-constellation-node--dimmed.vora-constellation-node--active .vora-constellation-node-date {
   opacity: 0.4;
@@ -4669,8 +4739,12 @@ body[data-vora-card-open='true'] .vora-pointer-o-star:not(.vora-pointer-o-star--
 .vora-sky-page {
   --vora-sky-gap-label-content: 1.75rem;
   --vora-sky-gap-line: 0.12em;
+  /* Clear SKY/ME + Privacy row — never let ritual CTAs kiss the tab bar */
+  --vora-sky-tab-clearance: calc(9.75rem + var(--vora-safe-bottom, 0px));
   color: var(--vora-sky-fg);
   overflow: hidden;
+  padding-bottom: var(--vora-sky-tab-clearance);
+  box-sizing: border-box;
 }
 .vora-sky-page .vora-sky-constellation-band,
 .vora-sky-page .vora-sky-ritual,
@@ -4693,19 +4767,17 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   visibility: hidden !important;
 }
 
-/* ── Sky — constellation band (top) + scrollable ritual below ─────── */
+/* ── Sky — constellation band (top) + ritual below ─────── */
 .vora-sky-stack {
   justify-content: flex-start;
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden; /* page never scrolls under CTAs — main column scrolls alone */
   overscroll-behavior-y: contain;
   touch-action: pan-y;
 }
 .vora-sky-constellation-band {
-  padding-top: calc(var(--vora-header-total) + 0.65rem);
-  /* Air between stars and the Light — keep copy from sinking toward the tab bar */
-  padding-bottom: 0.5rem;
+  padding-top: calc(var(--vora-header-total) + 0.15rem);
+  /* Quiet sky band — leave the Light in the upper half of the phone */
+  padding-bottom: 0.1rem;
   width: 100%;
   overflow: visible;
   flex-shrink: 0;
@@ -4751,8 +4823,8 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
 }
 .vora-sky-constellation-stage {
   position: relative;
-  /* Phone-first: a touch shorter so date → Light → Write sits higher optically */
-  height: 11.75rem;
+  /* Phone-first: constellation is atmosphere, not a tall hero */
+  height: 7.5rem;
   width: 100%;
   overflow: visible;
   /* Flat hit testing — perspective made star edges flicker cursors */
@@ -4760,31 +4832,31 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
 }
 @media (min-width: 640px) {
   .vora-sky-constellation-stage {
-    height: 14.25rem;
+    height: 12.5rem;
   }
 }
 /* Short desktop windows — keep main copy from falling to the tab bar */
 @media (max-height: 820px) {
   .vora-sky-constellation-band {
-    padding-top: calc(var(--vora-header-total) + 0.35rem);
-    padding-bottom: 0.55rem;
+    padding-top: calc(var(--vora-header-total) + 0.1rem);
+    padding-bottom: 0.1rem;
   }
   .vora-sky-constellation-stage {
-    height: 9.25rem;
+    height: 6.75rem;
   }
 }
 @media (max-height: 700px) {
   .vora-sky-constellation-stage {
-    height: 6.5rem;
+    height: 5.25rem;
   }
 }
 @media (max-height: 580px) {
   .vora-sky-constellation-band {
-    padding-top: calc(var(--vora-header-total) + 0.15rem);
-    padding-bottom: 0.35rem;
+    padding-top: calc(var(--vora-header-total) + 0.05rem);
+    padding-bottom: 0.05rem;
   }
   .vora-sky-constellation-stage {
-    height: 4.25rem;
+    height: 3.75rem;
   }
 }
 .vora-constellation-world {
@@ -4804,22 +4876,23 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   filter: blur(24px);
 }
 .vora-sky-ritual {
-  padding-top: 0.5rem;
-  padding-bottom: 0.25rem;
+  padding-top: 0;
+  padding-bottom: 0;
   padding-inline: 0;
 }
 .vora-sky-ritual--editorial {
-  /* Bias the whole ritual block slightly up — less tab-bar gravity */
-  --vora-sky-copy-y-top: 0.4rem;
-  --vora-sky-copy-y-bottom: 1.05rem;
+  /* Host fills free sky; child panel owns center + CTA shelf */
   display: flex;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
+  justify-content: stretch;
+  align-items: stretch;
   min-height: 0;
-  padding-top: var(--vora-sky-copy-y-top);
-  padding-bottom: var(--vora-sky-copy-y-bottom);
+  height: 100%;
+  width: 100%;
+  padding-top: 0.1rem;
+  padding-bottom: 0;
+  overflow: hidden;
   touch-action: pan-y;
 }
 @media (min-width: 640px) {
@@ -4828,31 +4901,7 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   }
 }
 .vora-sky-ritual .vora-mirror-headline {
-  min-height: 6.5rem;
-}
-/* Only when the window is short: tuck stars, keep Light readable */
-@media (max-height: 820px) {
-  .vora-sky-ritual--editorial {
-    --vora-sky-copy-y-top: 0.35rem;
-    --vora-sky-copy-y-bottom: 1.15rem;
-  }
-}
-@media (max-height: 700px) {
-  .vora-sky-ritual--editorial {
-    --vora-sky-copy-y-top: 0.2rem;
-    --vora-sky-copy-y-bottom: 0.85rem;
-  }
-  .vora-sky-ritual .vora-mirror-headline,
-  .vora-sky-headline-slot,
-  .vora-sky-todays-light .vora-sky-headline-slot .vora-mirror-headline {
-    min-height: 4.25rem;
-  }
-  .vora-sky-todays-light .vora-sky-date {
-    margin-bottom: 0.5rem;
-  }
-  .vora-sky-ritual-actions {
-    margin-top: 1.5rem;
-  }
+  min-height: 0;
 }
 .vora-sky-ritual .vora-mirror-tap-hint {
   margin-top: 0;
@@ -4900,15 +4949,100 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
 .vora-sky-todays-light {
   /* Wide enough for long nowrap hero lines; flex-centers still win if ink exceeds. */
   --vora-mirror-headline-width: min(100%, 34rem);
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  min-height: 0;
+  height: 100%;
   width: 100%;
   color: rgb(255 255 255 / 92%);
   padding-inline: var(--vora-sky-copy-inset, 2.15rem);
   box-sizing: border-box;
-  overflow-x: visible;
+  overflow: hidden; /* CTAs never share paint with the sentence */
+}
+/*
+ * Date + body center in the free column.
+ * If the sentence is long (or keyboard shrinks the sky), THIS column scrolls —
+ * Hold / Cancel stay pinned below and cannot ghost through the type.
+ */
+.vora-sky-todays-main {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 0;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  /* Optical lift — keep the Light above the action shelf */
+  padding-top: 0.35rem;
+  padding-bottom: 1.35rem;
+}
+.vora-sky-todays-kicker {
+  margin: 0 0 0.72rem;
+  font-family: var(--font-sky-label);
+  font-size: 0.5rem;
+  font-weight: 400;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgb(230 220 255 / 0.28);
+  line-height: 1;
+}
+.vora-sky-todays-light.vora-lang-ko .vora-sky-todays-kicker {
+  letter-spacing: 0.14em;
+  text-transform: none;
+  font-weight: 300;
+  font-size: 0.5625rem;
+  color: rgb(230 220 255 / 0.32);
+}
+.vora-sky-todays-light .vora-sky-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+  font-family: var(--font-sky-label);
+  font-size: 0.625rem;
+  font-weight: 300;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--vora-sky-fg-soft) 88%, transparent);
 }
 .vora-sky-todays-light--writing {
   position: relative;
   padding-inline: var(--vora-sky-copy-inset, 2.15rem);
+}
+.vora-sky-todays-light--writing .vora-sky-todays-main {
+  /* Writing + keyboard: give the field the sky — Apple Notes energy, not a chip */
+  justify-content: flex-start;
+  padding-top: 0.25rem;
+  padding-bottom: 0.75rem;
+}
+.vora-sky-todays-light--writing .vora-sky-headline-slot {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: min(46dvh, 16rem);
+  width: 100%;
+}
+.vora-sky-todays-light--writing .vora-sky-headline-layer,
+.vora-sky-todays-light--writing .vora-sky-write-field {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: min(100%, var(--vora-mirror-headline-width));
+  margin-inline: auto;
+  min-height: inherit;
+}
+.vora-sky-todays-light--writing .vora-mirror-headline--writing {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: inherit;
+  max-width: none;
 }
 .vora-sky-todays-light--writing .vora-sky-date {
   margin-bottom: 0.85rem;
@@ -4919,154 +5053,11 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   }
 }
 
-/*
- * Write moods — words only. Air between them. Active = soft underline.
- */
-.vora-write-planets-slot {
-  width: 100%;
-  max-width: min(100%, 26rem);
-  margin-inline: auto;
-}
-.vora-write-planets {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.15rem;
-  width: 100%;
-  margin: 0;
-  padding-bottom: 0.2rem;
-}
-.vora-write-planets-kicker {
-  margin: 0;
-  font-family: var(--font-sky-label);
-  font-size: 0.5625rem;
-  font-weight: 300;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: rgb(230 220 255 / 0.4);
-  line-height: 1;
-  min-height: 0.7rem;
-}
-.vora-write-planets-whisper {
-  margin: 0.35rem 0 0;
-  font-family: var(--font-sky-accent);
-  font-size: 0.72rem;
-  font-weight: 400;
-  font-style: italic;
-  letter-spacing: 0.02em;
-  color: rgb(230 220 255 / 0.44);
-  line-height: 1.3;
-  text-align: center;
-}
-.vora-write-planets-rail--whisper .vora-write-planet-label {
-  color: rgb(230 220 255 / 0.58);
-}
-.vora-write-planets-rail {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem 1.15rem;
-  width: 100%;
-  padding-inline: 0.25rem;
-}
-.vora-write-planet {
-  position: relative;
-  display: flex;
-  flex: 0 0 auto;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  min-height: 2rem;
-  margin: 0;
-  padding: 0.45rem 0.15rem 0.7rem;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: opacity 0.35s var(--vora-ease);
-}
-.vora-write-planet:disabled {
-  cursor: default;
-  opacity: 0.4;
-}
-.vora-write-planet-label {
-  position: relative;
-  z-index: 1;
-  font-family: var(--font-sky-label);
-  font-size: 0.625rem;
-  font-weight: 400;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgb(230 220 255 / 0.42);
-  line-height: 1.2;
-  text-align: center;
-  white-space: nowrap;
-  transition: color 0.35s var(--vora-ease);
-}
-/* Milky-way thumb — slides between moods like the tab bar liquid */
-.vora-write-planet-underline {
-  position: absolute;
-  left: 0.1rem;
-  right: 0.1rem;
-  bottom: 0.22rem;
-  height: 1.5px;
-  border-radius: 999px;
-  pointer-events: none;
-  background: linear-gradient(
-    90deg,
-    rgb(255 255 255 / 0) 0%,
-    rgb(240 232 255 / 0.55) 18%,
-    rgb(255 252 250 / 0.88) 50%,
-    rgb(203 184 255 / 0.55) 82%,
-    rgb(255 255 255 / 0) 100%
-  );
-  box-shadow:
-    0 0 10px rgb(203 184 255 / 0.35),
-    0 0 18px rgb(255 255 255 / 0.12);
-}
-.vora-write-planet--active .vora-write-planet-label {
-  color: rgb(245 238 255 / 0.92);
-}
-@media (hover: hover) and (pointer: fine) {
-  .vora-write-planet:hover:not(:disabled) .vora-write-planet-label {
-    color: rgb(240 232 255 / 0.78);
-  }
-}
-@media (max-width: 360px) {
-  .vora-write-planets-rail {
-    gap: 0.25rem 0.75rem;
-  }
-  .vora-write-planet-label {
-    font-size: 0.5625rem;
-    letter-spacing: 0.12em;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .vora-write-planet,
-  .vora-write-planet-label {
-    transition: none;
-  }
-}
 @media (min-width: 640px) {
   .vora-sky-todays-light {
     --vora-mirror-headline-width: min(100%, 36rem);
     padding-inline: max(var(--vora-sky-copy-inset, 2.15rem), 2.5rem);
   }
-}
-.vora-sky-todays-light .vora-sky-date {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0 0 0.85rem;
-  font-family: var(--font-sky-label);
-  font-size: 0.625rem;
-  font-weight: 300;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--vora-sky-fg-soft);
 }
 .vora-sky-date-sep {
   color: color-mix(in srgb, var(--vora-sky-fg) 18%, transparent);
@@ -5117,22 +5108,20 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   gap: var(--vora-typo-pair-gap);
 }
 .vora-sky-headline-slot {
-  /* Stack layers in-flow so height follows the Light — actions stay below, centered */
-  display: grid;
+  /* Single layer only — never stack write/browse headlines */
+  display: block;
   width: 100%;
-  min-height: 6.5rem;
-  justify-items: center;
-  align-items: start;
+  min-height: 0;
+  position: relative;
+  z-index: 1;
 }
 .vora-sky-headline-layer {
-  grid-area: 1 / 1;
   position: relative;
   width: 100%;
   max-width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  will-change: opacity, filter;
 }
 .vora-sky-headline-slot > * {
   width: 100%;
@@ -5153,6 +5142,24 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   min-height: 6.5rem;
   justify-content: flex-start;
   padding: 0;
+}
+.vora-sky-todays-light .vora-sky-quiet-line {
+  margin: 0 auto;
+  max-width: min(100%, var(--vora-mirror-headline-width));
+  min-height: 6.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 0;
+  box-sizing: border-box;
+  /* Same hero face as the main Light — Instrument, not a side serif */
+  font-family: var(--font-sky-hero);
+  font-weight: 400;
+  font-size: var(--vora-typo-sky-hero);
+  line-height: var(--vora-typo-hero-leading);
+  letter-spacing: var(--vora-typo-hero-tracking);
+  color: color-mix(in srgb, var(--vora-sky-fg) 52%, transparent);
+  text-align: center;
 }
 .vora-sky-todays-light .vora-mirror-headline--tappable {
   cursor: text;
@@ -5189,19 +5196,16 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
 }
 .vora-sky-todays-light .vora-whisper-chip {
   margin-inline: auto;
-  padding: 0.5rem 1rem;
+  padding: 0.55rem 1.15rem;
   border-radius: 999px;
-  border: 1px solid rgb(203 184 255 / 0.22);
-  background: rgb(255 255 255 / 0.05);
+  border: 1px solid rgb(203 184 255 / 0.2);
+  background: rgb(255 255 255 / 0.06);
   box-shadow:
-    0 0 20px rgb(203 184 255 / 0.12),
-    1px 0 10px rgb(160 210 255 / 0.08),
-    -1px 0 10px rgb(203 184 255 / 0.1);
-  color: rgb(240 232 255 / 0.78);
-  text-shadow:
-    1px 0 rgb(160 210 255 / 0.22),
-    -1px 0 rgb(203 184 255 / 0.26);
-  min-height: 2rem;
+    0 0 18px rgb(203 184 255 / 0.1),
+    inset 0 1px 0 rgb(255 255 255 / 0.12);
+  color: rgb(245 240 255 / 0.88);
+  text-shadow: none;
+  min-height: 2.15rem;
   line-height: 1.2;
   cursor: pointer;
   transition:
@@ -5229,25 +5233,50 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   }
 }
 .vora-sky-ritual-actions {
+  position: relative;
+  z-index: 4;
   display: flex;
+  flex-shrink: 0;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   width: 100%;
-  margin-top: 2.15rem;
-  gap: 0.55rem;
+  margin-top: 0.35rem;
+  margin-bottom: 0.85rem;
+  padding-top: 0.35rem;
+  gap: 0.35rem;
+  isolation: isolate;
+  background: transparent;
+  /* Hard floor — scrolled type cannot paint through this shelf */
+  pointer-events: auto;
 }
 @media (min-width: 640px) {
   .vora-sky-ritual-actions {
-    margin-top: 2.55rem;
+    margin-bottom: 1.1rem;
     gap: 0.65rem;
   }
 }
+
+/* Writing — adjustResize + pinned CTA shelf (no sticky, no inset math) */
+.vora-sky-page--writing .vora-sky-constellation-stage {
+  height: 4.75rem;
+}
+.vora-sky-page--writing .vora-sky-constellation-band {
+  padding-bottom: 0;
+}
+.vora-sky-page--writing .vora-sky-ritual-actions {
+  margin-top: 0.15rem;
+  margin-bottom: 0.55rem;
+  padding-top: 0.5rem;
+  padding-bottom: calc(0.25rem + var(--vora-keyboard-inset, 0px));
+}
 .vora-sky-ritual-action-primary,
 .vora-sky-ritual-action-secondary {
-  display: grid;
-  justify-items: center;
+  /* No grid stacking — stacked exits were a ghost source */
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
   width: 100%;
 }
 .vora-sky-ritual-action-primary {
@@ -5256,10 +5285,65 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
 .vora-sky-ritual-action-secondary {
   min-height: 2.25rem;
   margin-top: 0;
+  gap: 0.15rem;
 }
-.vora-sky-ritual-action-primary > *,
-.vora-sky-ritual-action-secondary > * {
-  grid-area: 1 / 1;
+.vora-sky-write-hint {
+  margin: 0;
+  padding: 0.15rem 0.5rem 0;
+  font-family: var(--font-sky-label);
+  font-size: 0.625rem;
+  font-weight: 300;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgb(230 220 255 / 0.42);
+  text-align: center;
+}
+.vora-sky-write-hint--sentence {
+  max-width: 16rem;
+  margin-inline: auto;
+  padding: 0.35rem 0.75rem 0.15rem;
+  font-family: var(--font-sky-accent);
+  font-size: 0.75rem;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: rgb(230 220 255 / 0.5);
+  line-height: 1.35;
+}
+.vora-sky-todays-light.vora-lang-ko .vora-sky-write-hint--sentence {
+  font-style: normal;
+  letter-spacing: 0.01em;
+}
+.vora-sky-write-hint--action {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  padding: 0.25rem 0.75rem 0.1rem;
+  min-height: 0;
+}
+.vora-sky-write-hint-label {
+  letter-spacing: 0.12em;
+  color: rgb(230 220 255 / 0.4);
+}
+.vora-sky-write-hint-cta {
+  letter-spacing: 0.18em;
+  color: rgb(230 220 255 / 0.72);
+}
+.vora-sky-leave-prompt {
+  margin: 0 0 0.45rem;
+  font-family: var(--font-sky-label);
+  font-size: 0.6875rem;
+  font-weight: 300;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(230 220 255 / 0.55);
+  text-align: center;
 }
 .vora-sky-ritual-action-spacer {
   display: block;
@@ -5269,17 +5353,25 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
 }
 .vora-sky-todays-light .vora-mirror-headline--writing .vora-sky-diary-input {
   display: block;
+  box-sizing: border-box;
   width: 100%;
-  min-height: calc(2 * 1em * var(--vora-typo-hero-leading));
-  max-height: min(42dvh, 14.5rem);
+  max-width: 100%;
+  /* Apple Notes-like canvas: tall, soft-wrapping, grows down — never a one-line runway */
+  min-height: min(42dvh, 14rem);
+  max-height: min(58dvh, 22rem);
   margin: 0;
-  padding: 0;
+  padding: 0.15rem 0.1rem;
   border: 0;
   background: transparent;
   resize: none;
   overflow-x: hidden;
   overflow-y: auto;
   field-sizing: content;
+  /* Soft wrap is the product — unbroken strings must break, not scroll sideways */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  text-wrap: wrap;
   font-family: var(--font-sky-hero);
   font-size: var(--vora-typo-sky-hero);
   line-height: var(--vora-typo-hero-leading);
@@ -5335,31 +5427,23 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   opacity: 1;
   cursor: default;
 }
+/* Secondary action — quiet text link. Hold owns the shelf. */
 .vora-sky-write-own {
   position: relative;
   isolation: isolate;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin: 0;
-  padding: 0.52rem 1.15rem;
-  min-height: 2.05rem;
-  overflow: hidden;
-  border-radius: 999px;
-  border: 1px solid rgb(220 210 255 / 0.32);
-  background:
-    linear-gradient(
-      120deg,
-      rgb(255 255 255 / 0.1) 0%,
-      rgb(203 184 255 / 0.12) 42%,
-      rgb(160 200 255 / 0.1) 68%,
-      rgb(255 255 255 / 0.08) 100%
-    );
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.28),
-    0 0 22px rgb(203 184 255 / 0.16);
-  backdrop-filter: blur(12px) saturate(1.25);
-  -webkit-backdrop-filter: blur(12px) saturate(1.25);
+  margin: 0.1rem 0 0;
+  padding: 0.55rem 0.9rem;
+  min-height: 2.25rem;
+  overflow: visible;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   font-family: var(--font-sky-label);
   font-size: 0.625rem;
   font-weight: 300;
@@ -5367,103 +5451,74 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   letter-spacing: 0.2em;
   line-height: 1.2;
   text-transform: uppercase;
-  color: rgb(245 240 255 / 0.88);
+  color: rgb(230 220 255 / 0.36);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition:
-    color 0.4s var(--vora-ease),
-    border-color 0.4s var(--vora-ease),
-    box-shadow 0.4s var(--vora-ease),
-    transform 0.35s var(--vora-ease);
+    color 0.35s var(--vora-ease),
+    opacity 0.35s var(--vora-ease),
+    transform 0.2s var(--vora-ease);
 }
-/* Milky-way liquid ribbon — slow drift, not a pulse */
 .vora-sky-write-own-liquid {
-  position: absolute;
-  inset: -40% -60%;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse 40% 55% at 22% 40%, rgb(255 255 255 / 0.28), transparent 62%),
-    radial-gradient(ellipse 45% 50% at 70% 55%, rgb(190 175 255 / 0.32), transparent 65%),
-    radial-gradient(ellipse 35% 45% at 48% 20%, rgb(160 210 255 / 0.18), transparent 60%);
-  opacity: 0.7;
-  animation: vora-write-liquid-drift 11s ease-in-out infinite;
+  display: none;
 }
 .vora-sky-write-own-label {
   position: relative;
   z-index: 1;
 }
-
-/* Pink — force Release / Write white after base write-own (correct class) */
-[data-sky-theme='pink'] .vora-sky-write-own,
-[data-sky-theme='pink'] .vora-sky-write-own .vora-sky-write-own-label {
-  color: #ffffff;
-  -webkit-text-fill-color: #ffffff;
-}
 [data-sky-theme='pink'] .vora-sky-release-link {
   color: #ffffff;
   -webkit-text-fill-color: #ffffff;
 }
-@keyframes vora-write-liquid-drift {
-  0%,
-  100% {
-    transform: translate(-4%, 0) rotate(0deg);
-    opacity: 0.55;
-  }
-  50% {
-    transform: translate(5%, -2%) rotate(4deg);
-    opacity: 0.85;
-  }
-}
 .vora-sky-write-own--invite {
-  color: rgb(255 252 255 / 0.95);
-  border-color: rgb(220 210 255 / 0.45);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.35),
-    0 0 28px rgb(203 184 255 / 0.28);
+  color: rgb(230 220 255 / 0.52);
   animation: vora-whisper-in 0.7s var(--vora-ease) both;
   animation-delay: 0.45s;
 }
 .vora-sky-write-own:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: default;
 }
 .vora-sky-write-own:active:not(:disabled) {
-  transform: scale(0.97);
+  color: rgb(245 240 255 / 0.7);
+  transform: scale(0.98);
 }
 @media (hover: hover) and (pointer: fine) {
   .vora-sky-write-own:hover:not(:disabled) {
-    color: rgb(255 252 255 / 0.98);
-    border-color: rgb(230 220 255 / 0.5);
-    box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 0.4),
-      0 0 30px rgb(203 184 255 / 0.28);
+    color: rgb(245 240 255 / 0.58);
+  }
+  .vora-sky-write-own--invite:hover:not(:disabled) {
+    color: rgb(245 240 255 / 0.72);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .vora-sky-write-own-liquid {
-    animation: none;
-    opacity: 0.65;
-  }
   .vora-sky-write-own--invite {
     animation: none;
   }
 }
 
-/* Pink Write / Release — solid white after all base states (invite/hover) */
+/* Pink Write — soft white text, never a competing pill */
 [data-sky-theme='pink'] .vora-sky-write-own,
 [data-sky-theme='pink'] .vora-sky-write-own--invite,
 [data-sky-theme='pink'] .vora-sky-write-own:hover:not(:disabled),
 [data-sky-theme='pink'] .vora-sky-write-own:active:not(:disabled),
 [data-sky-theme='pink'] .vora-sky-write-own .vora-sky-write-own-label {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  color: rgb(255 255 255 / 0.48) !important;
+  -webkit-text-fill-color: rgb(255 255 255 / 0.48) !important;
   text-shadow: none;
-  opacity: 1;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
   font-weight: 400;
 }
+[data-sky-theme='pink'] .vora-sky-write-own--invite,
+[data-sky-theme='pink'] .vora-sky-write-own:hover:not(:disabled),
+[data-sky-theme='pink'] .vora-sky-write-own:active:not(:disabled) {
+  color: rgb(255 255 255 / 0.72) !important;
+  -webkit-text-fill-color: rgb(255 255 255 / 0.72) !important;
+}
 [data-sky-theme='pink'] .vora-sky-write-own-liquid {
-  opacity: 0.28;
+  display: none;
 }
 [data-sky-theme='pink'] .vora-sky-release-link,
 [data-sky-theme='pink'] .vora-sky-release-link:hover,
@@ -5480,8 +5535,9 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   align-items: center;
   justify-content: center;
   margin: 0;
-  padding: 0.35rem 0.5rem;
-  min-height: 1.5rem;
+  padding: 0.85rem 1.1rem;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
   appearance: none;
   -webkit-appearance: none;
   border: 0 !important;
@@ -5526,11 +5582,15 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   }
 }
 .vora-sky-release-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin: 0;
   border: none;
   background: transparent;
-  padding: 0;
-  min-height: 1.125rem;
+  padding: 0.85rem 1.1rem;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
   font-family: var(--font-sky-label);
   font-size: 0.625rem;
   font-weight: 300;
@@ -5635,6 +5695,7 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   padding-left: max(var(--vora-chrome-x, 1.25rem), var(--vora-safe-left, 0px));
   padding-right: max(var(--vora-chrome-x, 1.25rem), var(--vora-safe-right, 0px));
   pointer-events: none;
+  transform: translateY(calc(-1 * var(--vora-keyboard-inset, 0px)));
 }
 /* Shared liquid glass — tab bar + theme Done */
 .vora-tabbar-list,
@@ -6430,12 +6491,11 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   font-size: clamp(0.9rem, 2.6vw + 0.42rem, 1.2rem);
   font-weight: 400;
   letter-spacing: 0.028em;
-  line-height: 1.2;
+  line-height: 1.35;
   color: color-mix(in srgb, var(--vora-sky-accent) 78%, transparent);
-  white-space: nowrap;
-  text-wrap: nowrap;
-  overflow: hidden;
-  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: break-word;
+  text-wrap: balance;
 }
 .vora-sky-theme-studio-dock {
   position: absolute;
@@ -7940,22 +8000,37 @@ body[data-vora-card-open='true'] .vora-app-header {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
+  gap: 0.45rem;
   width: 100%;
   flex-basis: 100%;
-  margin: 0;
-  padding: 0;
-  border-radius: 0;
+  margin: 0.15rem 0 0;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
   text-align: center;
   font-family: var(--font-sky-label);
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgb(228 217 255 / 0.88);
-  background: transparent;
-  box-shadow: none;
+  color: rgb(245 240 255 / 0.95);
+  background: rgb(18 12 32 / 0.55);
+  box-shadow: 0 0 24px rgb(203 184 255 / 0.18);
   pointer-events: none;
-  animation: vora-status-spark 1.4s var(--vora-ease) both;
+  animation: vora-status-spark 1.2s var(--vora-ease) both;
+}
+.vora-light-card-status[data-tone='progress'] {
+  color: rgb(230 220 255 / 0.78);
+  background: rgb(18 12 32 / 0.4);
+  box-shadow: none;
+}
+.vora-light-card-status[data-tone='success'] {
+  color: rgb(255 252 250 / 0.98);
+  background: rgb(48 36 78 / 0.72);
+  box-shadow: 0 0 28px rgb(203 184 255 / 0.28);
+}
+.vora-light-card-status[data-tone='error'] {
+  color: rgb(255 220 220 / 0.92);
+  background: rgb(48 18 24 / 0.55);
+  box-shadow: none;
 }
 @keyframes vora-status-spark {
   0% {

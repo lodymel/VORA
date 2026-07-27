@@ -7,6 +7,7 @@ import { formatSkyDate } from './sky-date'
 import { DEFAULT_LIGHT_CARD_THEME, type LightCardThemeId } from './light-card-theme'
 import { VoraOStar, VoraWordmark } from './logo'
 import type { Light } from './constants'
+import { useVoraLocale } from './vora-locale'
 
 const DUST = [
   { left: '15%', top: '17%', size: 1.6, delay: '0s', duration: '6.8s' },
@@ -33,15 +34,17 @@ export const LightCard = forwardRef<
   { light, theme = DEFAULT_LIGHT_CARD_THEME, className = '', size = 'screen' },
   ref,
 ) {
-  const dateStamp = useMemo(() => formatSkyDate(light), [light])
+  const { locale } = useVoraLocale()
+  const dateStamp = useMemo(() => formatSkyDate(light, locale), [light, locale])
   const lines = useMemo(() => getAlbumTypoLines(light.sentence), [light.sentence])
   const starSize = size === 'export' ? 72 : 22
   const dustScale = size === 'export' ? 3.4 : 1
+  const hangulCard = locale === 'ko' || /[\uAC00-\uD7A3]/.test(light.sentence)
 
   return (
     <article
       ref={ref}
-      className={`vora-light-card vora-light-card--${size} ${className}`.trim()}
+      className={`vora-light-card vora-light-card--${size}${hangulCard ? ' vora-lang-ko' : ''} ${className}`.trim()}
       data-theme={theme}
       aria-label={`Light card: ${light.sentence}`}
     >

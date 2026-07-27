@@ -4,6 +4,7 @@ import type { KeyboardEvent } from 'react'
 import { AlbumTypoBlock } from './album-typo-block'
 import type { AlbumTypoLines } from './mirror-album-typo'
 import { getAlbumTypoLines } from './mirror-album-typo'
+import { useVoraLocale } from './vora-locale'
 
 export { getAlbumTypoLines }
 export type { AlbumTypoLines }
@@ -26,6 +27,7 @@ export function MirrorTodaysLight({
   saveStar?: boolean
   onTap?: () => void
 }) {
+  const { t } = useVoraLocale()
   const lines = linesProp ?? getAlbumTypoLines(sentence ?? '')
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -44,7 +46,7 @@ export function MirrorTodaysLight({
       role={tappable ? 'button' : undefined}
       tabIndex={tappable && !tapDisabled ? 0 : undefined}
       aria-disabled={tappable && tapDisabled ? true : undefined}
-      aria-label={tappable ? 'Hold this Light to your Sky' : undefined}
+      aria-label={tappable ? t.holdLightAria : undefined}
       onClick={
         tappable && !tapDisabled
           ? () => {

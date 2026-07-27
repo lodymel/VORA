@@ -1,8 +1,6 @@
-import { DREAM_LIGHTS } from './light-quotes-dream'
-import { FUN_LIGHTS } from './light-quotes-fun'
-import { HEALTH_LIGHTS } from './light-quotes-health'
-import { LOVE_LIGHTS } from './light-quotes-love'
-import { SUCCESS_LIGHTS } from './light-quotes-success'
+import { LIGHTS } from './light-quotes'
+import { LIGHTS_KO } from './light-quotes-ko'
+import type { VoraLocale } from './locale'
 import { hasHangul } from './text-script'
 
 export type Light = {
@@ -22,49 +20,27 @@ export type SparkPrompt = {
 export type { NotificationPreference } from './light-reminder'
 export type { LightReminder } from './light-reminder'
 
-/**
- * Curated daily Lights — Success + Love + Dream + Fun + Health.
- */
-export const DAILY_LIGHTS: readonly string[] = [
-  ...SUCCESS_LIGHTS,
-  ...LOVE_LIGHTS,
-  ...DREAM_LIGHTS,
-  ...FUN_LIGHTS,
-  ...HEALTH_LIGHTS,
-]
-
-export type LightCategoryId = 'success' | 'love' | 'dream' | 'fun' | 'health'
-
-/** Per-category pools — tap a mood, receive one of these. */
-export const CATEGORY_LIGHTS: Record<LightCategoryId, readonly string[]> = {
-  success: SUCCESS_LIGHTS,
-  love: LOVE_LIGHTS,
-  dream: DREAM_LIGHTS,
-  fun: FUN_LIGHTS,
-  health: HEALTH_LIGHTS,
+/** Today's Star pool for the current language. */
+export function lightsFor(locale: VoraLocale = 'en'): readonly string[] {
+  return locale === 'ko' ? LIGHTS_KO : LIGHTS
 }
 
-/** One Light from a category — avoids repeating the current sentence when possible. */
-export function pickCategoryLight(
-  category: LightCategoryId,
-  avoid: string | null = null,
-): string {
-  const pool = CATEGORY_LIGHTS[category]
-  if (pool.length === 0) return ''
-  if (pool.length === 1) return pool[0]
-  const normalized = avoid?.trim() ?? ''
-  let next = pool[Math.floor(Math.random() * pool.length)]
-  if (normalized) {
-    for (let i = 0; i < 8 && next === normalized; i++) {
-      next = pool[Math.floor(Math.random() * pool.length)]
-    }
-  }
-  return next
+/** @deprecated Prefer lightsFor(locale) */
+export const DAILY_LIGHTS: readonly string[] = [...LIGHTS]
+
+/** Local calendar day index — matches “held today” aging (not UTC). */
+export function localDayIndex(now = new Date()): number {
+  return Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86_400_000)
 }
 
-export function getTodaysLight(): string {
-  const dayIndex = Math.floor(Date.now() / 86_400_000)
-  return DAILY_LIGHTS[dayIndex % DAILY_LIGHTS.length]
+export function localDayKey(now = new Date()): string {
+  return `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`
+}
+
+/** Today's Star — one quiet invitation sentence for this local day. */
+export function getTodaysLight(locale: VoraLocale = 'en', now = new Date()): string {
+  const pool = lightsFor(locale)
+  return pool[localDayIndex(now) % pool.length]
 }
 
 export const SPARK_PROMPTS: SparkPrompt[] = [
@@ -75,37 +51,37 @@ export const SPARK_PROMPTS: SparkPrompt[] = [
   { title: 'What do you choose for yourself?', subtitle: 'Write with love. Only for you.' },
 ]
 
-/** Bump when default Sky seed shape changes — refreshes seed filler on sparse skies. */
-export const SKY_SEED_REVISION = 6
+/** Bump when default Sky seed shape / language pools change. */
+export const SKY_SEED_REVISION = 13
 
 /**
- * Seven category quotes for the default constellation.
- * Success is clearly present, plus Love / Dream / Fun / Health.
- * Dates are all before today (7 days ago → yesterday) so the sky already feels lived-in.
+ * Seven Today's Star lines for the default constellation.
+ * Dates are all before today so the sky already feels lived-in.
  */
-const SEED_FROM_CATEGORIES: readonly { sentence: string; daysAgo: number }[] = [
-  { sentence: SUCCESS_LIGHTS[3], daysAgo: 7 },
-  { sentence: LOVE_LIGHTS[2], daysAgo: 6 },
-  { sentence: DREAM_LIGHTS[9], daysAgo: 5 },
-  { sentence: FUN_LIGHTS[1], daysAgo: 4 },
-  { sentence: HEALTH_LIGHTS[0], daysAgo: 3 },
-  { sentence: SUCCESS_LIGHTS[16], daysAgo: 2 },
-  { sentence: SUCCESS_LIGHTS[7], daysAgo: 1 },
-]
+function seedFromPool(locale: VoraLocale) {
+  const pool = lightsFor(locale)
+  const picks = [0, 2, 6, 8, 20, 26, 30]
+  return picks.map((index, i) => ({
+    sentence: pool[index % pool.length],
+    daysAgo: 7 - i,
+  }))
+}
 
-function formatLightDateLabel(daysAgo: number, now: Date): string {
+function formatLightDateLabel(daysAgo: number, now: Date, locale: VoraLocale = 'en'): string {
   const d = new Date(now)
   d.setHours(12, 0, 0, 0)
   d.setDate(d.getDate() - daysAgo)
-  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(d)
+  const tag = locale === 'ko' ? 'ko-KR' : 'en-US'
+  return new Intl.DateTimeFormat(tag, { month: 'short', day: 'numeric' }).format(d)
 }
 
-/** Default Sky — 7 English category Lights dated across the last 3 days (incl. today). */
-export function createSeedLights(now = new Date()): Light[] {
-  return SEED_FROM_CATEGORIES.map(({ sentence, daysAgo }, index) => ({
-    id: `vora-seed-r${SKY_SEED_REVISION}-${index}-d${daysAgo}`,
+/** Default Sky — 7 Lights dated across recent days. */
+export function createSeedLights(now = new Date(), locale: VoraLocale = 'en'): Light[] {
+  const lang = locale === 'ko' ? 'ko' : 'en'
+  return seedFromPool(locale).map(({ sentence, daysAgo }, index) => ({
+    id: `vora-seed-r${SKY_SEED_REVISION}-${lang}-${index}-d${daysAgo}`,
     sentence,
-    date: formatLightDateLabel(daysAgo, now),
+    date: formatLightDateLabel(daysAgo, now, locale),
     daysAgo,
   }))
 }
@@ -116,17 +92,47 @@ export function isSeedLight(light: Light): boolean {
 }
 
 /**
- * Hangul out. Keep personal Lights.
+ * Personal Light ids are timestamps — refresh daysAgo so “today” rolls over at midnight.
+ * Seeds keep their authored offsets (rebuilt in resolveSkyLights).
+ */
+export function ageUserLights(
+  lights: Light[],
+  now = new Date(),
+  locale: VoraLocale = 'en',
+): Light[] {
+  const todayUtc = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())
+  return lights.map((light) => {
+    if (isSeedLight(light)) return light
+    const ts = Number(light.id)
+    if (!Number.isFinite(ts) || ts < 1e12) return light
+    const saved = new Date(ts)
+    if (Number.isNaN(saved.getTime())) return light
+    const savedUtc = Date.UTC(saved.getFullYear(), saved.getMonth(), saved.getDate())
+    const daysAgo = Math.max(0, Math.floor((todayUtc - savedUtc) / 86_400_000))
+    return {
+      ...light,
+      daysAgo,
+      date: daysAgo === 0 ? formatToday(locale) : formatLightDateLabel(daysAgo, now, locale),
+    }
+  })
+}
+
+/**
+ * Keep personal Lights (Latin or Hangul).
  * Sparse skies (< 7 own Lights) always keep the starter constellation —
  * one Hold must never erase the default seven.
  */
-export function resolveSkyLights(lights: Light[] | null | undefined): Light[] {
-  const cleaned = dedupeLights(lights).filter((light) => !hasHangul(light.sentence))
+export function resolveSkyLights(
+  lights: Light[] | null | undefined,
+  options?: { locale?: VoraLocale },
+): Light[] {
+  const locale = options?.locale ?? 'en'
+  const cleaned = ageUserLights(dedupeLights(lights), new Date(), locale)
   const userLights = cleaned.filter((light) => !isSeedLight(light))
 
   if (userLights.length >= 7) return userLights
 
-  const seeds = createSeedLights()
+  const seeds = createSeedLights(new Date(), locale)
   if (userLights.length === 0) return seeds
 
   const taken = new Set(userLights.map((light) => light.sentence.trim().toLowerCase()))
@@ -139,8 +145,8 @@ export function needsSeedLights(lights: Light[] | null | undefined): boolean {
   return !Array.isArray(lights) || lights.length === 0
 }
 
-export function formatToday(): string {
-  return 'Today'
+export function formatToday(locale: VoraLocale = 'en'): string {
+  return locale === 'ko' ? '오늘' : 'Today'
 }
 
 /** Remove duplicate saves — same sentence on the same day keeps the newest only. */
@@ -157,15 +163,72 @@ export function dedupeLights(lights: Light[] | null | undefined): Light[] {
 }
 
 export function hasLightToday(lights: Light[], sentence: string): boolean {
-  const normalized = sentence.trim()
-  return lights.some((l) => l.daysAgo === 0 && l.sentence.trim() === normalized)
+  const normalized = sentence.trim().replace(/\s+/g, ' ').toLowerCase()
+  return lights.some(
+    (l) => l.daysAgo === 0 && l.sentence.trim().replace(/\s+/g, ' ').toLowerCase() === normalized,
+  )
 }
 
-export function addLightIfNew(lights: Light[], sentence: string): Light[] | null {
-  const normalized = sentence.trim()
-  if (!normalized || hasHangul(normalized) || hasLightToday(lights, normalized)) return null
+/** Newest personal Light held today (seeds never count). Array is newest-first. */
+export function getLatestTodayUserLight(lights: Light[]): Light | null {
+  return lights.find((light) => light.daysAgo === 0 && !isSeedLight(light)) ?? null
+}
+
+/**
+ * What the Sky body should show:
+ * 1) the Light you just held today
+ * 2) else Today's Star
+ */
+export function getSkyHeroSentence(lights: Light[], dailyPrompt: string): string {
+  return getLatestTodayUserLight(lights)?.sentence ?? dailyPrompt
+}
+
+/** The held Light currently on the hero — Release removes this one. */
+export function getSkyHeroHeldLight(lights: Light[], dailyPrompt: string): Light | null {
+  const latest = getLatestTodayUserLight(lights)
+  if (latest) return latest
+  const prompt = dailyPrompt.trim()
+  if (!prompt) return null
+  return (
+    lights.find(
+      (light) =>
+        light.daysAgo === 0 &&
+        !isSeedLight(light) &&
+        light.sentence.trim() === prompt,
+    ) ?? null
+  )
+}
+
+/**
+ * After Release of the last today Light, rest the hero —
+ * never snap back to the same daily line (or Today's Star loop).
+ */
+export function shouldRestHeroAfterRelease(
+  lights: Light[],
+  releasedId: string,
+): boolean {
+  const released = lights.find((light) => light.id === releasedId)
+  if (!released || isSeedLight(released) || released.daysAgo !== 0) return false
+  return !lights.some(
+    (light) =>
+      light.id !== releasedId &&
+      light.daysAgo === 0 &&
+      !isSeedLight(light),
+  )
+}
+
+export function addLightIfNew(
+  lights: Light[],
+  sentence: string,
+  options?: { allowHangul?: boolean; locale?: VoraLocale },
+): Light[] | null {
+  const normalized = sentence.trim().replace(/\s+/g, ' ')
+  if (!normalized) return null
+  if (hasHangul(normalized) && !options?.allowHangul) return null
+  if (hasLightToday(lights, normalized)) return null
+  const locale = options?.locale ?? 'en'
   return [
-    { id: `${Date.now()}`, sentence: normalized, date: formatToday(), daysAgo: 0 },
+    { id: `${Date.now()}`, sentence: normalized, date: formatToday(locale), daysAgo: 0 },
     ...lights,
   ]
 }

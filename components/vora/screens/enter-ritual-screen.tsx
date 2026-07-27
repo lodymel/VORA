@@ -4,10 +4,10 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { SkyAtmosphere } from '../sky-atmosphere'
 import { VoraOStar, VoraWordmark } from '../logo'
-import { VORA_SLOGAN, VORA_TAGLINE } from '../brand'
 import { EnterChrome } from '../enter-chrome'
 import { DEFAULT_SKY_THEME, type SkyThemeId } from '../light-card-theme'
 import { voraAudio } from '../vora-audio'
+import { useVoraLocale } from '../vora-locale'
 
 /** Soft editorial ease — arrives late, never snaps. */
 const soft = [0.25, 0.1, 0.25, 1] as const
@@ -27,6 +27,7 @@ export function EnterRitualScreen({
   skyTheme?: SkyThemeId
 }) {
   const reduceMotion = useReducedMotion()
+  const { t } = useVoraLocale()
   const [beat, setBeat] = useState<Beat>('void')
   const timers = useRef<number[]>([])
   const doneRef = useRef(false)
@@ -92,7 +93,7 @@ export function EnterRitualScreen({
   function beginCrossing() {
     clearTimers()
     setBeat('crossing')
-    later(reduceMotion ? 420 : 1500, finish)
+    later(reduceMotion ? 320 : 850, finish)
   }
 
   const showStar = beat === 'star' || beat === 'name'
@@ -181,8 +182,8 @@ export function EnterRitualScreen({
               }}
               aria-hidden={!inviting}
             >
-              <p className="vora-enter-headline">{VORA_SLOGAN}</p>
-              <p className="vora-enter-tagline">{VORA_TAGLINE}</p>
+              <p className="vora-enter-headline">{t.slogan}</p>
+              <p className="vora-enter-tagline">{t.tagline}</p>
             </motion.div>
           ) : null}
         </div>
@@ -215,7 +216,7 @@ export function EnterRitualScreen({
                 className="vora-enter-cta"
                 tabIndex={inviting ? 0 : -1}
               >
-                Enter your Sky
+                {t.enterSky}
               </button>
               <span className="vora-enter-cta-orbit vora-enter-cta-orbit--right" aria-hidden="true">
                 <i className="vora-enter-cta-mark vora-enter-cta-mark--star" />
@@ -224,7 +225,7 @@ export function EnterRitualScreen({
                 <i className="vora-enter-cta-mark vora-enter-cta-mark--dot" />
               </span>
             </div>
-            <p className="vora-enter-sound-hint">Sound is part of the sky</p>
+            <p className="vora-enter-sound-hint">{t.soundHint}</p>
           </motion.div>
         ) : null}
       </div>

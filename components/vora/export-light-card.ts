@@ -17,14 +17,16 @@ const LC_TOKEN_PROPS = [
 ] as const
 
 function slugify(sentence: string) {
-  return (
+  const base =
     sentence
       .trim()
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
       .slice(0, 40) || 'light'
-  )
+  // Hangul-only (and other non-Latin) sentences collapse to "light" — uniquify.
+  if (base === 'light') return `light-${Date.now().toString(36)}`
+  return base
 }
 
 function waitFrames(count = 2) {
@@ -203,10 +205,10 @@ export async function captureLightCardPng(el: HTMLElement): Promise<Blob> {
 
   try {
     await waitImages(clone)
-    await waitFrames(2)
+    await waitFrames(1)
 
     const raw = await domToBlob(clone, {
-      scale: 3,
+      scale: 2,
       quality: 1,
       // Transparent outside the card radius — solid fill made corners look sharp
       backgroundColor: null,
@@ -291,10 +293,151 @@ export function downloadBlob(blob: Blob, filename: string) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1500)
 }
 
+async function blobToBase64(blob: Blob) {
+  const buffer = await blob.arrayBuffer()
+  const bytes = new Uint8Array(buffer)
+  let binary = ''
+  const chunk = 0x8000
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode.apply(
+      null,
+      bytes.subarray(i, i + chunk) as unknown as number[],
+    )
+  }
+  return btoa(binary)
+}
+
+async function isNativeApp() {
+  try {
+    const { Capacitor } = await import('@capacitor/core')
+    return Capacitor.isNativePlatform()
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Android album identifiers are filesystem paths under getAlbumsPath().
+ * Matching by name alone can pick the wrong bucket (e.g. DCIM/VORA).
+ * Official pattern: https://github.com/capacitor-community/media
+ *
+ * Do not require getAlbums() to succeed — the plugin can NPE when
+ * listFiles()/MediaStore cursors are null. createAlbum + known path is enough.
+ */
+async function ensureVoraAlbumId() {
+  const { Capacitor } = await import('@capacitor/core')
+  const { Media } = await import('@capacitor-community/media')
+  const platform = Capacitor.getPlatform()
+
+  if (platform === 'android') {
+    const { path: albumsPath } = await Media.getAlbumsPath()
+    const root = albumsPath.replace(/\/$/, '')
+    const identifier = `${root}/VORA`
+
+    try {
+      const { albums } = await Media.getAlbums()
+      const existing = albums.find(
+        (album) => album.name === 'VORA' && album.identifier.startsWith(root),
+      )
+      if (existing?.identifier) return existing.identifier
+    } catch {
+      // Continue — createAlbum + path still works for savePhoto.
+    }
+
+    try {
+      await Media.createAlbum({ name: 'VORA' })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      if (!/already exists/i.test(message)) throw error
+    }
+
+    return identifier
+  }
+
+  try {
+    const { albums } = await Media.getAlbums()
+    const existing = albums.find((album) => album.name === 'VORA')
+    if (existing?.identifier) return existing.identifier
+  } catch {
+    // Fall through to create
+  }
+
+  try {
+    await Media.createAlbum({ name: 'VORA' })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    if (!/already exists/i.test(message)) throw error
+  }
+
+  const { albums } = await Media.getAlbums()
+  const created = albums.find((album) => album.name === 'VORA')
+  if (!created?.identifier) throw new Error('Could not create VORA album')
+  return created.identifier
+}
+
+async function writeCachePng(blob: Blob, filename: string) {
+  const { Directory, Filesystem } = await import('@capacitor/filesystem')
+  const base64 = await blobToBase64(blob)
+  const path = `export/${filename}`
+  await Filesystem.mkdir({
+    path: 'export',
+    directory: Directory.Cache,
+    recursive: true,
+  }).catch(() => undefined)
+  const written = await Filesystem.writeFile({
+    path,
+    data: base64,
+    directory: Directory.Cache,
+    recursive: true,
+  })
+  // Prefer getUri so Media/Share always receive a real file:// path.
+  const { uri } = await Filesystem.getUri({
+    path,
+    directory: Directory.Cache,
+  })
+  return uri || written.uri
+}
+
+/** Save PNG into the device photo library (native) or trigger a browser download. */
+export async function saveLightCardImage(blob: Blob, sentence: string) {
+  const filename = `vora-${slugify(sentence)}.png`
+  if (await isNativeApp()) {
+    const { Media } = await import('@capacitor-community/media')
+    // File path > data URL — large 1080×1920 PNGs break the Capacitor bridge as base64.
+    const fileUri = await writeCachePng(blob, filename)
+    const albumIdentifier = await ensureVoraAlbumId()
+    await Media.savePhoto({
+      path: fileUri,
+      albumIdentifier,
+      fileName: filename.replace(/\.png$/i, ''),
+    })
+    return 'saved' as const
+  }
+  downloadBlob(blob, filename)
+  return 'saved' as const
+}
+
 export async function shareOrSaveLightCard(blob: Blob, sentence: string) {
   const filename = `vora-${slugify(sentence)}.png`
-  const file = new File([blob], filename, { type: 'image/png' })
 
+  if (await isNativeApp()) {
+    const { Share } = await import('@capacitor/share')
+    const fileUri = await writeCachePng(blob, filename)
+    try {
+      await Share.share({
+        title: 'VORA',
+        files: [fileUri],
+        dialogTitle: 'Share Light',
+      })
+      return 'shared' as const
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      if (/cancel|dismiss|abort/i.test(message)) return 'cancelled' as const
+      throw error
+    }
+  }
+
+  const file = new File([blob], filename, { type: 'image/png' })
   const canShareFiles =
     typeof navigator !== 'undefined' &&
     typeof navigator.share === 'function' &&
@@ -313,10 +456,11 @@ export async function shareOrSaveLightCard(blob: Blob, sentence: string) {
       if (error instanceof DOMException && error.name === 'AbortError') {
         return 'cancelled' as const
       }
-      // Fall through to download
+      throw error
     }
   }
 
+  // Browser fallback when Web Share files are unavailable
   downloadBlob(blob, filename)
   return 'saved' as const
 }

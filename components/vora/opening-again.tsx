@@ -1,6 +1,7 @@
 'use client'
 
 import { motion, useReducedMotion } from 'motion/react'
+import { useVoraLocale } from './vora-locale'
 
 /**
  * Return to the entrance — Me only.
@@ -14,19 +15,20 @@ export function OpeningAgain({
   className?: string
 }) {
   const reduceMotion = useReducedMotion()
+  const { t } = useVoraLocale()
 
   return (
     <div className={`vora-opening-again ${className}`.trim()}>
-      <p className="vora-opening-again-kicker">Opening</p>
+      <p className="vora-opening-again-kicker">{t.opening}</p>
       <motion.button
         type="button"
         className="vora-opening-again-btn"
         onClick={onBeginAgain}
-        aria-label="Return to the opening"
+        aria-label={t.onceMore}
         whileTap={reduceMotion ? undefined : { opacity: 0.55 }}
         transition={{ duration: 0.18 }}
       >
-        Once more.
+        {t.onceMore}
       </motion.button>
     </div>
   )

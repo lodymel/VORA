@@ -8,7 +8,7 @@ import { LightCard } from './light-card'
 import { VoraOStar } from './logo'
 import {
   captureLightCardPng,
-  downloadBlob,
+  saveLightCardImage,
   shareOrSaveLightCard,
 } from './export-light-card'
 import {
@@ -18,6 +18,7 @@ import {
 } from './light-card-theme'
 import { voraAudio } from './vora-audio'
 import type { Light } from './constants'
+import { useVoraLocale } from './vora-locale'
 
 const ease = [0.22, 1, 0.36, 1] as const
 const easePull = [0.33, 1, 0.28, 1] as const
@@ -25,9 +26,9 @@ const easePull = [0.33, 1, 0.28, 1] as const
 const easeClose = [0.22, 1, 0.36, 1] as const
 
 /** Open: pull → reveal. Close: soft scale + home + fade. */
-const PULL_S = 0.5
-const SPIN_S = 0.95
-const CLOSE_S = 0.58
+const PULL_S = 0.42
+const SPIN_S = 0.65
+const CLOSE_S = 0.48
 
 type Phase = 'transforming' | 'ready' | 'closing'
 
@@ -50,12 +51,16 @@ export function LightCardReveal({
   onCloseStart?: () => void
 }) {
   const reduceMotion = useReducedMotion()
+  const { t } = useVoraLocale()
   const [mounted, setMounted] = useState(false)
   const [phase, setPhase] = useState<Phase>('transforming')
   const [showFace, setShowFace] = useState(false)
   const [busy, setBusy] = useState(false)
   const [status, setStatus] = useState<string | null>(null)
+  const [statusTone, setStatusTone] = useState<'progress' | 'success' | 'error'>('progress')
   const cardRef = useRef<HTMLElement>(null)
+  const captureCacheRef = useRef<Blob | null>(null)
+  const statusClearRef = useRef<number | null>(null)
   const finishedRef = useRef(false)
   const closingRef = useRef(false)
 
@@ -93,6 +98,39 @@ export function LightCardReveal({
     setShowFace(true)
     setPhase('ready')
   }, [])
+
+  useEffect(() => {
+    return () => {
+      if (statusClearRef.current) window.clearTimeout(statusClearRef.current)
+    }
+  }, [])
+
+  // Warm the PNG while the card is open — Save/Share should feel immediate.
+  useEffect(() => {
+    if (phase !== 'ready' || !showFace) return
+    const el = cardRef.current
+    if (!el) return
+    let cancelled = false
+    captureCacheRef.current = null
+    void captureLightCardPng(el)
+      .then((blob) => {
+        if (!cancelled) captureCacheRef.current = blob
+      })
+      .catch(() => {
+        /* capture on demand if prefetch fails */
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [phase, showFace, light.id, theme])
+
+  async function getCaptureBlob() {
+    if (captureCacheRef.current) return captureCacheRef.current
+    if (!cardRef.current) throw new Error('Card not ready')
+    const blob = await captureLightCardPng(cardRef.current)
+    captureCacheRef.current = blob
+    return blob
+  }
 
   const skipToReady = useCallback(() => {
     if (closingRef.current) return
@@ -268,33 +306,48 @@ export function LightCardReveal({
   async function handleSave() {
     if (!cardRef.current || busy || phase !== 'ready') return
     setBusy(true)
-    setStatus(null)
+    setStatusTone('progress')
+    setStatus(t.saving)
+    if (statusClearRef.current) window.clearTimeout(statusClearRef.current)
     try {
-      const blob = await captureLightCardPng(cardRef.current)
-      downloadBlob(blob, `vora-${light.id}.png`)
-      setStatus('Saved')
-    } catch {
-      setStatus('Could not save')
+      const blob = await getCaptureBlob()
+      await saveLightCardImage(blob, light.sentence)
+      const { Capacitor } = await import('@capacitor/core')
+      setStatusTone('success')
+      setStatus(
+        Capacitor.getPlatform() === 'android' ? t.savedGallery : t.savedPhotos,
+      )
+    } catch (error) {
+      console.error('[vora] save Light card failed', error)
+      setStatusTone('error')
+      setStatus(t.couldNotSave)
     } finally {
       setBusy(false)
-      window.setTimeout(() => setStatus(null), 2400)
+      statusClearRef.current = window.setTimeout(() => setStatus(null), 3200)
     }
   }
 
   async function handleShare() {
     if (!cardRef.current || busy || phase !== 'ready') return
     setBusy(true)
-    setStatus(null)
+    setStatusTone('progress')
+    setStatus(t.preparing)
+    if (statusClearRef.current) window.clearTimeout(statusClearRef.current)
     try {
-      const blob = await captureLightCardPng(cardRef.current)
+      const blob = await getCaptureBlob()
       const result = await shareOrSaveLightCard(blob, light.sentence)
-      if (result === 'cancelled') return
-      setStatus(result === 'shared' ? 'Shared' : 'Saved')
+      if (result === 'cancelled') {
+        setStatus(null)
+        return
+      }
+      setStatusTone('success')
+      setStatus(result === 'shared' ? t.shared : t.saved)
     } catch {
-      setStatus('Could not save')
+      setStatusTone('error')
+      setStatus(t.couldNotShare)
     } finally {
       setBusy(false)
-      window.setTimeout(() => setStatus(null), 2400)
+      statusClearRef.current = window.setTimeout(() => setStatus(null), 3200)
     }
   }
 
@@ -405,27 +458,31 @@ export function LightCardReveal({
                   className="vora-light-card-action"
                   onClick={handleSave}
                   disabled={busy}
+                  aria-busy={busy && status === t.saving}
                 >
-                  Save
+                  {busy && status === t.saving ? t.saving : t.save}
                 </button>
                 <button
                   type="button"
                   className="vora-light-card-action vora-light-card-action--primary"
                   onClick={handleShare}
                   disabled={busy}
+                  aria-busy={busy && status === t.preparing}
                 >
-                  Share
+                  {busy && status === t.preparing ? t.sharing : t.share}
                 </button>
                 <AnimatePresence>
                   {status ? (
                     <motion.p
                       key={status}
                       className="vora-light-card-status"
+                      data-tone={statusTone}
                       role="status"
+                      aria-live="polite"
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
-                      transition={{ duration: 0.35, ease }}
+                      transition={{ duration: 0.28, ease }}
                     >
                       <VoraOStar size={12} />
                       <span>{status}</span>

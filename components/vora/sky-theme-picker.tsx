@@ -5,13 +5,23 @@ import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { X } from 'lucide-react'
 import { SkyAtmosphere } from './sky-atmosphere'
-import { VORA_SLOGAN, VORA_TAGLINE } from './brand'
 import { SKY_THEMES, type SkyThemeId } from './light-card-theme'
+import { useVoraLocale } from './vora-locale'
+import type { VoraLocale } from './locale'
+import { copy } from './locale'
 
 const soft = [0.25, 0.1, 0.25, 1] as const
 
-function themeLabel(id: SkyThemeId) {
-  return SKY_THEMES.find((theme) => theme.id === id)?.label ?? 'Default'
+function themeLabelFor(id: SkyThemeId, locale: VoraLocale) {
+  const t = copy(locale)
+  const map: Record<SkyThemeId, string> = {
+    default: t.themeDefault,
+    pure: t.themePure,
+    black: t.themeBlack,
+    pink: t.themePink,
+    aurora: t.themeAurora,
+  }
+  return map[id] ?? t.themeDefault
 }
 
 function ThemeThumb({
@@ -46,6 +56,7 @@ export function SkyThemePicker({
   onChange: (theme: SkyThemeId) => void
 }) {
   const reduceMotion = useReducedMotion()
+  const { locale, t } = useVoraLocale()
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState(value)
   const [mounted, setMounted] = useState(false)
@@ -102,19 +113,19 @@ export function SkyThemePicker({
               <button
                 type="button"
                 className="vora-sky-theme-studio-close"
-                aria-label="Close"
+                aria-label={t.close}
                 onClick={closeStudio}
               >
                 <X size={22} strokeWidth={1.5} aria-hidden="true" />
               </button>
 
               <div className="vora-sky-theme-studio-stage">
-                <p className="vora-sky-theme-studio-kicker">Theme</p>
+                <p className="vora-sky-theme-studio-kicker">{t.theme}</p>
                 <h2 id="vora-sky-theme-studio-title" className="vora-sky-theme-studio-title">
-                  {themeLabel(draft)}
+                  {themeLabelFor(draft, locale)}
                 </h2>
-                <p className="vora-sky-theme-studio-sample">{VORA_SLOGAN}</p>
-                <p className="vora-sky-theme-studio-sample-accent">{VORA_TAGLINE}</p>
+                <p className="vora-sky-theme-studio-sample">{t.slogan}</p>
+                <p className="vora-sky-theme-studio-sample-accent">{t.tagline}</p>
               </div>
 
               <motion.div
@@ -126,24 +137,25 @@ export function SkyThemePicker({
                 <div
                   className="vora-sky-theme-studio-rail"
                   role="radiogroup"
-                  aria-label="Night sky themes"
+                  aria-label={t.theme}
                 >
                   {SKY_THEMES.map((theme) => {
                     const active = draft === theme.id
+                    const label = themeLabelFor(theme.id, locale)
                     return (
                       <button
                         key={theme.id}
                         type="button"
                         role="radio"
                         aria-checked={active}
-                        aria-label={theme.label}
+                        aria-label={label}
                         onClick={() => setDraft(theme.id)}
                         className={`vora-sky-theme-studio-option ${
                           active ? 'vora-sky-theme-studio-option--active' : ''
                         }`}
                       >
                         <ThemeThumb themeId={theme.id} active={active} />
-                        <span className="vora-sky-theme-studio-option-name">{theme.label}</span>
+                        <span className="vora-sky-theme-studio-option-name">{label}</span>
                       </button>
                     )
                   })}
@@ -153,7 +165,7 @@ export function SkyThemePicker({
                   className="vora-sky-theme-studio-done"
                   onClick={applyAndClose}
                 >
-                  Done
+                  {t.themeDone}
                 </button>
               </motion.div>
             </motion.div>
@@ -172,10 +184,10 @@ export function SkyThemePicker({
         aria-haspopup="dialog"
         aria-expanded={open}
       >
-        <span className="vora-me-row-label">Theme</span>
+        <span className="vora-me-row-label">{t.theme}</span>
         <span className="vora-me-theme-current">
           <ThemeThumb themeId={value} className="vora-sky-theme-thumb--row" />
-          <span className="vora-me-row-value">{themeLabel(value)}</span>
+          <span className="vora-me-row-value">{themeLabelFor(value, locale)}</span>
         </span>
       </button>
       {studio}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { PenLine, Volume2, VolumeX } from 'lucide-react'
 import { AppShell } from './app-shell'
@@ -9,20 +9,28 @@ import { VoraHeader } from './vora-header'
 import { EnterRitualScreen } from './screens/enter-ritual-screen'
 import { SkyScreen } from './screens/sky-screen'
 import { ProfileScreen } from './screens/profile-screen'
-import { addLightIfNew, getTodaysLight, hasLightToday, isSeedLight, removeLight, resolveSkyLights, createSeedLights } from './constants'
+import {
+  addLightIfNew,
+  getTodaysLight,
+  localDayKey,
+  removeLight,
+  resolveSkyLights,
+} from './constants'
 import { useVoraPersistence } from './use-vora-persistence'
 import { voraAudio } from './vora-audio'
 import { skyThemeUsesLightChrome } from './light-card-theme'
 import { hasKnownWriteOwn, markWriteOwnKnown } from './write-own-hint'
+import { allowsHangul } from './locale'
+import { VoraLocaleProvider, useVoraLocale } from './vora-locale'
 
 const fade = {
   initial: { opacity: 0 },
   animate: { opacity: 1 },
   exit: { opacity: 0 },
-  transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
+  transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] as const },
 }
 
-export function VoraApp() {
+function VoraAppChrome() {
   const {
     hydrated,
     stage,
@@ -35,12 +43,54 @@ export function VoraApp() {
     setSkyTheme,
     days,
     isSubscribed,
+    locale,
+    setLocale,
   } = useVoraPersistence()
-  const todaysLight = useMemo(() => getTodaysLight(), [])
+  const localeReadyRef = useRef(false)
+  const [dayKey, setDayKey] = useState(() => localDayKey())
   const [writing, setWriting] = useState(false)
+  const [writeDraft, setWriteDraft] = useState('')
   const [skyHomeNonce, setSkyHomeNonce] = useState(0)
   const [soundOn, setSoundOn] = useState(false)
   const [writeInvite, setWriteInvite] = useState(false)
+  const [skyHolding, setSkyHolding] = useState(false)
+  const todaysLight = useMemo(() => getTodaysLight(locale), [locale, dayKey])
+
+  useEffect(() => {
+    // After hydrate, only refresh seeds when the user changes language.
+    // Defer while writing so Hangul→한국어 switch doesn’t rebuild the sky under the field.
+    if (!hydrated) return
+    if (!localeReadyRef.current) {
+      localeReadyRef.current = true
+      return
+    }
+    if (writing) return
+    setLights((prev) => resolveSkyLights(prev, { locale }))
+  }, [locale, hydrated, setLights, writing])
+
+  useEffect(() => {
+    function syncCalendarDay() {
+      const next = localDayKey()
+      setDayKey((prev) => {
+        if (prev === next) return prev
+        setLights((lights) => resolveSkyLights(lights, { locale }))
+        return next
+      })
+    }
+    function onVisibility() {
+      if (document.visibilityState === 'visible') syncCalendarDay()
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('focus', syncCalendarDay)
+    window.addEventListener('pageshow', syncCalendarDay)
+    const timer = window.setInterval(syncCalendarDay, 60_000)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('focus', syncCalendarDay)
+      window.removeEventListener('pageshow', syncCalendarDay)
+      window.clearInterval(timer)
+    }
+  }, [locale, setLights])
 
   useEffect(() => {
     setSoundOn(voraAudio.hydrate())
@@ -49,6 +99,13 @@ export function VoraApp() {
   useEffect(() => {
     setWriteInvite(!hasKnownWriteOwn())
   }, [hydrated])
+
+  useEffect(() => {
+    document.body.dataset.voraWriting = writing ? 'true' : 'false'
+    return () => {
+      delete document.body.dataset.voraWriting
+    }
+  }, [writing])
 
   function closeMetaSheets() {
     window.dispatchEvent(new Event('vora:close-sheets'))
@@ -71,6 +128,7 @@ export function VoraApp() {
         if (tab === 'profile') setTab('sky')
         return true
       }
+      // Soft close — draft stays for the next open (Apple Notes energy).
       return false
     })
   }
@@ -82,11 +140,14 @@ export function VoraApp() {
   function addLight(sentence: string): boolean {
     let added = false
     setLights((prev) => {
-      const next = addLightIfNew(prev, sentence)
+      const next = addLightIfNew(prev, sentence, {
+        allowHangul: allowsHangul(locale),
+        locale,
+      })
       if (!next) return prev
       added = true
       // Keep the starter seven while the personal sky is still sparse.
-      return resolveSkyLights(next)
+      return resolveSkyLights(next, { locale })
     })
     return added
   }
@@ -96,22 +157,29 @@ export function VoraApp() {
   }
 
   function handleDeleteLight(id: string) {
-    setLights((prev) => {
-      const next = removeLight(prev, id)
-      const userLeft = next.filter((light) => !isSeedLight(light))
-      // Empty personal sky → restore the default constellation.
-      if (userLeft.length === 0) return createSeedLights()
-      return next
-    })
+    // Always re-resolve — ages “today”, refills seeds, restores default sky if empty.
+    setLights((prev) => resolveSkyLights(removeLight(prev, id), { locale }))
   }
 
-  function handleFinishWrite(sentence: string) {
-    addLight(sentence)
+  function handleFinishWrite(sentence: string): boolean {
+    const added = addLight(sentence)
+    // Only leave write when the Light actually landed — keep draft on silent fails.
+    if (added) {
+      setWriteDraft('')
+      setWriting(false)
+    }
+    return added
+  }
+
+  function handleCancelWrite() {
+    // Discard already cleared draft in the panel when confirmed.
     setWriting(false)
   }
 
   function goHome() {
     // Logo = Sky home: clear write/card/selection/pan, leave Me, close meta sheets.
+    // Draft is kept — Write again and the sentence is still there.
+    // Mid-ascent: still go home — Sky commits the pending Hold before clearing.
     setWriting(false)
     setTab('sky')
     setSkyHomeNonce((n) => n + 1)
@@ -120,6 +188,7 @@ export function VoraApp() {
 
   function returnToGate() {
     setWriting(false)
+    setWriteDraft('')
     setTab('sky')
     setStage('splash')
   }
@@ -144,17 +213,117 @@ export function VoraApp() {
   }
 
   return (
+    <VoraLocaleProvider locale={locale} setLocale={setLocale}>
+      <VoraAppShell
+        stage={stage}
+        tab={tab}
+        setTab={setTab}
+        lights={lights}
+        todaysLight={todaysLight}
+        skyTheme={skyTheme}
+        setSkyTheme={setSkyTheme}
+        days={days}
+        isSubscribed={isSubscribed}
+        writing={writing}
+        writeDraft={writeDraft}
+        setWriteDraft={setWriteDraft}
+        skyHomeNonce={skyHomeNonce}
+        soundOn={soundOn}
+        writeInvite={writeInvite}
+        skyHolding={skyHolding}
+        skyLightChrome={skyLightChrome}
+        pointerSurface={pointerSurface}
+        onOpenWriting={openWriting}
+        onToggleWriting={toggleWriting}
+        onSaveLight={handleSaveLight}
+        onDeleteLight={handleDeleteLight}
+        onFinishWrite={handleFinishWrite}
+        onCancelWrite={handleCancelWrite}
+        onHoldingChange={setSkyHolding}
+        onHome={goHome}
+        onReturnToGate={returnToGate}
+        onToggleSound={() => void toggleSound()}
+        onEnterDone={() => {
+          setSoundOn(voraAudio.isEnabled())
+          setStage('app')
+        }}
+        onSoftCloseWrite={() => setWriting(false)}
+      />
+    </VoraLocaleProvider>
+  )
+}
+
+function VoraAppShell({
+  stage,
+  tab,
+  setTab,
+  lights,
+  todaysLight,
+  skyTheme,
+  setSkyTheme,
+  days,
+  isSubscribed,
+  writing,
+  writeDraft,
+  setWriteDraft,
+  skyHomeNonce,
+  soundOn,
+  writeInvite,
+  skyHolding,
+  skyLightChrome,
+  pointerSurface,
+  onOpenWriting,
+  onToggleWriting,
+  onSaveLight,
+  onDeleteLight,
+  onFinishWrite,
+  onCancelWrite,
+  onHoldingChange,
+  onHome,
+  onReturnToGate,
+  onToggleSound,
+  onEnterDone,
+  onSoftCloseWrite,
+}: {
+  stage: 'splash' | 'onboarding' | 'app'
+  tab: 'sky' | 'profile'
+  setTab: (t: 'sky' | 'profile') => void
+  lights: ReturnType<typeof useVoraPersistence>['lights']
+  todaysLight: string
+  skyTheme: ReturnType<typeof useVoraPersistence>['skyTheme']
+  setSkyTheme: ReturnType<typeof useVoraPersistence>['setSkyTheme']
+  days: number
+  isSubscribed: boolean
+  writing: boolean
+  writeDraft: string
+  setWriteDraft: (next: string) => void
+  skyHomeNonce: number
+  soundOn: boolean
+  writeInvite: boolean
+  skyHolding: boolean
+  skyLightChrome: boolean
+  pointerSurface: 'sky' | 'me'
+  onOpenWriting: () => void
+  onToggleWriting: () => void
+  onSaveLight: (sentence: string) => boolean
+  onDeleteLight: (id: string) => void
+  onFinishWrite: (sentence: string) => boolean
+  onCancelWrite: () => void
+  onHoldingChange: (holding: boolean) => void
+  onHome: () => void
+  onReturnToGate: () => void
+  onToggleSound: () => void
+  onEnterDone: () => void
+  onSoftCloseWrite: () => void
+}) {
+  const { t } = useVoraLocale()
+
+  return (
     <AppShell ambient={stage === 'app'} skyTheme={skyTheme} pointerSurface={pointerSurface}>
       <AnimatePresence mode="wait">
         {(stage === 'splash' || stage === 'onboarding') && (
           <motion.div key="enter" className="h-full w-full" {...fade}>
-            <EnterRitualScreen
-              skyTheme={skyTheme}
-              onDone={() => {
-                setSoundOn(voraAudio.isEnabled())
-                setStage('app')
-              }}
-            />
+            <EnterRitualScreen skyTheme={skyTheme} onDone={onEnterDone} />
           </motion.div>
         )}
 
@@ -165,19 +334,19 @@ export function VoraApp() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.95, ease: [0.22, 1, 0.36, 1] as const }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] as const }}
           >
             <div className="relative h-full w-full">
               <VoraHeader
                 tone={tab === 'sky' ? (skyLightChrome ? 'light' : 'night') : 'light'}
-                onHome={goHome}
+                onHome={onHome}
                 trailing={
                   <div className="vora-header-actions">
                     <button
                       type="button"
-                      onClick={() => void toggleSound()}
+                      onClick={onToggleSound}
                       className={`vora-header-sound-btn ${soundOn ? 'vora-header-sound-btn--on' : ''}`}
-                      aria-label={soundOn ? 'Mute sound' : 'Enable sound'}
+                      aria-label={soundOn ? t.muteSound : t.enableSound}
                       aria-pressed={soundOn}
                     >
                       {soundOn ? (
@@ -188,11 +357,12 @@ export function VoraApp() {
                     </button>
                     <button
                       type="button"
-                      onClick={toggleWriting}
+                      onClick={onToggleWriting}
+                      disabled={skyHolding}
                       className={`vora-header-write-btn${writing ? ' vora-header-write-btn--active' : ''}${
                         writeInvite && !writing ? ' vora-header-write-btn--invite' : ''
                       }`}
-                      aria-label={writing ? 'Close writing' : 'Write your own Light'}
+                      aria-label={writing ? t.closeWritingAria : t.writeOwnAria}
                       aria-pressed={writing}
                     >
                       <PenLine size={17} strokeWidth={1.35} aria-hidden="true" />
@@ -201,21 +371,23 @@ export function VoraApp() {
                 }
               />
 
-              <AnimatePresence mode="wait">
+              <AnimatePresence>
                 {tab === 'sky' && (
                   <motion.div key="sky" className="h-full w-full" {...fade}>
                     <SkyScreen
                       lights={lights}
                       todaysLight={todaysLight}
-                      alreadyInSky={hasLightToday(lights, todaysLight)}
-                      onSaveLight={handleSaveLight}
-                      onDeleteLight={handleDeleteLight}
+                      onSaveLight={onSaveLight}
+                      onDeleteLight={onDeleteLight}
                       isWriting={writing}
-                      onFinishWrite={handleFinishWrite}
-                      onCancelWrite={() => setWriting(false)}
-                      onWriteOwn={openWriting}
+                      writeDraft={writeDraft}
+                      onWriteDraftChange={setWriteDraft}
+                      onFinishWrite={onFinishWrite}
+                      onCancelWrite={onCancelWrite}
+                      onWriteOwn={onOpenWriting}
                       homeNonce={skyHomeNonce}
                       skyTheme={skyTheme}
+                      onHoldingChange={onHoldingChange}
                     />
                   </motion.div>
                 )}
@@ -228,7 +400,7 @@ export function VoraApp() {
                       isSubscribed={isSubscribed}
                       skyTheme={skyTheme}
                       onSkyThemeChange={setSkyTheme}
-                      onReturnToGate={returnToGate}
+                      onReturnToGate={onReturnToGate}
                     />
                   </motion.div>
                 )}
@@ -236,10 +408,16 @@ export function VoraApp() {
 
               <NavBar
                 active={tab}
-                onChange={setTab}
+                locked={skyHolding}
+                onChange={(next) => {
+                  if (skyHolding) return
+                  // Leaving Sky soft-closes Write; draft stays for return.
+                  if (next === 'profile') onSoftCloseWrite()
+                  setTab(next)
+                }}
                 tone={tab === 'sky' ? (skyLightChrome ? 'light' : 'dark') : 'light'}
                 skyTheme={skyTheme}
-                onBeginAgain={returnToGate}
+                onBeginAgain={onReturnToGate}
               />
             </div>
           </motion.div>
@@ -247,4 +425,8 @@ export function VoraApp() {
       </AnimatePresence>
     </AppShell>
   )
+}
+
+export function VoraApp() {
+  return <VoraAppChrome />
 }

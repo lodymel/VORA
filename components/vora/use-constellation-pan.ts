@@ -197,7 +197,7 @@ export function useConstellationPan(
       const dy = event.clientY - start.current.y
 
       if (!didDrag.current) {
-        if (Math.hypot(dx, dy) < 6) return
+        if (Math.hypot(dx, dy) < 12) return
         didDrag.current = true
         setWandering(true)
         try {
