@@ -212,4 +212,16 @@ expectLines('I attract success through who I am becoming', ['I attract', 'succes
   }
 }
 
+assert.ok(
+  css.includes(
+    '.vora-sky-page--writing:not(.vora-sky-page--holding) .vora-sky-ritual--editorial',
+  ) && css.includes('padding-top: calc(var(--vora-header-total) + 0.5rem)'),
+  'writing composer must reserve the full header clearance',
+)
+assert.ok(
+  css.includes('.vora-sky-page--writing .vora-sky-write-hint--sentence') &&
+    css.includes('white-space: nowrap'),
+  'writing hint must not orphan the final word',
+)
+
 console.log('album typo lock OK — center-safe CSS + live splits + balanced attract')
