@@ -11,6 +11,8 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const ko = readFileSync(join(root, 'components/vora/light-quotes-ko.ts'), 'utf8')
 const en = readFileSync(join(root, 'components/vora/light-quotes.ts'), 'utf8')
 const constants = readFileSync(join(root, 'components/vora/constants.ts'), 'utf8')
+const locale = readFileSync(join(root, 'components/vora/locale.ts'), 'utf8')
+const typo = readFileSync(join(root, 'components/vora/mirror-album-typo.ts'), 'utf8')
 
 assert.ok(ko.includes('export const LIGHTS_KO'), 'missing LIGHTS_KO')
 assert.ok(en.includes('export const LIGHTS'), 'missing LIGHTS')
@@ -29,5 +31,13 @@ assert.ok(hangulLines >= 40, `expected ≥40 KO lines, got ${hangulLines}`)
 
 const enLines = (en.match(/^\s+'[^']+',?\s*$/gm) || []).length
 assert.ok(enLines >= 40, `expected ≥40 EN lines, got ${enLines}`)
+const enCopy = en.match(/'[^'\n]*'/g) || []
+const localeCopy = locale.match(/:\s*'[^'\n]*'/g) || []
+assert.ok(!enCopy.some((line) => line.includes('—')), 'curated English Lights must not use em dashes')
+assert.ok(!localeCopy.some((line) => line.includes('—')), 'app locale copy must not use em dashes')
+assert.ok(
+  !typo.match(/^\s*['"][^'"]*—[^'"]*['"][:;,]?\s*$/gm),
+  'curated typography strings must not use em dashes',
+)
 
 console.log('light locale OK — single pool, no categories')

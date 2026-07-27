@@ -118,7 +118,7 @@ const EN: Copy = {
   release: 'Release',
   skyBegins: 'Your sky begins.',
   releasedQuiet: 'Released into quiet.',
-  writePlaceholder: 'Write a sentence — only for you…',
+  writePlaceholder: 'Write a sentence, only for you…',
   writeSentenceHint: 'At least one sentence becomes a star.',
   writeDuplicateHint: 'Already in your sky today.',
   writeHangulHint: 'Writing in Korean?',

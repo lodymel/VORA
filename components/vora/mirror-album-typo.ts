@@ -532,8 +532,8 @@ const CURATED_VOICE_SPLITS: Record<string, { primary: string; accent: string }> 
     primary: 'Have the courage to ask for',
     accent: 'what you want.',
   },
-  'put all your eggs in one basket — and watch that basket.': {
-    primary: 'Put all your eggs in one basket — and',
+  'put all your eggs in one basket, and watch that basket.': {
+    primary: 'Put all your eggs in one basket, and',
     accent: 'watch that basket.',
   },
   'the most precious asset we all have is time.': {
@@ -552,9 +552,9 @@ const CURATED_VOICE_SPLITS: Record<string, { primary: string; accent: string }> 
     primary: 'Stop looking back at yesterday.',
     accent: 'Build tomorrow instead.',
   },
-  'people do their best work when they know the goal — and why.': {
+  'people do their best work when they know the goal and why.': {
     primary: 'People do their best work',
-    accent: 'when they know the goal — and why.',
+    accent: 'when they know the goal and why.',
   },
   'keep a feedback loop. think about what you did, and how to do it better.': {
     primary: 'Keep a feedback loop.',
@@ -672,4 +672,3 @@ export const ALBUM_TYPO_REGRESSION = [
     accentLines: ['showing up after', 'the excitement', 'fades.'],
   },
 ] as const
-
