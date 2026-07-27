@@ -223,5 +223,9 @@ assert.ok(
     css.includes('white-space: nowrap'),
   'writing hint must not orphan the final word',
 )
+assert.ok(
+  /\.vora-sky-page--writing \.vora-whisper-chip\s*\{[^}]*min-height:\s*2\.8125rem/s.test(css),
+  'writing Hold button must keep a 44px touch target',
+)
 
 console.log('album typo lock OK — center-safe CSS + live splits + balanced attract')

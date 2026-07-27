@@ -5314,7 +5314,8 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   gap: 0.05rem;
 }
 .vora-sky-page--writing .vora-whisper-chip {
-  min-height: 1.85rem;
+  /* One extra CSS pixel avoids fractional zoom rounding below the 44px floor. */
+  min-height: 2.8125rem;
   padding: 0.4rem 0.95rem;
 }
 .vora-sky-page--writing .vora-sky-write-hint {
