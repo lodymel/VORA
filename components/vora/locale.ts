@@ -74,6 +74,12 @@ type Copy = {
   couldNotSave: string
   couldNotShare: string
   close: string
+  mainNavigation: string
+  voraHome: string
+  lightCard: string
+  closeCard: string
+  skipTransformation: string
+  closing: string
   theme: string
   themeDefault: string
   themePure: string
@@ -147,6 +153,12 @@ const EN: Copy = {
   couldNotSave: 'Could not save',
   couldNotShare: 'Could not share',
   close: 'Close',
+  mainNavigation: 'Main navigation',
+  voraHome: 'VORA home',
+  lightCard: 'Light card',
+  closeCard: 'Close card',
+  skipTransformation: 'Skip transformation',
+  closing: 'Closing',
   theme: 'Theme',
   themeDefault: 'Default',
   themePure: 'Pure',
@@ -157,7 +169,7 @@ const EN: Copy = {
 }
 
 const KO: Copy = {
-  slogan: '자신을 바라보세요.',
+  slogan: '나를 바라보세요.',
   tagline: '당신의 말이 별이 됩니다.',
   tabSky: '하늘',
   tabMe: '나',
@@ -169,28 +181,28 @@ const KO: Copy = {
   subscription: '구독',
   active: '이용 중',
   subscribe: '구독하기',
-  comingSoon: '곧 만나요',
+  comingSoon: '준비 중',
   opening: '오프닝',
   onceMore: '다시 한 번.',
   dayWithYou: (days) => (days <= 1 ? '함께한 첫날.' : `함께한 ${days}일째.`),
   todaysStar: '오늘의 별',
-  holdThisLight: '이 별을 붙잡기',
-  holdToSky: '하늘에 붙잡기',
-  holding: '붙잡는 중…',
+  holdThisLight: '이 별 담기',
+  holdToSky: '하늘에 담기',
+  holding: '담는 중…',
   rising: '떠오르는 중…',
   cancel: '취소',
-  writeYourOwn: '직접 쓰기',
+  writeYourOwn: '내 문장 쓰기',
   releaseFromSky: '하늘에서 놓아주기',
   keep: '그대로 두기',
   release: '놓아주기',
   skyBegins: '하늘이 시작됩니다.',
-  releasedQuiet: '고요 속으로 놓아두었습니다.',
-  writePlaceholder: '당신만을 위한 문장을 적어보세요…',
+  releasedQuiet: '고요 속으로 돌아갔습니다.',
+  writePlaceholder: '나만의 문장을 적어보세요…',
   writeSentenceHint: '적어도 한 문장이면 별이 됩니다.',
   writeDuplicateHint: '오늘 하늘에 이미 있는 문장입니다.',
   writeHangulHint: '한국어로 쓰고 있나요?',
   writeSwitchKo: '한국어로 전환',
-  leaveLight: '이 빛을 떠날까요?',
+  leaveLight: '이 문장을 떠날까요?',
   keepWriting: '계속 쓰기',
   leave: '나가기',
   muteSound: '소리 끄기',
@@ -216,10 +228,16 @@ const KO: Copy = {
   privacyPolicy: '개인정보 처리방침',
   termsOfUse: '이용약관',
   skyClear: '하늘이 맑습니다.',
-  holdLightAria: '오늘의 별을 하늘에 붙잡기',
+  holdLightAria: '오늘의 별을 하늘에 담기',
   couldNotSave: '저장하지 못했어요',
   couldNotShare: '공유하지 못했어요',
   close: '닫기',
+  mainNavigation: '주요 메뉴',
+  voraHome: 'VORA 홈',
+  lightCard: '빛 카드',
+  closeCard: '카드 닫기',
+  skipTransformation: '변환 건너뛰기',
+  closing: '닫는 중',
   theme: '테마',
   themeDefault: '기본',
   themePure: '퓨어',

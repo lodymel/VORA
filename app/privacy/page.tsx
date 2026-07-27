@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
-import { LegalDoc } from '@/components/vora/legal-doc'
-import { PRIVACY_LEDE, PRIVACY_UPDATED, PrivacyChapters } from '@/components/vora/privacy-content'
+import { LegalPublicPage } from '@/components/vora/legal-public-page'
 
 export const metadata: Metadata = {
   title: 'Privacy · VORA',
@@ -8,14 +7,5 @@ export const metadata: Metadata = {
 }
 
 export default function PrivacyPage() {
-  return (
-    <LegalDoc
-      kicker="Privacy"
-      title="Privacy Policy"
-      lede={PRIVACY_LEDE}
-      updated={PRIVACY_UPDATED}
-    >
-      <PrivacyChapters />
-    </LegalDoc>
-  )
+  return <LegalPublicPage kind="privacy" />
 }

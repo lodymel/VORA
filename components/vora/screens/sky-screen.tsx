@@ -64,6 +64,8 @@ export function SkyScreen({
   const [ascent, setAscent] = useState<{ from: { x: number; y: number }; to: { x: number; y: number } } | null>(
     null,
   )
+  /** Writing hides the constellation — reveal it one frame before measuring Hold ascent. */
+  const [skyForAscent, setSkyForAscent] = useState(false)
   const [skyBeganWhisper, setSkyBeganWhisper] = useState(false)
   /** Last today Light was Released — rest the hero; don’t re-pin the same daily line + Hold. */
   const [heroQuiet, setHeroQuiet] = useState(false)
@@ -114,14 +116,15 @@ export function SkyScreen({
   }, [heroQuiet, heldTodayLight])
 
   useEffect(() => {
-    onHoldingChange?.(!!ascent)
-  }, [ascent, onHoldingChange])
+    onHoldingChange?.(!!ascent || skyForAscent)
+  }, [ascent, skyForAscent, onHoldingChange])
 
   useEffect(() => {
     if (homeNonce === 0) return
     const pending = pendingHold.current
     pendingHold.current = null
     setAscent(null)
+    setSkyForAscent(false)
     // Logo home mid-ascent — commit so the Light is never lost.
     if (pending) {
       if (pending.source === 'today') {
@@ -276,8 +279,49 @@ export function SkyScreen({
     }
   }
 
+  function blurWriteField() {
+    const active = document.activeElement
+    if (active instanceof HTMLTextAreaElement) active.blur()
+  }
+
+  function beginAscent(sentence: string, source: 'today' | 'diary') {
+    const points = measureAscent(sentence)
+    pendingHold.current = { sentence, source }
+    setSkyForAscent(false)
+    if (!points) {
+      commitHold(sentence, source)
+      pendingHold.current = null
+      return
+    }
+    setAscent(points)
+  }
+
+  // After revealing the constellation (writing had it display:none), measure on the next frames.
+  useEffect(() => {
+    if (!skyForAscent) return
+    const pending = pendingHold.current
+    if (!pending) {
+      setSkyForAscent(false)
+      return
+    }
+    let cancelled = false
+    let inner = 0
+    const outer = window.requestAnimationFrame(() => {
+      inner = window.requestAnimationFrame(() => {
+        if (cancelled) return
+        beginAscent(pending.sentence, pending.source)
+      })
+    })
+    return () => {
+      cancelled = true
+      window.cancelAnimationFrame(outer)
+      window.cancelAnimationFrame(inner)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- measure after reveal only
+  }, [skyForAscent])
+
   function handleHoldLight(sentence: string, source: 'today' | 'diary') {
-    if (ascent || pendingHold.current) return
+    if (ascent || pendingHold.current || skyForAscent) return
     const trimmed = normalizeLightSentence(sentence)
     if (!trimmed) return
     // Diary must be at least one sentence. Today's Star is curated — always holdable.
@@ -287,21 +331,24 @@ export function SkyScreen({
 
     void voraAudio.unlock()
     voraAudio.cue('hold')
+    blurWriteField()
 
-    const points = measureAscent(trimmed)
     pendingHold.current = { sentence: trimmed, source }
-    if (!points) {
-      commitHold(trimmed, source)
-      pendingHold.current = null
+
+    // Writing hides the constellation band — reveal before measuring ascent targets.
+    if (isWriting && source === 'diary') {
+      setSkyForAscent(true)
       return
     }
-    setAscent(points)
+
+    beginAscent(trimmed, source)
   }
 
   function handleAscentComplete() {
     const pending = pendingHold.current
     pendingHold.current = null
     setAscent(null)
+    setSkyForAscent(false)
     if (!pending) return
     commitHold(pending.sentence, pending.source)
   }
@@ -316,13 +363,16 @@ export function SkyScreen({
 
   // Hide sky copy only while the card is fully present — restore as close begins
   const hideSkyCopy = !!reveal && skyUnderCard
+  const holdingSky = !!ascent || skyForAscent
 
   return (
     <div
       ref={pageRef}
       className={`vora-sky-page vora-sky-page--explore relative flex h-full w-full flex-col ${
         hideSkyCopy ? 'vora-sky-page--revealing' : ''
-      }${isWriting ? ' vora-sky-page--writing' : ''}`}
+      }${isWriting ? ' vora-sky-page--writing' : ''}${
+        holdingSky ? ' vora-sky-page--holding' : ''
+      }`}
     >
       <SkyAtmosphere className="absolute inset-0" depth="sky" explore={explore} />
 

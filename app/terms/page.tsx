@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
-import { LegalDoc } from '@/components/vora/legal-doc'
-import { TERMS_LEDE, TERMS_UPDATED, TermsChapters } from '@/components/vora/terms-content'
+import { LegalPublicPage } from '@/components/vora/legal-public-page'
 
 export const metadata: Metadata = {
   title: 'Terms · VORA',
@@ -8,14 +7,5 @@ export const metadata: Metadata = {
 }
 
 export default function TermsPage() {
-  return (
-    <LegalDoc
-      kicker="Terms"
-      title="Terms of Use"
-      lede={TERMS_LEDE}
-      updated={TERMS_UPDATED}
-    >
-      <TermsChapters />
-    </LegalDoc>
-  )
+  return <LegalPublicPage kind="terms" />
 }

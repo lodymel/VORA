@@ -1,4 +1,3 @@
-import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Bodoni_Moda, Instrument_Serif, Jost, Pinyon_Script } from 'next/font/google'
 import { rosemartin } from '@/lib/fonts/sky-reveal'
@@ -70,7 +69,6 @@ export default function RootLayout({
     >
       <body className="bg-background font-sans antialiased">
         {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
   )

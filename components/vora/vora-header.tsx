@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from 'react'
 import { VoraWordmark } from './logo'
+import { useVoraLocale } from './vora-locale'
 
 /** Persistent top brand chrome — Sky, Me. */
 export function VoraHeader({
@@ -14,6 +15,7 @@ export function VoraHeader({
   onHome?: () => void
 }) {
   const [homeAck, setHomeAck] = useState(false)
+  const { t } = useVoraLocale()
 
   function handleHome() {
     onHome?.()
@@ -30,7 +32,7 @@ export function VoraHeader({
           className={`vora-app-header-brand vora-app-header-home${
             homeAck ? ' vora-app-header-home--ack' : ''
           }`}
-          aria-label="VORA home"
+          aria-label={t.voraHome}
         >
           <VoraWordmark size="header" tone={tone} />
         </button>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { PenLine, Volume2, VolumeX } from 'lucide-react'
 import { AppShell } from './app-shell'
@@ -54,19 +54,21 @@ function VoraAppChrome() {
   const [soundOn, setSoundOn] = useState(false)
   const [writeInvite, setWriteInvite] = useState(false)
   const [skyHolding, setSkyHolding] = useState(false)
-  const todaysLight = useMemo(() => getTodaysLight(locale), [locale, dayKey])
+  // dayKey intentionally causes a render at midnight; the helper reads today's date.
+  void dayKey
+  const todaysLight = getTodaysLight(locale)
 
   useEffect(() => {
-    // After hydrate, only refresh seeds when the user changes language.
-    // Defer while writing so Hangul→한국어 switch doesn’t rebuild the sky under the field.
+    // After hydrate, refresh curated sky when language changes.
+    // UI + seeds swap immediately; user Lights stay. Keep Write open so
+    // “Switch to 한국어” mid-draft doesn’t kick the user out of the field.
     if (!hydrated) return
     if (!localeReadyRef.current) {
       localeReadyRef.current = true
       return
     }
-    if (writing) return
     setLights((prev) => resolveSkyLights(prev, { locale }))
-  }, [locale, hydrated, setLights, writing])
+  }, [locale, hydrated, setLights])
 
   useEffect(() => {
     function syncCalendarDay() {
@@ -101,17 +103,43 @@ function VoraAppChrome() {
   }, [hydrated])
 
   useEffect(() => {
-    document.body.dataset.voraWriting = writing ? 'true' : 'false'
+    if (writing) {
+      document.body.dataset.voraWriting = 'true'
+    } else {
+      delete document.body.dataset.voraWriting
+    }
     return () => {
       delete document.body.dataset.voraWriting
     }
   }, [writing])
+
+  useEffect(() => {
+    if (skyHolding) {
+      document.body.dataset.voraHolding = 'true'
+    } else {
+      delete document.body.dataset.voraHolding
+    }
+    return () => {
+      delete document.body.dataset.voraHolding
+    }
+  }, [skyHolding])
+
+  // Never leave Write stuck open on Me, or with a meta sheet covering the field.
+  useEffect(() => {
+    if (!writing) return
+    if (tab === 'profile') {
+      setWriting(false)
+      return
+    }
+    closeMetaSheets()
+  }, [writing, tab])
 
   function closeMetaSheets() {
     window.dispatchEvent(new Event('vora:close-sheets'))
   }
 
   function openWriting() {
+    if (skyHolding) return
     markWriteOwnKnown()
     setWriteInvite(false)
     closeMetaSheets()
@@ -120,6 +148,7 @@ function VoraAppChrome() {
   }
 
   function toggleWriting() {
+    if (skyHolding) return
     setWriting((w) => {
       if (!w) {
         markWriteOwnKnown()
@@ -408,9 +437,10 @@ function VoraAppShell({
 
               <NavBar
                 active={tab}
-                locked={skyHolding}
+                locked={skyHolding || writing}
+                hidden={writing || skyHolding}
                 onChange={(next) => {
-                  if (skyHolding) return
+                  if (skyHolding || writing) return
                   // Leaving Sky soft-closes Write; draft stays for return.
                   if (next === 'profile') onSoftCloseWrite()
                   setTab(next)

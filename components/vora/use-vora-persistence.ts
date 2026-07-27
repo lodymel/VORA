@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Tab } from './nav-bar'
 import {
   SKY_SEED_REVISION,
@@ -102,19 +102,27 @@ export function useVoraPersistence() {
   const [skyTheme, setSkyTheme] = useState<SkyThemeId>(DEFAULT_SKY_THEME)
   const [startedAt, setStartedAt] = useState(todayIsoDate)
   const [isSubscribed, setIsSubscribed] = useState(false)
-  const [locale, setLocale] = useState<VoraLocale>('en')
+  const [locale, setLocaleState] = useState<VoraLocale>('en')
+  /** If the user picks a language before hydrate finishes, keep it. */
+  const localeOverrideRef = useRef<VoraLocale | null>(null)
+
+  function setLocale(next: VoraLocale) {
+    localeOverrideRef.current = next
+    setLocaleState(next)
+  }
 
   useEffect(() => {
     const saved = loadState()
     if (saved) {
       setStage(saved.stage === 'app' ? 'app' : 'splash')
       setTab(saved.tab === 'profile' ? 'profile' : 'sky')
-      const nextLocale = saved.locale
+      const fromSave = saved.locale
         ? normalizeLocale(saved.locale)
         : typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('ko')
           ? 'ko'
           : 'en'
-      setLocale(nextLocale)
+      const nextLocale = localeOverrideRef.current ?? fromSave
+      setLocaleState(nextLocale)
       // Always resolve — restores the default seven when the sky went sparse.
       setLights(resolveSkyLights(saved.lights, { locale: nextLocale }))
       setLightReminder(resolveReminder(saved))
@@ -124,11 +132,12 @@ export function useVoraPersistence() {
       else setStartedAt(todayIsoDate())
       if (saved.isSubscribed || saved.isMember) setIsSubscribed(true)
     } else {
-      const nextLocale =
+      const fromDevice =
         typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('ko')
           ? 'ko'
           : 'en'
-      setLocale(nextLocale)
+      const nextLocale = localeOverrideRef.current ?? fromDevice
+      setLocaleState(nextLocale)
       setLights(createSeedLights(new Date(), nextLocale))
       setStartedAt(todayIsoDate())
     }

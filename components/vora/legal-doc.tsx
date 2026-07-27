@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { VoraWordmark } from './logo'
 import { DEFAULT_SKY_THEME } from './light-card-theme'
+import type { VoraLocale } from './locale'
 
 /**
  * Play-ready Privacy / Terms.
@@ -11,12 +12,14 @@ export function LegalDoc({
   title,
   lede,
   updated,
+  locale = 'en',
   children,
 }: {
   kicker: string
   title: string
   lede: string
   updated: string
+  locale?: VoraLocale
   children: React.ReactNode
 }) {
   return (
@@ -24,13 +27,21 @@ export function LegalDoc({
       <div className="vora-legal-stage-sky" aria-hidden="true" />
 
       <header className="vora-app-header">
-        <Link href="/" className="vora-app-header-brand vora-app-header-home" aria-label="VORA home">
+        <Link
+          href="/"
+          className="vora-app-header-brand vora-app-header-home"
+          aria-label={locale === 'ko' ? 'VORA 홈' : 'VORA home'}
+        >
           <VoraWordmark size="header" tone="night" />
         </Link>
       </header>
 
-      <div className="vora-enter-panel vora-legal-panel" role="dialog" aria-modal="true" aria-labelledby="vora-legal-title">
-        <Link href="/" className="vora-enter-panel-scrim" aria-label="Back to VORA" />
+      <div className="vora-enter-panel vora-legal-panel" aria-labelledby="vora-legal-title">
+        <Link
+          href="/"
+          className="vora-enter-panel-scrim"
+          aria-label={locale === 'ko' ? 'VORA로 돌아가기' : 'Back to VORA'}
+        />
 
         <div className="vora-enter-panel-dock">
           <aside className="vora-enter-panel-sheet">
@@ -46,7 +57,11 @@ export function LegalDoc({
             <div className="vora-enter-panel-edge" aria-hidden="true" />
 
             <div className="vora-enter-panel-top">
-              <Link href="/" className="vora-enter-panel-close" aria-label="Close">
+              <Link
+                href="/"
+                className="vora-enter-panel-close"
+                aria-label={locale === 'ko' ? '닫기' : 'Close'}
+              >
                 <span aria-hidden="true">×</span>
               </Link>
             </div>
@@ -61,21 +76,24 @@ export function LegalDoc({
                 <p className="vora-enter-panel-updated">{updated}</p>
                 <div className="vora-enter-panel-chapters">{children}</div>
 
-                <nav className="vora-legal-sheet-meta" aria-label="Legal">
+                <nav
+                  className="vora-legal-sheet-meta"
+                  aria-label={locale === 'ko' ? '법적 고지' : 'Legal'}
+                >
                   <Link href="/privacy/" className="vora-enter-meta-link vora-enter-meta-link--night">
-                    Privacy
+                    {locale === 'ko' ? '개인정보' : 'Privacy'}
                   </Link>
                   <span className="vora-enter-meta-dot" aria-hidden="true">
                     ·
                   </span>
                   <Link href="/terms/" className="vora-enter-meta-link vora-enter-meta-link--night">
-                    Terms
+                    {locale === 'ko' ? '약관' : 'Terms'}
                   </Link>
                   <span className="vora-enter-meta-dot" aria-hidden="true">
                     ·
                   </span>
                   <Link href="/" className="vora-enter-meta-link vora-enter-meta-link--night">
-                    Sky
+                    {locale === 'ko' ? '하늘' : 'Sky'}
                   </Link>
                 </nav>
               </div>

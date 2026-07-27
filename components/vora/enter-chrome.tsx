@@ -8,8 +8,8 @@ import {
   type SkyThemeId,
 } from './light-card-theme'
 import { useCoarsePointer } from './pointer-env'
-import { PRIVACY_LEDE, PRIVACY_UPDATED, PrivacyChapters } from './privacy-content'
-import { TERMS_LEDE, TERMS_UPDATED, TermsChapters } from './terms-content'
+import { privacyLede, privacyUpdated, PrivacyChapters } from './privacy-content'
+import { termsLede, termsUpdated, TermsChapters } from './terms-content'
 import { useVoraLocale } from './vora-locale'
 
 const ease = [0.22, 1, 0.36, 1] as const
@@ -18,12 +18,20 @@ const sheetEase = [0.32, 0.72, 0, 1] as const
 
 export type EnterSheetId = 'made' | 'privacy' | 'terms' | 'status'
 
-const STATUS_LINES = [
-  { label: 'Sky', value: 'Clear' },
-  { label: 'Constellation', value: 'Quiet' },
-  { label: 'Lights', value: 'Ready' },
-  { label: 'Sound', value: 'Waiting' },
-]
+const STATUS_LINES = {
+  en: [
+    { label: 'Sky', value: 'Clear' },
+    { label: 'Constellation', value: 'Quiet' },
+    { label: 'Lights', value: 'Ready' },
+    { label: 'Sound', value: 'Waiting' },
+  ],
+  ko: [
+    { label: '하늘', value: '맑음' },
+    { label: '별자리', value: '고요함' },
+    { label: '빛', value: '준비됨' },
+    { label: '소리', value: '기다리는 중' },
+  ],
+} as const
 
 function MetaLink({
   label,
@@ -64,7 +72,7 @@ function EnterSheetPanel({
 }) {
   const reduceMotion = useReducedMotion()
   const coarse = useCoarsePointer()
-  const { t } = useVoraLocale()
+  const { locale, t } = useVoraLocale()
   // Freeze content for this mount — never swap copy mid-dismiss.
   const lockedSheet = useRef(sheet).current
   const lift = useMemo(() => {
@@ -147,10 +155,10 @@ function EnterSheetPanel({
                   {t.privacy}
                 </p>
                 <h2 className="vora-enter-panel-headline">{t.privacyPolicy}</h2>
-                <p className="vora-enter-panel-copy">{PRIVACY_LEDE}</p>
-                <p className="vora-enter-panel-updated">{PRIVACY_UPDATED}</p>
+                <p className="vora-enter-panel-copy">{privacyLede(locale)}</p>
+                <p className="vora-enter-panel-updated">{privacyUpdated(locale)}</p>
                 <div className="vora-enter-panel-chapters">
-                  <PrivacyChapters whisperClassName="vora-enter-panel-whisper" />
+                  <PrivacyChapters locale={locale} whisperClassName="vora-enter-panel-whisper" />
                 </div>
               </div>
             ) : null}
@@ -161,10 +169,10 @@ function EnterSheetPanel({
                   {t.terms}
                 </p>
                 <h2 className="vora-enter-panel-headline">{t.termsOfUse}</h2>
-                <p className="vora-enter-panel-copy">{TERMS_LEDE}</p>
-                <p className="vora-enter-panel-updated">{TERMS_UPDATED}</p>
+                <p className="vora-enter-panel-copy">{termsLede(locale)}</p>
+                <p className="vora-enter-panel-updated">{termsUpdated(locale)}</p>
                 <div className="vora-enter-panel-chapters">
-                  <TermsChapters whisperClassName="vora-enter-panel-whisper" />
+                  <TermsChapters locale={locale} whisperClassName="vora-enter-panel-whisper" />
                 </div>
               </div>
             ) : null}
@@ -176,7 +184,7 @@ function EnterSheetPanel({
                 </p>
                 <h2 className="vora-enter-panel-headline">{t.skyClear}</h2>
                 <ul className="vora-enter-status-list">
-                  {STATUS_LINES.map((line) => (
+                  {STATUS_LINES[locale].map((line) => (
                     <li key={line.label} className="vora-enter-status-row">
                       <span className="vora-enter-status-dot" aria-hidden="true" />
                       <span className="vora-enter-status-label">{line.label}</span>
@@ -192,7 +200,7 @@ function EnterSheetPanel({
                 <p id="vora-enter-panel-title" className="vora-enter-panel-kicker">
                   {t.whoMade}
                 </p>
-                <h2 className="vora-enter-panel-headline">
+                <h2 className="vora-enter-panel-headline vora-enter-panel-headline--brand" lang="en">
                   <span className="vora-enter-panel-brand">VORA</span>
                   <span className="vora-enter-panel-by"> by LODY STUDIO.</span>
                 </h2>
@@ -249,9 +257,45 @@ function SheetPortal({
   useEffect(() => {
     if (!open) return
     const prev = document.body.style.overflow
+    const appRoot = document.querySelector<HTMLElement>('.vora-app-root')
+    const previouslyFocused =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null
     document.body.style.overflow = 'hidden'
+    if (appRoot) appRoot.inert = true
+
+    const focusFrame = window.requestAnimationFrame(() => {
+      document.querySelector<HTMLElement>('.vora-enter-panel-close')?.focus()
+    })
+
+    function keepFocusInside(event: KeyboardEvent) {
+      if (event.key !== 'Tab') return
+      const panel = document.querySelector<HTMLElement>('.vora-enter-panel')
+      if (!panel) return
+      const focusable = [...panel.querySelectorAll<HTMLElement>('button:not(:disabled), a[href]')].filter(
+        (node) => {
+          const rect = node.getBoundingClientRect()
+          return rect.width > 0 && rect.height > 0
+        },
+      )
+      if (focusable.length === 0) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener('keydown', keepFocusInside)
     return () => {
+      window.cancelAnimationFrame(focusFrame)
+      document.removeEventListener('keydown', keepFocusInside)
       document.body.style.overflow = prev
+      if (appRoot) appRoot.inert = false
+      previouslyFocused?.focus()
     }
   }, [open])
 

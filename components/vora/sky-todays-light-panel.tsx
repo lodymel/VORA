@@ -17,11 +17,15 @@ const WRITE_EASE = [0.22, 1, 0.36, 1] as const
 /** One shared breath for write enter / leave */
 const WRITE_FADE = { duration: 0.55, ease: WRITE_EASE }
 
-function resizeDiaryField(el: HTMLTextAreaElement | null) {
+function resizeDiaryField(el: HTMLTextAreaElement | null, compact = false) {
   if (!el) return
   // Grow with wrapped lines — never leave a one-line chip that scrolls sideways.
+  // Cap to the scroll column so Hold / Cancel stay on screen (Notes energy).
   el.style.height = 'auto'
-  const next = Math.max(el.scrollHeight, el.clientHeight)
+  const main = el.closest('.vora-sky-todays-main') as HTMLElement | null
+  const floor = (compact ? 4.5 : 12) * 16
+  const ceiling = main ? Math.max(floor, main.clientHeight - 8) : 22 * 16
+  const next = Math.min(Math.max(el.scrollHeight, floor), ceiling)
   el.style.height = `${next}px`
 }
 
@@ -142,25 +146,25 @@ export function SkyTodaysLightPanel({
   useLayoutEffect(() => {
     if (!isWriting) return
     const el = inputRef.current
-    resizeDiaryField(el)
-    if (caretToEndRef.current && el) {
+    resizeDiaryField(el, ascending)
+    if (caretToEndRef.current && el && !ascending) {
       caretToEndRef.current = false
       const end = el.value.length
       el.focus()
       el.setSelectionRange(end, end)
     }
-  }, [draft, isWriting, writingHangul])
+  }, [draft, isWriting, writingHangul, ascending])
 
   useEffect(() => {
     if (!isWriting) return
-    const onResize = () => resizeDiaryField(inputRef.current)
+    const onResize = () => resizeDiaryField(inputRef.current, ascending)
     window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [isWriting])
-
-  useEffect(() => {
-    setReleaseArmed(false)
-  }, [viewingLight?.id, heldTodayLight?.id, isWriting])
+    window.visualViewport?.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      window.visualViewport?.removeEventListener('resize', onResize)
+    }
+  }, [isWriting, ascending])
 
   function setDraft(next: string) {
     onDraftChange?.(next)
@@ -205,12 +209,32 @@ export function SkyTodaysLightPanel({
     onCancelWrite?.()
   }
 
+  useEffect(() => {
+    setReleaseArmed(false)
+  }, [viewingLight?.id, heldTodayLight?.id, isWriting])
+
+  useEffect(() => {
+    if (!isWriting || ascending) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== 'Escape') return
+      e.preventDefault()
+      if (discardArmed) {
+        setDiscardArmed(false)
+        return
+      }
+      handleCancelClick()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- cancel uses latest draft/discard
+  }, [isWriting, ascending, discardArmed, draft])
+
   return (
     <section
       className={`vora-sky-todays-light w-full text-center ${
         ascending ? 'vora-sky-todays-light--ascending' : ''
       }${isWriting ? ' vora-sky-todays-light--writing' : ''}${
-        locale === 'ko' || writingHangul ? ' vora-lang-ko' : ''
+        writingHangul ? ' vora-lang-ko' : ''
       }`}
     >
       <div className="vora-sky-todays-main">
@@ -245,6 +269,7 @@ export function SkyTodaysLightPanel({
                   maxLength={MAX_DRAFT}
                   rows={4}
                   disabled={ascending}
+                  readOnly={ascending}
                   lang={writingHangul || locale === 'ko' ? 'ko' : undefined}
                   className={`vora-sky-diary-input${writingHangul ? ' vora-lang-ko' : ''}`}
                   placeholder={t.writePlaceholder}

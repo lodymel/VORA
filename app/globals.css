@@ -1322,25 +1322,25 @@ body[data-vora-card-open='true'] .vora-pointer-o-star:not(.vora-pointer-o-star--
  * Korean chrome labels — Hangul must not inherit Latin all-caps tracking.
  * html.vora-lang-ko covers tab bar / enter / constellation; islands keep local too.
  */
-html.vora-lang-ko .vora-sky-date,
-html.vora-lang-ko .vora-sky-todays-kicker,
-html.vora-lang-ko .vora-mirror-tap-hint,
-html.vora-lang-ko .vora-sky-diary-hold,
-html.vora-lang-ko .vora-sky-write-own,
-html.vora-lang-ko .vora-sky-write-own-label,
-html.vora-lang-ko .vora-sky-diary-cancel,
-html.vora-lang-ko .vora-sky-release-link,
-html.vora-lang-ko .vora-sky-leave-prompt,
-html.vora-lang-ko .vora-sky-write-hint,
-html.vora-lang-ko .vora-sky-write-hint-label,
-html.vora-lang-ko .vora-sky-write-hint-cta,
-html.vora-lang-ko .vora-constellation-node-date,
-html.vora-lang-ko .vora-light-card-date,
-html.vora-lang-ko .vora-tabbar-item,
-html.vora-lang-ko .vora-tabbar-label,
-html.vora-lang-ko .vora-enter-cta,
-html.vora-lang-ko .vora-enter-sound-hint,
-html.vora-lang-ko .vora-whisper-chip,
+html.vora-locale-ko .vora-sky-date,
+html.vora-locale-ko .vora-sky-todays-kicker,
+html.vora-locale-ko .vora-mirror-tap-hint,
+html.vora-locale-ko .vora-sky-diary-hold,
+html.vora-locale-ko .vora-sky-write-own,
+html.vora-locale-ko .vora-sky-write-own-label,
+html.vora-locale-ko .vora-sky-diary-cancel,
+html.vora-locale-ko .vora-sky-release-link,
+html.vora-locale-ko .vora-sky-leave-prompt,
+html.vora-locale-ko .vora-sky-write-hint,
+html.vora-locale-ko .vora-sky-write-hint-label,
+html.vora-locale-ko .vora-sky-write-hint-cta,
+html.vora-locale-ko .vora-constellation-node-date,
+html.vora-locale-ko .vora-light-card-date,
+html.vora-locale-ko .vora-tabbar-item,
+html.vora-locale-ko .vora-tabbar-label,
+html.vora-locale-ko .vora-enter-cta,
+html.vora-locale-ko .vora-enter-sound-hint,
+html.vora-locale-ko .vora-whisper-chip,
 .vora-lang-ko .vora-sky-date,
 .vora-lang-ko .vora-sky-todays-kicker,
 .vora-lang-ko .vora-mirror-tap-hint,
@@ -1360,15 +1360,15 @@ html.vora-lang-ko .vora-whisper-chip,
   letter-spacing: 0.04em;
   font-weight: 400;
 }
-html.vora-lang-ko .vora-tabbar-item,
-html.vora-lang-ko .vora-tabbar-label {
+html.vora-locale-ko .vora-tabbar-item,
+html.vora-locale-ko .vora-tabbar-label {
   letter-spacing: 0.06em;
   font-weight: 500;
 }
-html.vora-lang-ko .vora-enter-cta {
+html.vora-locale-ko .vora-enter-cta {
   letter-spacing: 0.08em;
 }
-html.vora-lang-ko .vora-constellation-node-date,
+html.vora-locale-ko .vora-constellation-node-date,
 .vora-lang-ko .vora-constellation-node-date {
   letter-spacing: 0.02em;
   padding-inline-start: 0;
@@ -1443,6 +1443,9 @@ html.vora-lang-ko .vora-constellation-node-date,
   flex-shrink: 0;
 }
 .vora-app-header-home {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
   border: none;
   background: transparent;
   padding: 0;
@@ -1467,8 +1470,8 @@ html.vora-lang-ko .vora-constellation-node-date,
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.125rem;
-  height: 2.125rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border: none;
   border-radius: 9999px;
   background: transparent;
@@ -1494,8 +1497,8 @@ html.vora-lang-ko .vora-constellation-node-date,
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.125rem;
-  height: 2.125rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border: none;
   border-radius: 9999px;
   background: transparent;
@@ -1725,6 +1728,11 @@ html.vora-lang-ko .vora-constellation-node-date,
   color: rgb(221 232 255 / 0.28);
 }
 .vora-enter-meta-link {
+  display: inline-flex;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
   pointer-events: auto;
   border: none;
   background: transparent;
@@ -2003,8 +2011,14 @@ html.vora-lang-ko .vora-constellation-node-date,
   color: rgb(255 250 247 / 0.92);
   text-wrap: balance;
 }
+/* Brand credit — always Latin default (Instrument + Rosemartin), never Hangul stacks */
+.vora-enter-panel-headline--brand {
+  font-family: var(--font-instrument), 'Instrument Serif', 'New York', ui-serif, Georgia, serif;
+  letter-spacing: -0.025em;
+  text-transform: none;
+}
 .vora-enter-panel-brand {
-  font-family: var(--font-sky-accent);
+  font-family: var(--font-rosemartin), 'Rosemartin', ui-serif, Georgia, serif;
   letter-spacing: 0.05em;
   color: var(--sheet-accent);
   text-shadow:
@@ -2012,7 +2026,7 @@ html.vora-lang-ko .vora-constellation-node-date,
     -1.5px 0 rgb(203 184 255 / 0.32);
 }
 .vora-enter-panel-by {
-  font-family: var(--font-sky-hero);
+  font-family: var(--font-instrument), 'Instrument Serif', 'New York', ui-serif, Georgia, serif;
   color: rgb(255 250 247 / 0.88);
 }
 .vora-enter-panel-copy {
@@ -5025,7 +5039,8 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  min-height: min(46dvh, 16rem);
+  /* Tall composer — tab bar / constellation are gone while writing */
+  min-height: 14rem;
   width: 100%;
 }
 .vora-sky-todays-light--writing .vora-sky-headline-layer,
@@ -5174,8 +5189,8 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   margin: 0;
   border: none;
   background: transparent;
-  padding: 0;
-  min-height: 1.125rem;
+  padding: 0.75rem 0.5rem;
+  min-height: 2.75rem;
   font-family: var(--font-sky-label);
   font-size: 0.625rem;
   font-weight: 300;
@@ -5205,7 +5220,7 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
     inset 0 1px 0 rgb(255 255 255 / 0.12);
   color: rgb(245 240 255 / 0.88);
   text-shadow: none;
-  min-height: 2.15rem;
+  min-height: 2.75rem;
   line-height: 1.2;
   cursor: pointer;
   transition:
@@ -5257,18 +5272,68 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   }
 }
 
-/* Writing — adjustResize + pinned CTA shelf (no sticky, no inset math) */
-.vora-sky-page--writing .vora-sky-constellation-stage {
-  height: 4.75rem;
+/* Writing — Notes / Toss energy: chrome yields to the composer */
+.vora-sky-page--writing {
+  /* Tab bar is hidden — only a quiet floor under Hold / Cancel */
+  --vora-sky-tab-clearance: calc(0.65rem + var(--vora-safe-bottom, 0px));
 }
-.vora-sky-page--writing .vora-sky-constellation-band {
-  padding-bottom: 0;
+/* Hide constellation while writing — restore during Hold ascent so targets measure correctly */
+.vora-sky-page--writing:not(.vora-sky-page--holding) .vora-sky-constellation-band {
+  display: none;
+}
+.vora-sky-page--writing.vora-sky-page--holding .vora-sky-constellation-band {
+  display: block;
+}
+.vora-sky-page--writing.vora-sky-page--holding .vora-sky-constellation-stage {
+  height: 5.5rem;
+}
+/* Hold in flight — don’t let pan / star taps steal the ascent */
+.vora-sky-page--holding .vora-sky-constellation-band {
+  pointer-events: none;
 }
 .vora-sky-page--writing .vora-sky-ritual-actions {
-  margin-top: 0.15rem;
-  margin-bottom: 0.55rem;
-  padding-top: 0.5rem;
-  padding-bottom: calc(0.25rem + var(--vora-keyboard-inset, 0px));
+  margin-top: 0.1rem;
+  margin-bottom: 0.2rem;
+  padding-top: 0.2rem;
+  padding-bottom: 0.1rem;
+  gap: 0.12rem;
+}
+.vora-sky-page--writing .vora-sky-ritual-action-primary,
+.vora-sky-page--writing .vora-sky-ritual-action-secondary {
+  min-height: 0;
+}
+.vora-sky-page--writing .vora-sky-ritual-action-secondary {
+  gap: 0.05rem;
+}
+.vora-sky-page--writing .vora-whisper-chip {
+  min-height: 1.85rem;
+  padding: 0.4rem 0.95rem;
+}
+.vora-sky-page--writing .vora-sky-write-hint {
+  padding-top: 0.05rem;
+}
+.vora-sky-page--writing .vora-sky-write-hint--sentence {
+  padding: 0.15rem 0.5rem 0.05rem;
+  font-size: 0.6875rem;
+}
+.vora-sky-page--writing .vora-sky-todays-main {
+  padding-top: 0.15rem;
+  padding-bottom: 0.35rem;
+}
+.vora-sky-page--writing .vora-sky-headline-slot {
+  min-height: 14rem;
+}
+.vora-sky-page--writing.vora-sky-page--holding .vora-sky-headline-slot {
+  min-height: 6.5rem;
+}
+.vora-sky-page--writing .vora-sky-diary-input {
+  min-height: 12rem;
+  max-height: none;
+}
+.vora-sky-page--writing.vora-sky-page--holding .vora-sky-diary-input {
+  min-height: 4.5rem;
+  opacity: 0.45;
+  pointer-events: none;
 }
 .vora-sky-ritual-action-primary,
 .vora-sky-ritual-action-secondary {
@@ -5356,9 +5421,9 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
-  /* Apple Notes-like canvas: tall, soft-wrapping, grows down — never a one-line runway */
-  min-height: min(42dvh, 14rem);
-  max-height: min(58dvh, 22rem);
+  /* Notes canvas — tall field; writing page frees tab/constellation so rem stays stable */
+  min-height: 12rem;
+  max-height: none;
   margin: 0;
   padding: 0.15rem 0.1rem;
   border: 0;
@@ -5436,7 +5501,7 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   justify-content: center;
   margin: 0.1rem 0 0;
   padding: 0.55rem 0.9rem;
-  min-height: 2.25rem;
+  min-height: 2.75rem;
   overflow: visible;
   border: none;
   border-radius: 0;
@@ -5697,6 +5762,15 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   pointer-events: none;
   transform: translateY(calc(-1 * var(--vora-keyboard-inset, 0px)));
 }
+/* Writing / Hold — hide Sky/Me + Privacy row (Apple Notes / Toss input focus) */
+.vora-tabbar--hidden,
+body[data-vora-writing='true'] .vora-tabbar,
+body[data-vora-holding='true'] .vora-tabbar {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: none;
+}
 /* Shared liquid glass — tab bar + theme Done */
 .vora-tabbar-list,
 .vora-sky-theme-studio-done {
@@ -5789,7 +5863,7 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   z-index: 1;
   display: flex;
   width: 100%;
-  min-height: 2.55rem;
+  min-height: 2.75rem;
   align-items: center;
   justify-content: center;
   margin: 0;
@@ -7739,7 +7813,7 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   --vora-card-w: min(90vw, calc(var(--vora-card-max-h) * 9 / 16), 32rem);
 }
 
-/* Card open — hide chrome; fade back when data attr clears on close start */
+/* Card / write — hide chrome; fade back when data attr clears */
 .vora-app-header,
 .vora-tabbar {
   transition:

@@ -23,6 +23,7 @@ export function NavBar({
   skyTheme = DEFAULT_SKY_THEME,
   onBeginAgain,
   locked = false,
+  hidden = false,
 }: {
   active: Tab
   onChange: (t: Tab) => void
@@ -31,6 +32,8 @@ export function NavBar({
   onBeginAgain?: () => void
   /** Soft-lock tabs during Hold ascent so the Light can land. */
   locked?: boolean
+  /** Write / Hold — Notes-style: yield the floor to the composer. */
+  hidden?: boolean
 }) {
   const dark = tone === 'dark'
   const { t } = useVoraLocale()
@@ -45,9 +48,13 @@ export function NavBar({
 
   return (
     <nav
-      className={`vora-tabbar ${dark ? 'vora-tabbar--night' : 'vora-tabbar--day'}`}
+      className={`vora-tabbar ${dark ? 'vora-tabbar--night' : 'vora-tabbar--day'}${
+        hidden ? ' vora-tabbar--hidden' : ''
+      }`}
       data-sky-theme={skyTheme}
-      aria-label="Main"
+      aria-label={t.mainNavigation}
+      aria-hidden={hidden ? true : undefined}
+      inert={hidden ? true : undefined}
     >
       <div className="vora-tabbar-list" role="tablist">
         <motion.span

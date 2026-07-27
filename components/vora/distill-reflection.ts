@@ -13,8 +13,8 @@ export function normalizeLightSentence(raw: string): string {
 }
 
 /**
- * True when text has at least one sentence — enough to become a star.
- * Soft breath, not grammar school: no required period; two sentences are fine.
+ * True when text has enough breath to become a star.
+ * Soft gate — no required period. “사랑해” / “I am enough” both pass.
  */
 export function hasMeaningfulContent(raw: string): boolean {
   const text = normalizeLightSentence(raw)
@@ -26,17 +26,11 @@ export function hasMeaningfulContent(raw: string): boolean {
   const lower = bare.toLowerCase()
   if (FILLER_ONLY.test(lower) || FILLER_WORD.test(lower)) return false
 
-  // Clear sentence end — still needs a real breath before it.
-  if (/[.!?。…]$/.test(text) && bare.length >= 2) {
-    if (hasHangul(bare)) return [...bare.replace(/\s/g, '')].length >= 2
-    return bare.split(' ').filter(Boolean).length >= 2 || bare.length >= 8
-  }
-
-  if (hasHangul(text)) {
+  if (hasHangul(bare)) {
     const syllables = [...bare.replace(/\s/g, '')].length
     const words = bare.split(' ').filter(Boolean).length
-    // Short Korean sentence (“사랑해요”), or at least two spaced words.
-    return syllables >= 4 || words >= 2
+    // Two Hangul syllables = a real breath (“좋아”, “사랑해”). Period optional.
+    return syllables >= 2 || words >= 2
   }
 
   const words = bare.split(' ').filter(Boolean)
@@ -44,5 +38,7 @@ export function hasMeaningfulContent(raw: string): boolean {
   if (words.length === 2 && words.every((w) => w.replace(/[^a-z0-9']/gi, '').length >= 2)) {
     return true
   }
+  // Short English with a clear end mark still needs a couple of letters.
+  if (/[.!?。…]$/.test(text) && bare.length >= 4) return true
   return false
 }

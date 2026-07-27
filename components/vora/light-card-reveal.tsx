@@ -364,7 +364,7 @@ export function LightCardReveal({
       data-sky-theme={theme}
       role="dialog"
       aria-modal="true"
-      aria-label="Light card"
+      aria-label={t.lightCard}
       initial={{ opacity: 0 }}
       animate={overlayControls}
     >
@@ -375,10 +375,10 @@ export function LightCardReveal({
         className="vora-light-card-reveal-backdrop"
         aria-label={
           phase === 'transforming'
-            ? 'Skip transformation'
+            ? t.skipTransformation
             : phase === 'closing'
-              ? 'Closing'
-              : 'Close card'
+              ? t.closing
+              : t.closeCard
         }
         disabled={phase === 'closing'}
         onClick={() => {
@@ -393,7 +393,7 @@ export function LightCardReveal({
             key="close"
             type="button"
             className="vora-light-card-reveal-x"
-            aria-label="Close"
+            aria-label={t.close}
             onClick={() => void requestClose()}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

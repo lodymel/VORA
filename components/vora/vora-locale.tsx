@@ -31,7 +31,9 @@ export function VoraLocaleProvider({
     if (typeof document === 'undefined') return
     const root = document.documentElement
     root.lang = locale === 'ko' ? 'ko' : 'en'
-    root.classList.toggle('vora-lang-ko', locale === 'ko')
+    // UI locale and content language are separate: an English Light written
+    // inside the Korean UI must keep the Latin editorial typefaces.
+    root.classList.toggle('vora-locale-ko', locale === 'ko')
   }, [locale])
 
   return (

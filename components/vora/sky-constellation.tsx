@@ -34,7 +34,10 @@ export function buildConstellation(
   const world = getConstellationWorldScale(n)
 
   // Horizontal breathing room (percent of world). Tighter when few Lights.
-  const edgeX = n <= 2 ? 34 : n <= 4 ? 30 : n <= 8 ? 26 : 22
+  // Up to eight Lights must keep the full 44px hit seat inside even a 320px
+  // viewport at the resting pan position. Denser skies can intentionally open
+  // beyond the edge because exploration is already established by then.
+  const edgeX = n <= 2 ? 34 : n <= 4 ? 30 : n <= 8 ? 29 : 22
   const spanX = 100 - edgeX * 2
 
   return sorted.map((light, i) => {

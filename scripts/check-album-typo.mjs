@@ -17,6 +17,9 @@ const moduleCss = readFileSync(
   'utf8',
 )
 const blockTsx = readFileSync(join(root, 'components/vora/album-typo-block.tsx'), 'utf8')
+const lightsSource = readFileSync(join(root, 'components/vora/light-quotes.ts'), 'utf8')
+const localeProvider = readFileSync(join(root, 'components/vora/vora-locale.tsx'), 'utf8')
+const todayPanel = readFileSync(join(root, 'components/vora/sky-todays-light-panel.tsx'), 'utf8')
 
 const MUST_CONTAIN = [
   "primaryLines: ['I attract', 'success through']",
@@ -26,6 +29,8 @@ const MUST_CONTAIN = [
   'Keep soft on primary',
   '!SOFT_LANDING.test(w)',
   'Never force a couplet',
+  'CURATED_VOICE_SPLITS',
+  'This must be semantic',
 ]
 
 for (const needle of MUST_CONTAIN) {
@@ -56,7 +61,14 @@ assert.ok(!albumBlock.includes('translateX(calc(-50%'), 'album lines must NEVER 
 assert.ok(albumBlock.includes('max-width: none'), 'album lines must not clip with max-width:100%')
 assert.ok(albumBlock.includes('max-content'), 'album lines must size to content')
 assert.ok(css.includes('.vora-lang-ko'), 'Korean typography scope missing')
+assert.ok(css.includes('html.vora-locale-ko'), 'Korean UI locale scope missing')
 assert.ok(css.includes('--font-ko-hero'), 'Korean hero font token missing')
+assert.ok(localeProvider.includes("root.classList.toggle('vora-locale-ko'"))
+assert.ok(!localeProvider.includes("root.classList.toggle('vora-lang-ko'"))
+assert.ok(
+  !todayPanel.includes("locale === 'ko' || writingHangul"),
+  'UI locale must not force English Lights into Korean content fonts',
+)
 
 assert.ok(moduleCss.includes('max-width: none'), 'module must force max-width:none')
 assert.ok(moduleCss.includes('display: flex'), 'module must flex-center rows')
@@ -97,6 +109,57 @@ function expectLines(sentence, primaryLines, accentLines) {
     `bad break for: ${sentence}`,
   )
 }
+
+const curatedLights = [
+  ...lightsSource.matchAll(/^  '((?:\\\\'|[^'])*)',?$/gm),
+].map((match) => match[1].replace(/\\'/g, "'"))
+assert.equal(curatedLights.length, 40, 'all curated English Lights must be audited')
+for (const sentence of curatedLights) {
+  const got = getAlbumTypoLines(sentence)
+  assert.equal(
+    [got.primary, got.accent].filter(Boolean).join(' '),
+    sentence,
+    `semantic split changed copy: ${sentence}`,
+  )
+  assert.ok(got.primary.length > 0, `missing primary voice: ${sentence}`)
+  assert.ok(got.accent.length > 0, `missing semantic landing: ${sentence}`)
+}
+
+function expectVoices(sentence, primary, accent) {
+  const got = getAlbumTypoLines(sentence)
+  assert.equal(got.primary, primary, `bad primary voice for: ${sentence}`)
+  assert.equal(got.accent, accent, `bad accent voice for: ${sentence}`)
+}
+
+// Semantic emphasis—not accidental grammar fragments.
+expectVoices(
+  'Have the courage to follow your heart and intuition.',
+  'Have the courage to follow',
+  'your heart and intuition.',
+)
+expectVoices(
+  'You have to trust that the dots will somehow connect in your future.',
+  'You have to trust that the dots will',
+  'somehow connect in your future.',
+)
+expectVoices('History belongs to the doers.', 'History belongs to', 'the doers.')
+expectVoices(
+  'The most precious asset we all have is time.',
+  'The most precious asset we all have is',
+  'time.',
+)
+expectVoices('Focus. Connect. Believe in yourself.', 'Focus. Connect.', 'Believe in yourself.')
+
+// New user writing: only split when the semantic turn is high-confidence.
+expectVoices('I am enough.', 'I am', 'enough.')
+expectVoices('I choose thoughts that lift me higher.', 'I choose thoughts', 'that lift me higher.')
+expectVoices('I can do it no matter what.', 'I can do it', 'no matter what.')
+expectVoices(
+  'A quiet morning changes everything slowly.',
+  'A quiet morning changes everything slowly.',
+  '',
+)
+expectVoices('Soft rain on the window', 'Soft rain on the window', '')
 
 // Short idiomatic setup stays one line — not a forced couplet
 expectLines('I can do it no matter what.', ['I can do it'], ['no matter what.'])

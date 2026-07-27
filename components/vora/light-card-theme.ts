@@ -43,7 +43,8 @@ export function isSkyThemeId(value: unknown): value is SkyThemeId {
 }
 
 /** Day-bright skies flip chrome to dark ink. All current themes are night. */
-export function skyThemeUsesLightChrome(_theme: SkyThemeId): boolean {
+export function skyThemeUsesLightChrome(theme: SkyThemeId): boolean {
+  void theme
   return false
 }
 

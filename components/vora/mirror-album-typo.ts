@@ -261,6 +261,7 @@ function hardPackOverBudget(lines: string[], maxChars: number): string[] {
 function splitVoice(sentence: string): { primary: string; accent: string } {
   const trimmed = sentence.trim()
   if (!trimmed) return { primary: '', accent: '' }
+  const hangul = hasHangul(trimmed)
 
   // Two breaths: "…. …." — keep the second sentence as the accent voice.
   const twoBreaths = trimmed.match(/^(.+?[.!?])\s+(\S[\s\S]*)$/)
@@ -273,17 +274,49 @@ function splitVoice(sentence: string): { primary: string; accent: string } {
 
   const comma = trimmed.indexOf(',')
   if (comma !== -1) {
-    return {
-      primary: trimmed.slice(0, comma + 1).trim(),
-      accent: trimmed.slice(comma + 1).trim(),
+    const afterComma = trimmed.slice(comma + 1).trim()
+    const clearTurn =
+      /^(but|so|yet|still|instead|again|then|because|while|even|only|finally|truly)\b/i.test(
+        afterComma,
+      )
+    // A comma can be a list, not an emphasis cue. Split only on an explicit turn.
+    if (hangul || clearTurn) {
+      return {
+        primary: trimmed.slice(0, comma + 1).trim(),
+        accent: afterComma,
+      }
     }
   }
 
   const words = trimmed.split(/\s+/).filter(Boolean)
   if (words.length <= 1) return { primary: words[0] ?? '', accent: '' }
-  if (words.length === 2) return { primary: words[0], accent: words[1] }
-  if (words.length === 3) {
-    return { primary: words.slice(0, 2).join(' '), accent: words[2] }
+
+  if (!hangul) {
+    // Explicit punctuation turns are strong enough to direct a second voice.
+    const punctuationTurn = trimmed.match(/^(.+?(?:—|:|;))\s+(\S[\s\S]*)$/)
+    if (punctuationTurn) {
+      return { primary: punctuationTurn[1].trim(), accent: punctuationTurn[2].trim() }
+    }
+
+    // Relative clause: keep the noun it describes in the setup voice.
+    const relativeTurn = trimmed.match(/^(.+?\b[\w’'-]+)\s+((?:that|who|which)\b[\s\S]+)$/i)
+    if (relativeTurn && relativeTurn[1].split(/\s+/).length >= 3) {
+      return { primary: relativeTurn[1].trim(), accent: relativeTurn[2].trim() }
+    }
+
+    // Recognizable conclusion/condition markers.
+    const phraseTurn = trimmed.match(/^(.+?)\s+((?:no matter|even if|because|so that|rather than)\b[\s\S]+)$/i)
+    if (phraseTurn && phraseTurn[1].split(/\s+/).length >= 2) {
+      return { primary: phraseTurn[1].trim(), accent: phraseTurn[2].trim() }
+    }
+
+    // Copular/reflection frames have a clear semantic complement.
+    const complementTurn = trimmed.match(
+      /^(.+?\b(?:am|is|are|was|were|become|becomes|became|feel|feels|choose|chooses|deserve|deserves)\b)\s+(.+)$/i,
+    )
+    if (complementTurn) {
+      return { primary: complementTurn[1].trim(), accent: complementTurn[2].trim() }
+    }
   }
 
   const strongAt = findLastIndex(words, (w) => LANDING_HEAD.test(w))
@@ -295,7 +328,7 @@ function splitVoice(sentence: string): { primary: string; accent: string } {
   }
 
   const softAt = findLastIndex(words, (w) => SOFT_LANDING.test(w))
-  if (softAt !== -1 && softAt >= 2 && words.length - softAt >= 2) {
+  if (hangul && softAt !== -1 && softAt >= 2 && words.length - softAt >= 2) {
     const next = cleanWord(words[softAt + 1] ?? '')
     // Soft + relative: keep soft on primary (fits mobile card); accent from who/what…
     // Keep soft on primary — then primary may binary to “I attract” / “success through”
@@ -310,6 +343,10 @@ function splitVoice(sentence: string): { primary: string; accent: string } {
       accent: words.slice(softAt).join(' '),
     }
   }
+
+  // Designer-safe fallback: arbitrary English should not receive an invented
+  // emphasis. A single coherent voice is better than a wrong accent.
+  if (!hangul) return { primary: trimmed, accent: '' }
 
   let accentCount = words.length >= 7 ? 3 : words.length >= 5 ? 2 : 1
   const last = words[words.length - 1] ?? ''
@@ -371,6 +408,177 @@ function normalizeAlbumKey(sentence: string) {
 }
 
 /**
+ * Editorial voice direction for the 40 curated English Lights.
+ *
+ * Instrument carries the thought; Rosemartin lands on the emotional turn,
+ * contrast, or key noun phrase. This must be semantic—not a character-count
+ * split—so weak fragments such as “in your future” or “to the doers” never
+ * receive accidental emphasis.
+ */
+const CURATED_VOICE_SPLITS: Record<string, { primary: string; accent: string }> = {
+  'stay hungry. stay foolish.': {
+    primary: 'Stay hungry.',
+    accent: 'Stay foolish.',
+  },
+  'your time is limited, so don’t waste it living someone else’s life.': {
+    primary: 'Your time is limited, so don’t waste it',
+    accent: 'living someone else’s life.',
+  },
+  'the people who are crazy enough to think they can change the world are the ones who do.': {
+    primary: 'The people who are crazy enough to think they can change the world',
+    accent: 'are the ones who do.',
+  },
+  'remembering that you’ll die is the best way i know to avoid the trap of thinking you have something to lose.': {
+    primary: 'Remembering that you’ll die is the best way I know to avoid the trap of thinking you have',
+    accent: 'something to lose.',
+  },
+  'don’t let the noise of others’ opinions drown out your own inner voice.': {
+    primary: 'Don’t let the noise of others’ opinions drown out',
+    accent: 'your own inner voice.',
+  },
+  'have the courage to follow your heart and intuition.': {
+    primary: 'Have the courage to follow',
+    accent: 'your heart and intuition.',
+  },
+  'we’re here to put a dent in the universe.': {
+    primary: 'We’re here to put',
+    accent: 'a dent in the universe.',
+  },
+  'it’s better to be a pirate than to join the navy.': {
+    primary: 'It’s better to be a pirate',
+    accent: 'than to join the navy.',
+  },
+  'the only way to do great work is to love what you do.': {
+    primary: 'The only way to do great work is to',
+    accent: 'love what you do.',
+  },
+  'you have to trust that the dots will somehow connect in your future.': {
+    primary: 'You have to trust that the dots will',
+    accent: 'somehow connect in your future.',
+  },
+  'you can’t connect the dots looking forward; you can only connect them looking backward.': {
+    primary: 'You can’t connect the dots looking forward;',
+    accent: 'you can only connect them looking backward.',
+  },
+  'getting fired was the best thing that could have ever happened to me.': {
+    primary: 'Getting fired was the best thing that could have',
+    accent: 'ever happened to me.',
+  },
+  'innovation distinguishes between a leader and a follower.': {
+    primary: 'Innovation distinguishes between',
+    accent: 'a leader and a follower.',
+  },
+  'design is not just what it looks like. design is how it works.': {
+    primary: 'Design is not just what it looks like.',
+    accent: 'Design is how it works.',
+  },
+  'sometimes when you innovate, you make mistakes. admit them quickly, and improve the next thing.': {
+    primary: 'Sometimes when you innovate, you make mistakes.',
+    accent: 'Admit them quickly, and improve the next thing.',
+  },
+  'being the richest person in the cemetery doesn’t matter to me.': {
+    primary: 'Being the richest person in the cemetery',
+    accent: 'doesn’t matter to me.',
+  },
+  'find what you love the way you’d find someone to love.': {
+    primary: 'Find what you love the way you’d find',
+    accent: 'someone to love.',
+  },
+  'your work will fill a large part of your life. do what you believe is great work.': {
+    primary: 'Your work will fill a large part of your life.',
+    accent: 'Do what you believe is great work.',
+  },
+  'if you haven’t found it yet, keep looking. don’t settle.': {
+    primary: 'If you haven’t found it yet, keep looking.',
+    accent: 'Don’t settle.',
+  },
+  'simple can be harder than complex.': {
+    primary: 'Simple can be',
+    accent: 'harder than complex.',
+  },
+  'when something is important enough, you do it even if the odds are against you.': {
+    primary: 'When something is important enough, you do it',
+    accent: 'even if the odds are against you.',
+  },
+  'failure is an option. if things aren’t failing, you aren’t innovating enough.': {
+    primary: 'Failure is an option.',
+    accent: 'If things aren’t failing, you aren’t innovating enough.',
+  },
+  'persistence is everything. don’t give up unless you’re forced to.': {
+    primary: 'Persistence is everything.',
+    accent: 'Don’t give up unless you’re forced to.',
+  },
+  'some people don’t like change, but you need to embrace it if the alternative is disaster.': {
+    primary: 'Some people don’t like change,',
+    accent: 'but you need to embrace it if the alternative is disaster.',
+  },
+  'ordinary people can choose to be extraordinary.': {
+    primary: 'Ordinary people can choose to be',
+    accent: 'extraordinary.',
+  },
+  'have almost too much self-belief.': {
+    primary: 'Have almost too much',
+    accent: 'self-belief.',
+  },
+  'the biggest risk is not taking any risk.': {
+    primary: 'The biggest risk is',
+    accent: 'not taking any risk.',
+  },
+  'history belongs to the doers.': {
+    primary: 'History belongs to',
+    accent: 'the doers.',
+  },
+  'have the courage to ask for what you want.': {
+    primary: 'Have the courage to ask for',
+    accent: 'what you want.',
+  },
+  'put all your eggs in one basket — and watch that basket.': {
+    primary: 'Put all your eggs in one basket — and',
+    accent: 'watch that basket.',
+  },
+  'the most precious asset we all have is time.': {
+    primary: 'The most precious asset we all have is',
+    accent: 'time.',
+  },
+  'life will give you great trials. don’t lose faith in yourself.': {
+    primary: 'Life will give you great trials.',
+    accent: 'Don’t lose faith in yourself.',
+  },
+  'what you’ll regret most is what you didn’t do.': {
+    primary: 'What you’ll regret most',
+    accent: 'is what you didn’t do.',
+  },
+  'stop looking back at yesterday. build tomorrow instead.': {
+    primary: 'Stop looking back at yesterday.',
+    accent: 'Build tomorrow instead.',
+  },
+  'people do their best work when they know the goal — and why.': {
+    primary: 'People do their best work',
+    accent: 'when they know the goal — and why.',
+  },
+  'keep a feedback loop. think about what you did, and how to do it better.': {
+    primary: 'Keep a feedback loop.',
+    accent: 'Think about what you did, and how to do it better.',
+  },
+  'focus. connect. believe in yourself.': {
+    primary: 'Focus. Connect.',
+    accent: 'Believe in yourself.',
+  },
+  'make it easy to take risks.': {
+    primary: 'Make it easy to',
+    accent: 'take risks.',
+  },
+  'find the intersection of what you’re good at, what you love, and what creates value.': {
+    primary: 'Find the intersection of what you’re good at, what you love,',
+    accent: 'and what creates value.',
+  },
+  'details matter. it’s worth waiting to get it right.': {
+    primary: 'Details matter.',
+    accent: 'It’s worth waiting to get it right.',
+  },
+}
+
+/**
  * Safety net — if accent leaked a soft landing before a relative
  * (`through who…`), pull soft back onto primary. Mobile card overflow guard.
  */
@@ -428,7 +636,8 @@ export function getAlbumTypoLines(sentence: string): AlbumTypoLines {
     }
   }
 
-  const { primary, accent } = splitVoice(sentence)
+  const voice = CURATED_VOICE_SPLITS[key] ?? splitVoice(sentence)
+  const { primary, accent } = voice
   const hangul = hasHangul(sentence)
   const primaryBudget = hangul ? KR_LINE_BUDGET : LINE_BUDGET
   const accentBudget = hangul ? KR_ACCENT_LINE_BUDGET : ACCENT_LINE_BUDGET
@@ -463,7 +672,4 @@ export const ALBUM_TYPO_REGRESSION = [
     accentLines: ['showing up after', 'the excitement', 'fades.'],
   },
 ] as const
-
-
-
 
