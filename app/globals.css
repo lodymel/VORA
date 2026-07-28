@@ -7986,6 +7986,7 @@ body[data-vora-card-open='true'] .vora-app-header {
 .vora-light-card-reveal-spin {
   position: relative;
   transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
   transform-origin: center center;
   will-change: transform, opacity;
 }
@@ -8011,7 +8012,8 @@ body[data-vora-card-open='true'] .vora-app-header {
       var(--vora-sky-4) 100%
     );
   box-shadow: 0 0 0 1px rgb(255 255 255 / 0.04);
-  transform: rotateY(180deg);
+  transform: rotateY(180deg) translateZ(1px);
+  -webkit-transform: rotateY(180deg) translateZ(1px);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   pointer-events: none;
@@ -8021,9 +8023,10 @@ body[data-vora-card-open='true'] .vora-app-header {
   position: relative;
   overflow: hidden;
   border-radius: 1.25rem;
+  transform: translateZ(1px);
+  -webkit-transform: translateZ(1px);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transform-style: preserve-3d;
 }
 
 .vora-light-card-seed {

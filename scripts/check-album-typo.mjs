@@ -22,6 +22,7 @@ const localeProvider = readFileSync(join(root, 'components/vora/vora-locale.tsx'
 const localeSource = readFileSync(join(root, 'components/vora/locale.ts'), 'utf8')
 const todayPanel = readFileSync(join(root, 'components/vora/sky-todays-light-panel.tsx'), 'utf8')
 const cardReveal = readFileSync(join(root, 'components/vora/light-card-reveal.tsx'), 'utf8')
+const lightCard = readFileSync(join(root, 'components/vora/light-card.tsx'), 'utf8')
 const enterScreen = readFileSync(
   join(root, 'components/vora/screens/enter-ritual-screen.tsx'),
   'utf8',
@@ -301,10 +302,16 @@ assert.ok(
   'browse CTA shelf must keep stable, centered seats through release confirmation',
 )
 assert.ok(
-  cardReveal.includes('rotateY: [0, 205, 322, 360]') &&
+  cardReveal.includes('rotateY: 360') &&
+    cardReveal.includes('opacity: 1') &&
     cardReveal.includes('delay: SPIN_DELAY_S') &&
     cardReveal.includes('await Promise.all([seed, spin])'),
-  'card reveal must preserve the original full turn without a phase reset',
+  'card reveal must preserve the original full turn without flattening 3D opacity',
+)
+assert.ok(
+  lightCard.includes('const hangulCard = hasHangul(light.sentence)') &&
+    !lightCard.includes("locale === 'ko' ||"),
+  'card typography must follow the Light language, not the UI locale',
 )
 
 console.log('album typo lock OK — center-safe CSS + live splits + balanced attract')

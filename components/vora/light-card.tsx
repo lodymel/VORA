@@ -7,6 +7,7 @@ import { formatSkyDate } from './sky-date'
 import { DEFAULT_LIGHT_CARD_THEME, type LightCardThemeId } from './light-card-theme'
 import { VoraOStar, VoraWordmark } from './logo'
 import type { Light } from './constants'
+import { hasHangul } from './text-script'
 import { useVoraLocale } from './vora-locale'
 
 const DUST = [
@@ -39,7 +40,8 @@ export const LightCard = forwardRef<
   const lines = useMemo(() => getAlbumTypoLines(light.sentence), [light.sentence])
   const starSize = size === 'export' ? 72 : 22
   const dustScale = size === 'export' ? 3.4 : 1
-  const hangulCard = locale === 'ko' || /[\uAC00-\uD7A3]/.test(light.sentence)
+  // Card typography follows the Light itself, never the surrounding UI language.
+  const hangulCard = hasHangul(light.sentence)
 
   return (
     <article

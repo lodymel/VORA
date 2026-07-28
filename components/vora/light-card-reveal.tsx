@@ -22,6 +22,7 @@ import { useVoraLocale } from './vora-locale'
 
 const ease = [0.22, 1, 0.36, 1] as const
 const easePull = [0.33, 1, 0.28, 1] as const
+const easeTurn = [0.2, 0.72, 0.24, 1] as const
 /** Quiet dissolve — single tween, no keyframe thrash */
 const easeClose = [0.22, 1, 0.36, 1] as const
 
@@ -249,7 +250,9 @@ export function LightCardReveal({
 
       travelControls.set({ x: dx, y: dy })
       seedControls.set({ opacity: 1, scale: 1 })
-      spinControls.set({ opacity: 0, scale: 0.2, rotateY: 0 })
+      // Keep the 3D layer opaque. Animating parent opacity can flatten its
+      // preserve-3d children on mobile WebKit and expose mirrored type.
+      spinControls.set({ opacity: 1, scale: 0.2, rotateY: 0 })
 
       voraAudio.cue('spark')
       void voraAudio.unlock()
@@ -268,14 +271,13 @@ export function LightCardReveal({
         },
       })
       const spin = spinControls.start({
-        opacity: [0, 0.72, 1, 1],
-        scale: [0.2, 0.54, 0.84, 1],
-        rotateY: [0, 205, 322, 360],
+        opacity: 1,
+        scale: 1,
+        rotateY: 360,
         transition: {
           delay: SPIN_DELAY_S,
           duration: SPIN_S,
-          ease,
-          times: [0, 0.46, 0.78, 1],
+          ease: easeTurn,
         },
       })
 
