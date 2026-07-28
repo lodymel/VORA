@@ -295,8 +295,10 @@ assert.ok(
 )
 assert.ok(
   css.includes(".vora-sky-ritual-actions[data-vora-cta-shelf='browse']") &&
-    css.includes('grid-template-rows: 2.75rem 2.75rem'),
-  'browse CTA shelf must keep stable rows through release confirmation',
+    css.includes('grid-template-columns: 100%') &&
+    css.includes('grid-template-rows: 2.75rem 2.75rem') &&
+    css.includes('justify-items: center'),
+  'browse CTA shelf must keep stable, centered seats through release confirmation',
 )
 assert.ok(
   cardReveal.includes('rotateY: [180, 92, 0]') &&

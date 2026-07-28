@@ -5288,9 +5288,12 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
    * Release, Keep and Write your own always occupy the same two seats.
    * Stable rows prevent the flex-centered Light above from shifting when
    * release confirmation opens or closes.
-   */
+  */
   display: grid;
+  grid-template-columns: 100%;
   grid-template-rows: 2.75rem 2.75rem;
+  justify-content: stretch;
+  justify-items: center;
 }
 @media (min-width: 640px) {
   .vora-sky-ritual-actions {
