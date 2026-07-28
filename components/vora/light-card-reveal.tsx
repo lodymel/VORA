@@ -111,10 +111,11 @@ export function LightCardReveal({
     }
   }, [])
 
-  // Finish capture + native file/album preparation behind the reveal so a
-  // first Save/Share tap only performs the final OS action.
+  // Never compete with the 3D reveal for the main thread. DOM capture is
+  // intentionally deferred until the turn has fully settled; in practice it
+  // still finishes during the short moment before a user reaches Save/Share.
   useEffect(() => {
-    if (!mounted) return
+    if (!mounted || phase !== 'ready') return
     const el = cardRef.current
     if (!el) return
     let cancelled = false
@@ -146,7 +147,7 @@ export function LightCardReveal({
     return () => {
       cancelled = true
     }
-  }, [mounted, light.id, light.sentence, theme])
+  }, [mounted, phase, light.id, light.sentence, theme])
 
   async function getCaptureBlob() {
     if (captureCacheRef.current) return captureCacheRef.current
