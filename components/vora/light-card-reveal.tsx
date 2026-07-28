@@ -8,8 +8,10 @@ import { LightCard } from './light-card'
 import { VoraOStar } from './logo'
 import {
   captureLightCardPng,
+  prepareLightCardExport,
   saveLightCardImage,
   shareOrSaveLightCard,
+  type PreparedLightCardExport,
 } from './export-light-card'
 import {
   DEFAULT_LIGHT_CARD_THEME,
@@ -56,12 +58,15 @@ export function LightCardReveal({
   const { t } = useVoraLocale()
   const [mounted, setMounted] = useState(false)
   const [phase, setPhase] = useState<Phase>('transforming')
-  const [showFace, setShowFace] = useState(false)
   const [busyAction, setBusyAction] = useState<'save' | 'share' | null>(null)
   const [status, setStatus] = useState<string | null>(null)
   const [statusTone, setStatusTone] = useState<'success' | 'error'>('success')
   const cardRef = useRef<HTMLElement>(null)
+  const busyActionRef = useRef<'save' | 'share' | null>(null)
   const captureCacheRef = useRef<Blob | null>(null)
+  const capturePromiseRef = useRef<Promise<Blob> | null>(null)
+  const exportCacheRef = useRef<PreparedLightCardExport | null>(null)
+  const exportPromiseRef = useRef<Promise<PreparedLightCardExport> | null>(null)
   const statusClearRef = useRef<number | null>(null)
   const finishedRef = useRef(false)
   const closingRef = useRef(false)
@@ -97,7 +102,6 @@ export function LightCardReveal({
   const finish = useCallback(() => {
     if (finishedRef.current) return
     finishedRef.current = true
-    setShowFace(true)
     setPhase('ready')
   }, [])
 
@@ -107,31 +111,74 @@ export function LightCardReveal({
     }
   }, [])
 
-  // Warm the PNG while the card is open — Save/Share should feel immediate.
+  // Finish capture + native file/album preparation behind the reveal so a
+  // first Save/Share tap only performs the final OS action.
   useEffect(() => {
-    if (phase !== 'ready' || !showFace) return
+    if (!mounted) return
     const el = cardRef.current
     if (!el) return
     let cancelled = false
     captureCacheRef.current = null
-    void captureLightCardPng(el)
-      .then((blob) => {
+    exportCacheRef.current = null
+    const capturePromise = captureLightCardPng(el)
+    capturePromiseRef.current = capturePromise
+    const exportPromise = capturePromise
+      .then(async (blob) => {
         if (!cancelled) captureCacheRef.current = blob
+        return prepareLightCardExport(blob, light.sentence)
+      })
+    exportPromiseRef.current = exportPromise
+    void exportPromise
+      .then((prepared) => {
+        if (!cancelled) exportCacheRef.current = prepared
       })
       .catch(() => {
-        /* capture on demand if prefetch fails */
+        /* capture and prepare on demand if prefetch fails */
+      })
+      .finally(() => {
+        if (capturePromiseRef.current === capturePromise) {
+          capturePromiseRef.current = null
+        }
+        if (exportPromiseRef.current === exportPromise) {
+          exportPromiseRef.current = null
+        }
       })
     return () => {
       cancelled = true
     }
-  }, [phase, showFace, light.id, theme])
+  }, [mounted, light.id, light.sentence, theme])
 
   async function getCaptureBlob() {
     if (captureCacheRef.current) return captureCacheRef.current
+    if (capturePromiseRef.current) return capturePromiseRef.current
     if (!cardRef.current) throw new Error('Card not ready')
-    const blob = await captureLightCardPng(cardRef.current)
-    captureCacheRef.current = blob
-    return blob
+    const capturePromise = captureLightCardPng(cardRef.current)
+    capturePromiseRef.current = capturePromise
+    try {
+      const blob = await capturePromise
+      captureCacheRef.current = blob
+      return blob
+    } finally {
+      if (capturePromiseRef.current === capturePromise) {
+        capturePromiseRef.current = null
+      }
+    }
+  }
+
+  async function getPreparedExport(blob: Blob) {
+    if (exportCacheRef.current) return exportCacheRef.current
+    if (exportPromiseRef.current) return exportPromiseRef.current
+    const exportPromise = prepareLightCardExport(blob, light.sentence)
+    exportPromiseRef.current = exportPromise
+    try {
+      const prepared = await exportPromise
+      exportCacheRef.current = prepared
+      return prepared
+    } finally {
+      if (exportPromiseRef.current === exportPromise) {
+        exportPromiseRef.current = null
+      }
+    }
   }
 
   const skipToReady = useCallback(() => {
@@ -285,7 +332,6 @@ export function LightCardReveal({
       if (cancelled || closingRef.current) return
 
       voraAudio.cue('card')
-      setShowFace(true)
 
       await Promise.all([seed, spin])
       if (!cancelled && !closingRef.current) finish()
@@ -309,13 +355,15 @@ export function LightCardReveal({
   ])
 
   async function handleSave() {
-    if (!cardRef.current || busyAction || phase !== 'ready') return
+    if (!cardRef.current || busyActionRef.current || phase !== 'ready') return
+    busyActionRef.current = 'save'
     setBusyAction('save')
     setStatus(null)
     if (statusClearRef.current) window.clearTimeout(statusClearRef.current)
     try {
       const blob = await getCaptureBlob()
-      await saveLightCardImage(blob, light.sentence)
+      const prepared = await getPreparedExport(blob)
+      await saveLightCardImage(blob, light.sentence, prepared)
       const { Capacitor } = await import('@capacitor/core')
       setStatusTone('success')
       setStatus(
@@ -326,19 +374,22 @@ export function LightCardReveal({
       setStatusTone('error')
       setStatus(t.couldNotSave)
     } finally {
+      busyActionRef.current = null
       setBusyAction(null)
       statusClearRef.current = window.setTimeout(() => setStatus(null), 3200)
     }
   }
 
   async function handleShare() {
-    if (!cardRef.current || busyAction || phase !== 'ready') return
+    if (!cardRef.current || busyActionRef.current || phase !== 'ready') return
+    busyActionRef.current = 'share'
     setBusyAction('share')
     setStatus(null)
     if (statusClearRef.current) window.clearTimeout(statusClearRef.current)
     try {
       const blob = await getCaptureBlob()
-      const result = await shareOrSaveLightCard(blob, light.sentence)
+      const prepared = await getPreparedExport(blob)
+      const result = await shareOrSaveLightCard(blob, light.sentence, prepared)
       if (result === 'cancelled') {
         setStatus(null)
         return
@@ -349,6 +400,7 @@ export function LightCardReveal({
       setStatusTone('error')
       setStatus(t.couldNotShare)
     } finally {
+      busyActionRef.current = null
       setBusyAction(null)
       statusClearRef.current = window.setTimeout(() => setStatus(null), 3200)
     }

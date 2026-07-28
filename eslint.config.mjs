@@ -15,5 +15,13 @@ export default defineConfig([
       'react-hooks/static-components': 'off',
     },
   },
-  globalIgnores(['.next/**', 'out/**', 'android/**', 'next-env.d.ts']),
+  globalIgnores([
+    '.next/**',
+    '.vinext/**',
+    '.wrangler/**',
+    'dist/**',
+    'out/**',
+    'android/**',
+    'next-env.d.ts',
+  ]),
 ])

@@ -2,6 +2,14 @@ import { domToBlob } from 'modern-screenshot'
 
 const EXPORT_WIDTH = 1080
 const EXPORT_HEIGHT = 1920
+let voraAlbumIdPromise: Promise<string> | null = null
+
+export type PreparedLightCardExport = {
+  blob: Blob
+  filename: string
+  fileUri: string | null
+  albumIdentifier: string | null
+}
 
 /** Card tokens that must travel with the offscreen export clone. */
 const LC_TOKEN_PROPS = [
@@ -325,6 +333,15 @@ async function isNativeApp() {
  * listFiles()/MediaStore cursors are null. createAlbum + known path is enough.
  */
 async function ensureVoraAlbumId() {
+  if (voraAlbumIdPromise) return voraAlbumIdPromise
+  voraAlbumIdPromise = resolveVoraAlbumId().catch((error) => {
+    voraAlbumIdPromise = null
+    throw error
+  })
+  return voraAlbumIdPromise
+}
+
+async function resolveVoraAlbumId() {
   const { Capacitor } = await import('@capacitor/core')
   const { Media } = await import('@capacitor-community/media')
   const platform = Capacitor.getPlatform()
@@ -398,14 +415,42 @@ async function writeCachePng(blob: Blob, filename: string) {
   return uri || written.uri
 }
 
-/** Save PNG into the device photo library (native) or trigger a browser download. */
-export async function saveLightCardImage(blob: Blob, sentence: string) {
+/**
+ * Finish expensive capture-adjacent work before the user taps Save/Share.
+ * Native file encoding and album discovery run together and are reused by
+ * either action; web keeps the Blob in memory without triggering a download.
+ */
+export async function prepareLightCardExport(
+  blob: Blob,
+  sentence: string,
+): Promise<PreparedLightCardExport> {
   const filename = `vora-${slugify(sentence)}.png`
+  if (!(await isNativeApp())) {
+    return { blob, filename, fileUri: null, albumIdentifier: null }
+  }
+
+  const [fileUri, albumIdentifier] = await Promise.all([
+    writeCachePng(blob, filename),
+    ensureVoraAlbumId(),
+  ])
+  return { blob, filename, fileUri, albumIdentifier }
+}
+
+/** Save PNG into the device photo library (native) or trigger a browser download. */
+export async function saveLightCardImage(
+  blob: Blob,
+  sentence: string,
+  prepared?: PreparedLightCardExport,
+) {
+  const filename = prepared?.filename ?? `vora-${slugify(sentence)}.png`
   if (await isNativeApp()) {
     const { Media } = await import('@capacitor-community/media')
-    // File path > data URL — large 1080×1920 PNGs break the Capacitor bridge as base64.
-    const fileUri = await writeCachePng(blob, filename)
-    const albumIdentifier = await ensureVoraAlbumId()
+    // Normally both values are ready before the tap. Keep a safe on-demand
+    // fallback for capture/preparation failures or unusual lifecycle timing.
+    const [fileUri, albumIdentifier] =
+      prepared?.fileUri && prepared.albumIdentifier
+        ? [prepared.fileUri, prepared.albumIdentifier]
+        : await Promise.all([writeCachePng(blob, filename), ensureVoraAlbumId()])
     await Media.savePhoto({
       path: fileUri,
       albumIdentifier,
@@ -417,12 +462,16 @@ export async function saveLightCardImage(blob: Blob, sentence: string) {
   return 'saved' as const
 }
 
-export async function shareOrSaveLightCard(blob: Blob, sentence: string) {
-  const filename = `vora-${slugify(sentence)}.png`
+export async function shareOrSaveLightCard(
+  blob: Blob,
+  sentence: string,
+  prepared?: PreparedLightCardExport,
+) {
+  const filename = prepared?.filename ?? `vora-${slugify(sentence)}.png`
 
   if (await isNativeApp()) {
     const { Share } = await import('@capacitor/share')
-    const fileUri = await writeCachePng(blob, filename)
+    const fileUri = prepared?.fileUri ?? await writeCachePng(blob, filename)
     try {
       await Share.share({
         title: 'VORA',

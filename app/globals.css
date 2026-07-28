@@ -8134,7 +8134,8 @@ body[data-vora-card-open='true'] .vora-app-header {
 .vora-light-card-status-slot {
   position: relative;
   flex-shrink: 0;
-  width: 100%;
+  width: max(100%, 12.5rem);
+  max-width: calc(100vw - 2rem);
   height: 1.75rem;
   flex-basis: 100%;
   margin-top: 0.1rem;
@@ -8156,6 +8157,7 @@ body[data-vora-card-open='true'] .vora-app-header {
   font-size: 0.6875rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  white-space: nowrap;
   color: rgb(245 240 255 / 0.82);
   background: transparent;
   box-shadow: none;

@@ -13,6 +13,9 @@ __v0_jsx-dev-runtime.ts
 node_modules
 .next/
 out/
+dist/
+.vinext/
+.wrangler/
 .DS_Store
 .pnpm-store/
 tsconfig.tsbuildinfo
@@ -35,4 +38,3 @@ android/key.properties
 *.jks
 android/app/*.keystore
 android/app/*.jks
-
