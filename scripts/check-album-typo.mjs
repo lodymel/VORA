@@ -301,9 +301,10 @@ assert.ok(
   'browse CTA shelf must keep stable, centered seats through release confirmation',
 )
 assert.ok(
-  cardReveal.includes('rotateY: [180, 92, 0]') &&
-    cardReveal.includes('times: [0, 0.48, 1]'),
-  'card reveal must use one continuous magical half-turn',
+  cardReveal.includes('rotateY: [0, 205, 322, 360]') &&
+    cardReveal.includes('delay: SPIN_DELAY_S') &&
+    cardReveal.includes('await Promise.all([seed, spin])'),
+  'card reveal must preserve the original full turn without a phase reset',
 )
 
 console.log('album typo lock OK — center-safe CSS + live splits + balanced attract')

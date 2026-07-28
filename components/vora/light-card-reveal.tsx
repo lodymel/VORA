@@ -25,8 +25,10 @@ const easePull = [0.33, 1, 0.28, 1] as const
 /** Quiet dissolve — single tween, no keyframe thrash */
 const easeClose = [0.22, 1, 0.36, 1] as const
 
-/** Open: the selected star and card arrive in one uninterrupted breath. */
-const REVEAL_S = 0.86
+/** Open: preserve VORA's original full turn, with the pull and spin overlapping. */
+const PULL_S = 0.46
+const SPIN_S = 0.88
+const SPIN_DELAY_S = 0.16
 const CLOSE_S = 0.48
 
 type Phase = 'transforming' | 'ready' | 'closing'
@@ -247,41 +249,43 @@ export function LightCardReveal({
 
       travelControls.set({ x: dx, y: dy })
       seedControls.set({ opacity: 1, scale: 1 })
-      spinControls.set({ opacity: 0, scale: 0.68, rotateY: 180 })
+      spinControls.set({ opacity: 0, scale: 0.2, rotateY: 0 })
 
       voraAudio.cue('spark')
       void voraAudio.unlock()
-      await Promise.all([
-        travelControls.start({
-          x: 0,
-          y: 0,
-          transition: { duration: REVEAL_S, ease: easePull },
-        }),
-        seedControls.start({
-          opacity: [1, 0.78, 0],
-          scale: [1, 1.28, 1.7],
-          transition: {
-            duration: REVEAL_S * 0.72,
-            ease,
-            times: [0, 0.38, 1],
-          },
-        }),
-        spinControls.start({
-          opacity: [0, 0.92, 1],
-          scale: [0.68, 0.86, 1],
-          rotateY: [180, 92, 0],
-          transition: {
-            duration: REVEAL_S,
-            ease: easePull,
-            times: [0, 0.48, 1],
-          },
-        }),
-      ])
+      const pull = travelControls.start({
+        x: 0,
+        y: 0,
+        transition: { duration: PULL_S, ease: easePull },
+      })
+      const seed = seedControls.start({
+        opacity: [1, 0.92, 0.48, 0],
+        scale: [1, 1.18, 1.42, 1.8],
+        transition: {
+          duration: SPIN_DELAY_S + SPIN_S * 0.58,
+          ease,
+          times: [0, 0.28, 0.62, 1],
+        },
+      })
+      const spin = spinControls.start({
+        opacity: [0, 0.72, 1, 1],
+        scale: [0.2, 0.54, 0.84, 1],
+        rotateY: [0, 205, 322, 360],
+        transition: {
+          delay: SPIN_DELAY_S,
+          duration: SPIN_S,
+          ease,
+          times: [0, 0.46, 0.78, 1],
+        },
+      })
+
+      await pull
       if (cancelled || closingRef.current) return
 
       voraAudio.cue('card')
       setShowFace(true)
 
+      await Promise.all([seed, spin])
       if (!cancelled && !closingRef.current) finish()
     }
 
