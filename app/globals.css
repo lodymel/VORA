@@ -5283,6 +5283,15 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   /* Hard floor — scrolled type cannot paint through this shelf */
   pointer-events: auto;
 }
+.vora-sky-ritual-actions[data-vora-cta-shelf='browse'] {
+  /*
+   * Release, Keep and Write your own always occupy the same two seats.
+   * Stable rows prevent the flex-centered Light above from shifting when
+   * release confirmation opens or closes.
+   */
+  display: grid;
+  grid-template-rows: 2.75rem 2.75rem;
+}
 @media (min-width: 640px) {
   .vora-sky-ritual-actions {
     margin-bottom: 1.1rem;

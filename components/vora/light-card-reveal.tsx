@@ -26,7 +26,7 @@ const easePull = [0.33, 1, 0.28, 1] as const
 const easeClose = [0.22, 1, 0.36, 1] as const
 
 /** Open: the selected star and card arrive in one uninterrupted breath. */
-const REVEAL_S = 0.72
+const REVEAL_S = 0.86
 const CLOSE_S = 0.48
 
 type Phase = 'transforming' | 'ready' | 'closing'
@@ -247,7 +247,7 @@ export function LightCardReveal({
 
       travelControls.set({ x: dx, y: dy })
       seedControls.set({ opacity: 1, scale: 1 })
-      spinControls.set({ opacity: 0, scale: 0.72, rotateY: 8 })
+      spinControls.set({ opacity: 0, scale: 0.68, rotateY: 180 })
 
       voraAudio.cue('spark')
       void voraAudio.unlock()
@@ -267,13 +267,13 @@ export function LightCardReveal({
           },
         }),
         spinControls.start({
-          opacity: [0, 0.16, 1],
-          scale: [0.72, 0.86, 1],
-          rotateY: [8, 3, 0],
+          opacity: [0, 0.92, 1],
+          scale: [0.68, 0.86, 1],
+          rotateY: [180, 92, 0],
           transition: {
             duration: REVEAL_S,
             ease: easePull,
-            times: [0, 0.38, 1],
+            times: [0, 0.48, 1],
           },
         }),
       ])

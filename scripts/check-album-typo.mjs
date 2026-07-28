@@ -19,7 +19,9 @@ const moduleCss = readFileSync(
 const blockTsx = readFileSync(join(root, 'components/vora/album-typo-block.tsx'), 'utf8')
 const lightsSource = readFileSync(join(root, 'components/vora/light-quotes.ts'), 'utf8')
 const localeProvider = readFileSync(join(root, 'components/vora/vora-locale.tsx'), 'utf8')
+const localeSource = readFileSync(join(root, 'components/vora/locale.ts'), 'utf8')
 const todayPanel = readFileSync(join(root, 'components/vora/sky-todays-light-panel.tsx'), 'utf8')
+const cardReveal = readFileSync(join(root, 'components/vora/light-card-reveal.tsx'), 'utf8')
 const enterScreen = readFileSync(
   join(root, 'components/vora/screens/enter-ritual-screen.tsx'),
   'utf8',
@@ -286,6 +288,20 @@ assert.ok(
     enterChrome.includes("soundPlaying ? '재생 중' : '기다리는 중'") &&
     enterChrome.includes("soundPlaying ? 'Playing' : 'Waiting'"),
   'Status sound line must reflect actual background playback',
+)
+assert.ok(
+  localeSource.includes("tagline: '나의 말이 별이 됩니다.'"),
+  'Korean tagline must use the first-person voice',
+)
+assert.ok(
+  css.includes(".vora-sky-ritual-actions[data-vora-cta-shelf='browse']") &&
+    css.includes('grid-template-rows: 2.75rem 2.75rem'),
+  'browse CTA shelf must keep stable rows through release confirmation',
+)
+assert.ok(
+  cardReveal.includes('rotateY: [180, 92, 0]') &&
+    cardReveal.includes('times: [0, 0.48, 1]'),
+  'card reveal must use one continuous magical half-turn',
 )
 
 console.log('album typo lock OK — center-safe CSS + live splits + balanced attract')

@@ -170,7 +170,7 @@ const EN: Copy = {
 
 const KO: Copy = {
   slogan: '나를 바라보세요.',
-  tagline: '당신의 말이 별이 됩니다.',
+  tagline: '나의 말이 별이 됩니다.',
   tabSky: '하늘',
   tabMe: '나',
   yourSky: '나의 하늘',
