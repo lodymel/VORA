@@ -25,9 +25,8 @@ const easePull = [0.33, 1, 0.28, 1] as const
 /** Quiet dissolve — single tween, no keyframe thrash */
 const easeClose = [0.22, 1, 0.36, 1] as const
 
-/** Open: pull → reveal. Close: soft scale + home + fade. */
-const PULL_S = 0.42
-const SPIN_S = 0.65
+/** Open: the selected star and card arrive in one uninterrupted breath. */
+const REVEAL_S = 0.72
 const CLOSE_S = 0.48
 
 type Phase = 'transforming' | 'ready' | 'closing'
@@ -248,7 +247,7 @@ export function LightCardReveal({
 
       travelControls.set({ x: dx, y: dy })
       seedControls.set({ opacity: 1, scale: 1 })
-      spinControls.set({ opacity: 0, scale: 0.2, rotateY: 0 })
+      spinControls.set({ opacity: 0, scale: 0.72, rotateY: 8 })
 
       voraAudio.cue('spark')
       void voraAudio.unlock()
@@ -256,32 +255,32 @@ export function LightCardReveal({
         travelControls.start({
           x: 0,
           y: 0,
-          transition: { duration: PULL_S, ease: easePull },
+          transition: { duration: REVEAL_S, ease: easePull },
         }),
         seedControls.start({
-          scale: [1, 1.22, 1.08],
-          transition: { duration: PULL_S, ease: easePull },
+          opacity: [1, 0.78, 0],
+          scale: [1, 1.28, 1.7],
+          transition: {
+            duration: REVEAL_S * 0.72,
+            ease,
+            times: [0, 0.38, 1],
+          },
+        }),
+        spinControls.start({
+          opacity: [0, 0.16, 1],
+          scale: [0.72, 0.86, 1],
+          rotateY: [8, 3, 0],
+          transition: {
+            duration: REVEAL_S,
+            ease: easePull,
+            times: [0, 0.38, 1],
+          },
         }),
       ])
       if (cancelled || closingRef.current) return
 
       voraAudio.cue('card')
       setShowFace(true)
-      spinControls.set({ opacity: 1, scale: 0.2, rotateY: 0 })
-
-      await Promise.all([
-        seedControls.start({
-          opacity: [1, 0],
-          scale: [1.08, 1.8],
-          transition: { duration: SPIN_S * 0.35, ease },
-        }),
-        spinControls.start({
-          opacity: 1,
-          scale: [0.2, 0.7, 1],
-          rotateY: [0, 360],
-          transition: { duration: SPIN_S, ease, times: [0, 0.45, 1] },
-        }),
-      ])
 
       if (!cancelled && !closingRef.current) finish()
     }
@@ -434,11 +433,9 @@ export function LightCardReveal({
             style={{ transformStyle: 'preserve-3d', transformOrigin: 'center center' }}
           >
             <div className="vora-light-card-reveal-back" aria-hidden="true" />
-            {showFace || reduceMotion ? (
-              <div className="vora-light-card-reveal-face">
-                <LightCard ref={cardRef} light={light} theme={theme} size="screen" />
-              </div>
-            ) : null}
+            <div className="vora-light-card-reveal-face">
+              <LightCard ref={cardRef} light={light} theme={theme} size="screen" />
+            </div>
           </motion.div>
         </motion.div>
 

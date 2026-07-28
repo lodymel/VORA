@@ -245,5 +245,9 @@ assert.ok(
   /\.vora-light-card-action\s*\{[^}]*min-height:\s*2\.8125rem/s.test(css),
   'card actions must keep a 44px touch target',
 )
+assert.ok(
+  /\.vora-sky-write-guidance\s*\{[^}]*margin-bottom:\s*0\.35rem/s.test(css),
+  'writing guidance needs clear breathing room above Hold',
+)
 
 console.log('album typo lock OK — center-safe CSS + live splits + balanced attract')

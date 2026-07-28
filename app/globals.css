@@ -5337,6 +5337,7 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   justify-content: center;
   width: 100%;
   min-height: 1.25rem;
+  margin-bottom: 0.35rem;
 }
 .vora-sky-write-guidance-spacer {
   display: block;
