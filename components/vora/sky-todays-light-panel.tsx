@@ -23,7 +23,11 @@ function resizeDiaryField(el: HTMLTextAreaElement | null, compact = false) {
   // Cap to the scroll column so Hold / Cancel stay on screen (Notes energy).
   el.style.height = 'auto'
   const main = el.closest('.vora-sky-todays-main') as HTMLElement | null
-  const floor = (compact ? 4.5 : 12) * 16
+  const shortLandscape =
+    typeof window !== 'undefined' &&
+    window.innerWidth > window.innerHeight &&
+    window.innerHeight <= 500
+  const floor = (compact ? 4.5 : shortLandscape ? 4.25 : 12) * 16
   const ceiling = main ? Math.max(floor, main.clientHeight - 8) : 22 * 16
   const next = Math.min(Math.max(el.scrollHeight, floor), ceiling)
   el.style.height = `${next}px`

@@ -249,5 +249,18 @@ assert.ok(
   /\.vora-sky-write-guidance\s*\{[^}]*margin-bottom:\s*0\.35rem/s.test(css),
   'writing guidance needs clear breathing room above Hold',
 )
+assert.ok(
+  css.includes(
+    '@media (orientation: landscape) and (max-height: 500px) and (max-width: 950px)',
+  ) &&
+    css.includes('--vora-sky-tab-clearance: calc(4.15rem') &&
+    css.includes('.vora-light-card-reveal-stage'),
+  'phone landscape must keep Sky actions and card reveal reachable',
+)
+assert.ok(
+  todayPanel.includes('window.innerWidth > window.innerHeight') &&
+    todayPanel.includes('shortLandscape ? 4.25 : 12'),
+  'landscape writing field must use a short-screen floor',
+)
 
 console.log('album typo lock OK — center-safe CSS + live splits + balanced attract')

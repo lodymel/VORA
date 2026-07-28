@@ -8133,6 +8133,154 @@ body[data-vora-card-open='true'] .vora-app-header {
   background: rgb(48 18 24 / 0.55);
   box-shadow: none;
 }
+
+/*
+ * Phone landscape: height, not width, is the scarce dimension.
+ * Keep every primary action reachable and turn the card reveal into a
+ * side-by-side composition instead of shrinking a portrait stack to a sliver.
+ */
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 950px) {
+  :root {
+    --vora-header-gap: 0.25rem;
+    --vora-header-inset-top: max(0.35rem, var(--vora-safe-top));
+    --vora-header-band: 2.75rem;
+    --vora-nav-offset: 0.35rem;
+    --vora-chrome-x: 1rem;
+  }
+
+  .vora-app-header {
+    padding-bottom: 0.25rem;
+  }
+
+  .vora-enter-ritual-address {
+    margin-top: 0.75rem;
+  }
+  .vora-enter-ritual .vora-enter-actions {
+    bottom: max(3.1rem, calc(var(--vora-safe-bottom) + 2.9rem));
+    gap: 0.3rem;
+  }
+  .vora-enter-chrome--bottom {
+    padding-bottom: max(0.15rem, var(--vora-safe-bottom));
+  }
+
+  .vora-tabbar {
+    flex-direction: row;
+    justify-content: center;
+    gap: 0;
+    padding-top: 0.25rem;
+    padding-bottom: max(0.25rem, var(--vora-safe-bottom));
+  }
+  .vora-tabbar-list {
+    width: min(15rem, 52vw);
+  }
+  .vora-tabbar-meta {
+    display: none;
+  }
+
+  .vora-sky-page {
+    --vora-sky-tab-clearance: calc(4.15rem + var(--vora-safe-bottom, 0px));
+    --vora-sky-gap-label-content: 0.65rem;
+    --vora-typo-sky-hero: clamp(1.35rem, 4.8vw, 1.8rem);
+    --vora-typo-sky-accent: clamp(1.25rem, 4.5vw, 1.7rem);
+  }
+  .vora-sky-constellation-band {
+    padding-top: calc(var(--vora-header-total) + 0.05rem);
+    padding-bottom: 0;
+  }
+  .vora-sky-constellation-stage {
+    height: 2.5rem;
+  }
+  .vora-constellation-node-date {
+    display: none;
+  }
+  .vora-sky-ritual--editorial {
+    padding-top: 0;
+  }
+  .vora-sky-todays-main {
+    padding-top: 0.1rem;
+    padding-bottom: 0.35rem;
+  }
+  .vora-sky-todays-kicker {
+    display: none;
+  }
+  .vora-sky-todays-light .vora-sky-date {
+    margin-bottom: 0.35rem;
+  }
+  .vora-sky-todays-light .vora-sky-headline-slot .vora-mirror-headline,
+  .vora-sky-todays-light .vora-sky-quiet-line {
+    min-height: 3.6rem;
+  }
+  .vora-sky-ritual-actions {
+    margin-top: 0;
+    margin-bottom: 0.15rem;
+    padding-top: 0.1rem;
+    gap: 0.1rem;
+  }
+
+  .vora-sky-page--writing {
+    --vora-sky-tab-clearance: calc(0.25rem + var(--vora-safe-bottom, 0px));
+  }
+  .vora-sky-page--writing:not(.vora-sky-page--holding) .vora-sky-ritual--editorial {
+    padding-top: calc(var(--vora-header-total) + 0.1rem);
+  }
+  .vora-sky-page--writing .vora-sky-todays-main {
+    padding-top: 0;
+    padding-bottom: 0.15rem;
+  }
+  .vora-sky-page--writing .vora-sky-todays-light .vora-sky-date {
+    display: none;
+  }
+  .vora-sky-page--writing .vora-sky-headline-slot,
+  .vora-sky-page--writing
+    .vora-sky-todays-light
+    .vora-mirror-headline--writing
+    .vora-sky-diary-input {
+    min-height: 4.25rem;
+  }
+  .vora-sky-page--writing .vora-sky-ritual-actions {
+    margin: 0;
+    padding: 0;
+    gap: 0.1rem;
+  }
+  .vora-sky-page--writing .vora-sky-write-guidance {
+    margin-bottom: 0.15rem;
+  }
+
+  .vora-light-card-reveal {
+    --vora-card-max-h: calc(100dvh - 1.25rem);
+    --vora-card-w: min(32vw, calc(var(--vora-card-max-h) * 9 / 16), 16rem);
+  }
+  .vora-light-card-reveal-stage {
+    flex-direction: row;
+    gap: clamp(1rem, 5vw, 2.5rem);
+    padding:
+      max(0.625rem, var(--vora-safe-top))
+      max(3.5rem, calc(var(--vora-safe-right) + 2.75rem))
+      max(0.625rem, var(--vora-safe-bottom))
+      max(3.5rem, calc(var(--vora-safe-left) + 2.75rem));
+  }
+  .vora-light-card-reveal-dock {
+    width: min(10rem, 28vw);
+    min-height: 0;
+  }
+  .vora-light-card-reveal-actions {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 0.25rem;
+    width: 100%;
+  }
+  .vora-light-card-status {
+    flex-basis: auto;
+    margin-top: 0.15rem;
+  }
+
+  .vora-enter-panel-sheet:has(.vora-enter-panel-policy),
+  .vora-me-sheet-panel {
+    max-height: calc(100dvh - 1rem);
+    overflow-y: auto;
+  }
+}
+
 @keyframes vora-status-spark {
   0% {
     opacity: 0;
