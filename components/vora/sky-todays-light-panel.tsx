@@ -112,6 +112,9 @@ export function SkyTodaysLightPanel({
     : showSentenceHint
       ? 'vora-write-sentence-hint'
       : undefined
+  const writeDescriptionIds = ['vora-write-prompt', writeDescriptionId]
+    .filter(Boolean)
+    .join(' ')
 
   useEffect(() => {
     setWriteInvite(!hasKnownWriteOwn())
@@ -268,6 +271,9 @@ export function SkyTodaysLightPanel({
               }`}
             >
               <div className="vora-mirror-album-title vora-sky-write-field">
+                <p id="vora-write-prompt" className="vora-sky-write-prompt">
+                  {t.writePlaceholder}
+                </p>
                 <textarea
                   ref={inputRef}
                   value={draft}
@@ -281,9 +287,8 @@ export function SkyTodaysLightPanel({
                   readOnly={ascending}
                   lang={writingHangul || locale === 'ko' ? 'ko' : undefined}
                   className={`vora-sky-diary-input${writingHangul ? ' vora-lang-ko' : ''}`}
-                  placeholder={t.writePlaceholder}
                   aria-label={t.writeOwnAria}
-                  aria-describedby={writeDescriptionId}
+                  aria-describedby={writeDescriptionIds}
                   enterKeyHint="done"
                   autoCapitalize="sentences"
                 />

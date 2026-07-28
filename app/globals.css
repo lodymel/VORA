@@ -1314,9 +1314,6 @@ body[data-vora-card-open='true'] .vora-pointer-o-star:not(.vora-pointer-o-star--
   padding-inline-end: 0;
   letter-spacing: var(--vora-typo-hero-tracking);
 }
-.vora-lang-ko .vora-sky-diary-input::placeholder {
-  letter-spacing: 0.02em;
-}
 
 /*
  * Korean chrome labels — Hangul must not inherit Latin all-caps tracking.
@@ -5061,6 +5058,25 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   min-height: inherit;
   max-width: none;
 }
+.vora-sky-todays-light--writing
+  .vora-mirror-album-title.vora-sky-write-field {
+  gap: 0.875rem;
+}
+.vora-sky-write-prompt {
+  flex: none;
+  margin: 0;
+  font-family: var(--font-sky-label);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0.025em;
+  color: rgb(230 220 255 / 0.48);
+  text-align: center;
+  text-wrap: balance;
+}
+.vora-lang-ko .vora-sky-write-prompt {
+  letter-spacing: 0.01em;
+}
 .vora-sky-todays-light--writing .vora-sky-date {
   margin-bottom: 0.85rem;
 }
@@ -5471,19 +5487,13 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   line-height: var(--vora-typo-hero-leading);
   letter-spacing: var(--vora-typo-hero-tracking);
   color: rgb(255 252 250 / 0.96);
-  /* Writing is an editor, not the finished poster. Start alignment keeps the caret predictable. */
-  text-align: start;
+  /* WYSIWYG: match the centered composition of the finished Light. */
+  text-align: center;
   outline: none;
   caret-color: rgb(203 184 255 / 0.9);
   -webkit-user-select: text;
   user-select: text;
   cursor: text;
-}
-.vora-sky-diary-input::placeholder {
-  color: rgb(230 220 255 / 0.32);
-  font-style: normal;
-  font-weight: 400;
-  letter-spacing: var(--vora-typo-hero-tracking);
 }
 .vora-sky-todays-light .vora-sky-diary-hold {
   color: rgb(255 252 250 / 0.92);
@@ -8245,6 +8255,14 @@ body[data-vora-card-open='true'] .vora-app-header {
   }
   .vora-sky-page--writing .vora-sky-write-guidance {
     margin-bottom: 0.15rem;
+  }
+  .vora-sky-page--writing
+    .vora-mirror-album-title.vora-sky-write-field {
+    gap: 0.4rem;
+  }
+  .vora-sky-page--writing .vora-sky-write-prompt {
+    font-size: 0.6875rem;
+    line-height: 1.25;
   }
 
   .vora-light-card-reveal {

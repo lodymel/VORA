@@ -265,10 +265,16 @@ assert.ok(
   'landscape writing field must use a short-screen floor',
 )
 assert.ok(
-  /\.vora-sky-todays-light \.vora-mirror-headline--writing \.vora-sky-diary-input\s*\{[^}]*text-align:\s*start/s.test(
+  /\.vora-sky-todays-light \.vora-mirror-headline--writing \.vora-sky-diary-input\s*\{[^}]*text-align:\s*center/s.test(
     css,
   ),
-  'writing caret must begin at the natural reading edge',
+  'writing must preserve the centered finished-Light composition',
+)
+assert.ok(
+  todayPanel.includes('id="vora-write-prompt"') &&
+    !todayPanel.includes('placeholder={t.writePlaceholder}') &&
+    todayPanel.includes("['vora-write-prompt', writeDescriptionId]"),
+  'writing prompt must be a separate accessible label, never overlap the caret',
 )
 assert.ok(
   css.includes('--vora-typo-sky-accent: clamp(1.96rem') &&
