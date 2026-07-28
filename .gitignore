@@ -16,6 +16,7 @@ out/
 dist/
 .vinext/
 .wrangler/
+.openai/
 .DS_Store
 .pnpm-store/
 tsconfig.tsbuildinfo
