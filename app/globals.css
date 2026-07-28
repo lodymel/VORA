@@ -8100,8 +8100,8 @@ body[data-vora-card-open='true'] .vora-app-header {
 }
 
 .vora-light-card-action:disabled {
-  opacity: 0.4;
-  cursor: wait;
+  opacity: 0.72;
+  cursor: progress;
 }
 
 .vora-light-card-action--primary {
@@ -8125,14 +8125,25 @@ body[data-vora-card-open='true'] .vora-app-header {
   transform: scale(0.97);
 }
 
+.vora-light-card-status-slot {
+  position: relative;
+  flex-shrink: 0;
+  width: 100%;
+  height: 1.75rem;
+  flex-basis: 100%;
+  margin-top: 0.1rem;
+  pointer-events: none;
+}
+
 .vora-light-card-status {
+  position: absolute;
+  inset: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
   width: 100%;
-  flex-basis: 100%;
-  margin: 0.35rem 0 0;
+  margin: 0;
   padding: 0.25rem 0.5rem;
   text-align: center;
   font-family: var(--font-sky-label);
@@ -8143,11 +8154,6 @@ body[data-vora-card-open='true'] .vora-app-header {
   background: transparent;
   box-shadow: none;
   pointer-events: none;
-  animation: vora-status-spark 1.2s var(--vora-ease) both;
-}
-.vora-light-card-status[data-tone='progress'] {
-  color: rgb(230 220 255 / 0.78);
-  background: transparent;
 }
 .vora-light-card-status[data-tone='success'] {
   color: rgb(255 252 250 / 0.92);
@@ -8303,9 +8309,9 @@ body[data-vora-card-open='true'] .vora-app-header {
     gap: 0.25rem;
     width: 100%;
   }
-  .vora-light-card-status {
+  .vora-light-card-status-slot {
     flex-basis: auto;
-    margin-top: 0.15rem;
+    min-height: 1.75rem;
   }
 
   .vora-enter-panel-sheet:has(.vora-enter-panel-policy),

@@ -313,5 +313,14 @@ assert.ok(
     !lightCard.includes("locale === 'ko' ||"),
   'card typography must follow the Light language, not the UI locale',
 )
+assert.ok(
+  cardReveal.includes("const [busyAction, setBusyAction]") &&
+    cardReveal.includes('className="vora-light-card-status-slot"') &&
+    cardReveal.includes('{t.save}') &&
+    cardReveal.includes('{t.share}') &&
+    !cardReveal.includes('? t.saving : t.save') &&
+    !cardReveal.includes('? t.sharing : t.share'),
+  'Save and Share labels must stay fixed while feedback uses a reserved status slot',
+)
 
 console.log('album typo lock OK — center-safe CSS + live splits + balanced attract')

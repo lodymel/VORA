@@ -57,9 +57,9 @@ export function LightCardReveal({
   const [mounted, setMounted] = useState(false)
   const [phase, setPhase] = useState<Phase>('transforming')
   const [showFace, setShowFace] = useState(false)
-  const [busy, setBusy] = useState(false)
+  const [busyAction, setBusyAction] = useState<'save' | 'share' | null>(null)
   const [status, setStatus] = useState<string | null>(null)
-  const [statusTone, setStatusTone] = useState<'progress' | 'success' | 'error'>('progress')
+  const [statusTone, setStatusTone] = useState<'success' | 'error'>('success')
   const cardRef = useRef<HTMLElement>(null)
   const captureCacheRef = useRef<Blob | null>(null)
   const statusClearRef = useRef<number | null>(null)
@@ -309,10 +309,9 @@ export function LightCardReveal({
   ])
 
   async function handleSave() {
-    if (!cardRef.current || busy || phase !== 'ready') return
-    setBusy(true)
-    setStatusTone('progress')
-    setStatus(t.saving)
+    if (!cardRef.current || busyAction || phase !== 'ready') return
+    setBusyAction('save')
+    setStatus(null)
     if (statusClearRef.current) window.clearTimeout(statusClearRef.current)
     try {
       const blob = await getCaptureBlob()
@@ -327,16 +326,15 @@ export function LightCardReveal({
       setStatusTone('error')
       setStatus(t.couldNotSave)
     } finally {
-      setBusy(false)
+      setBusyAction(null)
       statusClearRef.current = window.setTimeout(() => setStatus(null), 3200)
     }
   }
 
   async function handleShare() {
-    if (!cardRef.current || busy || phase !== 'ready') return
-    setBusy(true)
-    setStatusTone('progress')
-    setStatus(t.preparing)
+    if (!cardRef.current || busyAction || phase !== 'ready') return
+    setBusyAction('share')
+    setStatus(null)
     if (statusClearRef.current) window.clearTimeout(statusClearRef.current)
     try {
       const blob = await getCaptureBlob()
@@ -351,7 +349,7 @@ export function LightCardReveal({
       setStatusTone('error')
       setStatus(t.couldNotShare)
     } finally {
-      setBusy(false)
+      setBusyAction(null)
       statusClearRef.current = window.setTimeout(() => setStatus(null), 3200)
     }
   }
@@ -460,38 +458,43 @@ export function LightCardReveal({
                   type="button"
                   className="vora-light-card-action"
                   onClick={handleSave}
-                  disabled={busy}
-                  aria-busy={busy && status === t.saving}
+                  disabled={busyAction !== null}
+                  aria-busy={busyAction === 'save'}
                 >
-                  {busy && status === t.saving ? t.saving : t.save}
+                  {t.save}
                 </button>
                 <button
                   type="button"
                   className="vora-light-card-action vora-light-card-action--primary"
                   onClick={handleShare}
-                  disabled={busy}
-                  aria-busy={busy && status === t.preparing}
+                  disabled={busyAction !== null}
+                  aria-busy={busyAction === 'share'}
                 >
-                  {busy && status === t.preparing ? t.sharing : t.share}
+                  {t.share}
                 </button>
-                <AnimatePresence>
-                  {status ? (
-                    <motion.p
-                      key={status}
-                      className="vora-light-card-status"
-                      data-tone={statusTone}
-                      role="status"
-                      aria-live="polite"
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.28, ease }}
-                    >
-                      <VoraOStar size={12} />
-                      <span>{status}</span>
-                    </motion.p>
-                  ) : null}
-                </AnimatePresence>
+                <div
+                  className="vora-light-card-status-slot"
+                  role="status"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  <AnimatePresence initial={false}>
+                    {status ? (
+                      <motion.p
+                        key={`${statusTone}:${status}`}
+                        className="vora-light-card-status"
+                        data-tone={statusTone}
+                        initial={{ opacity: 0, y: 2 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2, ease }}
+                      >
+                        <VoraOStar size={12} />
+                        <span>{status}</span>
+                      </motion.p>
+                    ) : null}
+                  </AnimatePresence>
+                </div>
               </motion.div>
             ) : null}
           </AnimatePresence>
