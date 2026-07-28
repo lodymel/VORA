@@ -5348,6 +5348,10 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   min-height: 2.8125rem;
   padding: 0.4rem 0.95rem;
 }
+.vora-sky-page--writing .vora-sky-release-link {
+  height: 2.75rem;
+  padding-block: 0.4rem;
+}
 .vora-sky-page--writing .vora-sky-write-hint {
   padding-top: 0;
 }
@@ -5458,13 +5462,15 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   color: rgb(230 220 255 / 0.72);
 }
 .vora-sky-leave-prompt {
-  margin: 0 0 0.45rem;
+  margin: 0;
+  padding: 0.05rem 0.5rem 0.15rem;
   font-family: var(--font-sky-label);
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 300;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
   text-transform: uppercase;
-  color: rgb(230 220 255 / 0.55);
+  color: rgb(230 220 255 / 0.46);
   text-align: center;
 }
 .vora-sky-ritual-action-spacer {

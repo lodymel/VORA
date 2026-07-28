@@ -242,6 +242,16 @@ assert.ok(
   'writing guidance must be read before the primary Hold action',
 )
 assert.ok(
+  todayPanel.indexOf('className="vora-sky-leave-prompt"') <
+    todayPanel.indexOf('aria-label={t.keepWriting}') &&
+    /\.vora-sky-leave-prompt\s*\{[^}]*font-size:\s*0\.625rem/s.test(css) &&
+    /\.vora-sky-leave-prompt\s*\{[^}]*color:\s*rgb\(230 220 255 \/ 0\.46\)/s.test(css) &&
+    /\.vora-sky-page--writing \.vora-sky-release-link\s*\{[^}]*height:\s*2\.75rem/s.test(
+      css,
+    ),
+  'discard prompt must sit in the quiet guidance slot above Keep writing',
+)
+assert.ok(
   enterScreen.indexOf('className="vora-enter-sound-hint"') <
     enterScreen.indexOf('className="vora-enter-cta-row"'),
   'entry context must precede the primary Enter action',

@@ -325,10 +325,12 @@ export function SkyTodaysLightPanel({
       >
         {discardArmed && isWriting ? (
           <>
-            <div className="vora-sky-ritual-action-primary">
+            <div className="vora-sky-write-guidance">
               <p className="vora-sky-leave-prompt" role="status">
                 {t.leaveLight}
               </p>
+            </div>
+            <div className="vora-sky-ritual-action-primary">
               <button
                 type="button"
                 onClick={() => setDiscardArmed(false)}
