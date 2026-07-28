@@ -10,6 +10,7 @@ import {
 import { useCoarsePointer } from './pointer-env'
 import { privacyLede, privacyUpdated, PrivacyChapters } from './privacy-content'
 import { termsLede, termsUpdated, TermsChapters } from './terms-content'
+import { voraAudio } from './vora-audio'
 import { useVoraLocale } from './vora-locale'
 
 const ease = [0.22, 1, 0.36, 1] as const
@@ -23,15 +24,23 @@ const STATUS_LINES = {
     { label: 'Sky', value: 'Clear' },
     { label: 'Constellation', value: 'Quiet' },
     { label: 'Lights', value: 'Ready' },
-    { label: 'Sound', value: 'Waiting' },
   ],
   ko: [
     { label: '하늘', value: '맑음' },
     { label: '별자리', value: '고요함' },
     { label: '빛', value: '준비됨' },
-    { label: '소리', value: '기다리는 중' },
   ],
 } as const
+
+function statusLines(locale: 'en' | 'ko') {
+  const soundPlaying = voraAudio.isPlaying()
+  return [
+    ...STATUS_LINES[locale],
+    locale === 'ko'
+      ? { label: '소리', value: soundPlaying ? '재생 중' : '기다리는 중' }
+      : { label: 'Sound', value: soundPlaying ? 'Playing' : 'Waiting' },
+  ]
+}
 
 function MetaLink({
   label,
@@ -184,7 +193,7 @@ function EnterSheetPanel({
                 </p>
                 <h2 className="vora-enter-panel-headline">{t.skyClear}</h2>
                 <ul className="vora-enter-status-list">
-                  {STATUS_LINES[locale].map((line) => (
+                  {statusLines(locale).map((line) => (
                     <li key={line.label} className="vora-enter-status-row">
                       <span className="vora-enter-status-dot" aria-hidden="true" />
                       <span className="vora-enter-status-label">{line.label}</span>

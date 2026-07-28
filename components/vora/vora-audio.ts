@@ -274,6 +274,10 @@ export const voraAudio = {
     return enabled
   },
 
+  isPlaying() {
+    return enabled && started && ambientEl != null && !ambientEl.paused
+  },
+
   hydrate() {
     enabled = loadEnabled()
     bindVisibilityPause()

@@ -24,6 +24,8 @@ const enterScreen = readFileSync(
   join(root, 'components/vora/screens/enter-ritual-screen.tsx'),
   'utf8',
 )
+const enterChrome = readFileSync(join(root, 'components/vora/enter-chrome.tsx'), 'utf8')
+const audioSource = readFileSync(join(root, 'components/vora/vora-audio.ts'), 'utf8')
 
 const MUST_CONTAIN = [
   "primaryLines: ['I attract', 'success through']",
@@ -261,6 +263,23 @@ assert.ok(
   todayPanel.includes('window.innerWidth > window.innerHeight') &&
     todayPanel.includes('shortLandscape ? 4.25 : 12'),
   'landscape writing field must use a short-screen floor',
+)
+assert.ok(
+  /\.vora-sky-todays-light \.vora-mirror-headline--writing \.vora-sky-diary-input\s*\{[^}]*text-align:\s*start/s.test(
+    css,
+  ),
+  'writing caret must begin at the natural reading edge',
+)
+assert.ok(
+  css.includes('--vora-typo-sky-accent: clamp(1.96rem') &&
+    css.includes('--vora-typo-card-accent: clamp(1.25rem'),
+  'Korean accent face must be optically balanced with the hero face',
+)
+assert.ok(
+  audioSource.includes('isPlaying()') &&
+    enterChrome.includes("soundPlaying ? '재생 중' : '기다리는 중'") &&
+    enterChrome.includes("soundPlaying ? 'Playing' : 'Waiting'"),
+  'Status sound line must reflect actual background playback',
 )
 
 console.log('album typo lock OK — center-safe CSS + live splits + balanced attract')
