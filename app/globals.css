@@ -3569,7 +3569,7 @@ html.vora-locale-ko .vora-constellation-node-date,
   margin-top: 0.32rem;
 }
 .vora-enter-actions {
-  gap: 1.05rem;
+  gap: 0.7rem;
   padding-bottom: 2.75rem;
   padding-inline: var(--vora-chrome-x);
 }
@@ -3756,9 +3756,11 @@ html.vora-locale-ko .vora-constellation-node-date,
   font-family: var(--font-sky-label);
   font-size: 0.5625rem;
   font-weight: 400;
-  letter-spacing: 0.26em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgb(221 232 255 / 0.34);
+  color: rgb(221 232 255 / 0.46);
+  line-height: 1.4;
+  text-wrap: balance;
 }
 .vora-enter-quiet {
   display: flex;
@@ -3874,7 +3876,7 @@ html.vora-locale-ko .vora-constellation-node-date,
   /* Air above Privacy / Who made this / Status */
   bottom: max(5.5rem, calc(env(safe-area-inset-bottom) + 4.15rem));
   padding-bottom: 0;
-  gap: 1.15rem;
+  gap: 0.7rem;
 }
 .vora-enter-ritual-veil {
   background:
@@ -5304,7 +5306,7 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   margin-bottom: 0.2rem;
   padding-top: 0.2rem;
   padding-bottom: 0.1rem;
-  gap: 0.12rem;
+  gap: 0.2rem;
 }
 .vora-sky-page--writing .vora-sky-ritual-action-primary,
 .vora-sky-page--writing .vora-sky-ritual-action-secondary {
@@ -5319,15 +5321,28 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   padding: 0.4rem 0.95rem;
 }
 .vora-sky-page--writing .vora-sky-write-hint {
-  padding-top: 0.05rem;
+  padding-top: 0;
 }
 .vora-sky-page--writing .vora-sky-write-hint--sentence {
   width: max-content;
   max-width: 100%;
-  padding: 0.15rem 0.25rem 0.05rem;
+  padding: 0.1rem 0.25rem;
   font-size: clamp(0.625rem, 3.1vw, 0.6875rem);
   letter-spacing: 0.01em;
   white-space: nowrap;
+}
+.vora-sky-write-guidance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 1.25rem;
+}
+.vora-sky-write-guidance-spacer {
+  display: block;
+  width: 1px;
+  height: 1.25rem;
+  visibility: hidden;
 }
 .vora-sky-page--writing .vora-sky-todays-main {
   padding-top: 0.15rem;
@@ -5402,8 +5417,8 @@ body:has(.vora-light-card-reveal) .vora-constellation-node-date {
   background: transparent;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  padding: 0.25rem 0.75rem 0.1rem;
-  min-height: 0;
+  padding: 0.3rem 0.75rem;
+  min-height: 2.75rem;
 }
 .vora-sky-write-hint-label {
   letter-spacing: 0.12em;
@@ -8030,7 +8045,7 @@ body[data-vora-card-open='true'] .vora-app-header {
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 0.2rem 1.5rem;
+  gap: 0.35rem 1.25rem;
   width: auto;
   max-width: 100%;
   pointer-events: none;
@@ -8048,7 +8063,7 @@ body[data-vora-card-open='true'] .vora-app-header {
   border: 0;
   border-radius: 0;
   padding: 0.75rem 0.65rem;
-  min-height: 2.5rem;
+  min-height: 2.8125rem;
   min-width: auto;
   cursor: pointer;
   text-shadow: 0 1px 12px rgb(0 0 0 / 0.45);
@@ -8090,29 +8105,27 @@ body[data-vora-card-open='true'] .vora-app-header {
   gap: 0.45rem;
   width: 100%;
   flex-basis: 100%;
-  margin: 0.15rem 0 0;
-  padding: 0.55rem 0.85rem;
-  border-radius: 999px;
+  margin: 0.35rem 0 0;
+  padding: 0.25rem 0.5rem;
   text-align: center;
   font-family: var(--font-sky-label);
   font-size: 0.6875rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgb(245 240 255 / 0.95);
-  background: rgb(18 12 32 / 0.55);
-  box-shadow: 0 0 24px rgb(203 184 255 / 0.18);
+  color: rgb(245 240 255 / 0.82);
+  background: transparent;
+  box-shadow: none;
   pointer-events: none;
   animation: vora-status-spark 1.2s var(--vora-ease) both;
 }
 .vora-light-card-status[data-tone='progress'] {
   color: rgb(230 220 255 / 0.78);
-  background: rgb(18 12 32 / 0.4);
-  box-shadow: none;
+  background: transparent;
 }
 .vora-light-card-status[data-tone='success'] {
-  color: rgb(255 252 250 / 0.98);
-  background: rgb(48 36 78 / 0.72);
-  box-shadow: 0 0 28px rgb(203 184 255 / 0.28);
+  color: rgb(255 252 250 / 0.92);
+  background: transparent;
+  box-shadow: none;
 }
 .vora-light-card-status[data-tone='error'] {
   color: rgb(255 220 220 / 0.92);

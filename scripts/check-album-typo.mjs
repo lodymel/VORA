@@ -20,6 +20,10 @@ const blockTsx = readFileSync(join(root, 'components/vora/album-typo-block.tsx')
 const lightsSource = readFileSync(join(root, 'components/vora/light-quotes.ts'), 'utf8')
 const localeProvider = readFileSync(join(root, 'components/vora/vora-locale.tsx'), 'utf8')
 const todayPanel = readFileSync(join(root, 'components/vora/sky-todays-light-panel.tsx'), 'utf8')
+const enterScreen = readFileSync(
+  join(root, 'components/vora/screens/enter-ritual-screen.tsx'),
+  'utf8',
+)
 
 const MUST_CONTAIN = [
   "primaryLines: ['I attract', 'success through']",
@@ -226,6 +230,20 @@ assert.ok(
 assert.ok(
   /\.vora-sky-page--writing \.vora-whisper-chip\s*\{[^}]*min-height:\s*2\.8125rem/s.test(css),
   'writing Hold button must keep a 44px touch target',
+)
+assert.ok(
+  todayPanel.indexOf('className="vora-sky-write-guidance"') <
+    todayPanel.indexOf('onClick={handleHoldDiary}'),
+  'writing guidance must be read before the primary Hold action',
+)
+assert.ok(
+  enterScreen.indexOf('className="vora-enter-sound-hint"') <
+    enterScreen.indexOf('className="vora-enter-cta-row"'),
+  'entry context must precede the primary Enter action',
+)
+assert.ok(
+  /\.vora-light-card-action\s*\{[^}]*min-height:\s*2\.8125rem/s.test(css),
+  'card actions must keep a 44px touch target',
 )
 
 console.log('album typo lock OK — center-safe CSS + live splits + balanced attract')

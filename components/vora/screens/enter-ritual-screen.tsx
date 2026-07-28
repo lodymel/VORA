@@ -203,6 +203,7 @@ export function EnterRitualScreen({
             style={{ pointerEvents: inviting ? 'auto' : 'none' }}
             aria-hidden={!inviting}
           >
+            <p className="vora-enter-sound-hint">{t.soundHint}</p>
             <div className="vora-enter-cta-row">
               <span className="vora-enter-cta-orbit vora-enter-cta-orbit--left" aria-hidden="true">
                 <i className="vora-enter-cta-mark vora-enter-cta-mark--dot" />
@@ -225,7 +226,6 @@ export function EnterRitualScreen({
                 <i className="vora-enter-cta-mark vora-enter-cta-mark--dot" />
               </span>
             </div>
-            <p className="vora-enter-sound-hint">{t.soundHint}</p>
           </motion.div>
         ) : null}
       </div>

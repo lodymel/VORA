@@ -103,6 +103,11 @@ export function SkyTodaysLightPanel({
     draftReady && !duplicateBlocked && (!hasHangul(draft) || allowsHangul(locale))
   const showSentenceHint = isWriting && !ascending && !hangulBlocked && !draftReady
   const showDuplicateHint = isWriting && !ascending && !hangulBlocked && duplicateBlocked
+  const writeDescriptionId = showDuplicateHint
+    ? 'vora-write-duplicate-hint'
+    : showSentenceHint
+      ? 'vora-write-sentence-hint'
+      : undefined
 
   useEffect(() => {
     setWriteInvite(!hasKnownWriteOwn())
@@ -274,6 +279,7 @@ export function SkyTodaysLightPanel({
                   className={`vora-sky-diary-input${writingHangul ? ' vora-lang-ko' : ''}`}
                   placeholder={t.writePlaceholder}
                   aria-label={t.writeOwnAria}
+                  aria-describedby={writeDescriptionId}
                   enterKeyHint="done"
                   autoCapitalize="sentences"
                 />
@@ -359,6 +365,36 @@ export function SkyTodaysLightPanel({
           </>
         ) : isWriting ? (
           <>
+            <div className="vora-sky-write-guidance">
+              {hangulBlocked ? (
+                <button
+                  type="button"
+                  className="vora-sky-write-hint vora-sky-write-hint--action"
+                  onClick={() => setLocale('ko')}
+                >
+                  <span className="vora-sky-write-hint-label">{t.writeHangulHint}</span>
+                  <span className="vora-sky-write-hint-cta">{t.writeSwitchKo}</span>
+                </button>
+              ) : showDuplicateHint ? (
+                <p
+                  id="vora-write-duplicate-hint"
+                  className="vora-sky-write-hint vora-sky-write-hint--sentence"
+                  role="status"
+                >
+                  {t.writeDuplicateHint}
+                </p>
+              ) : showSentenceHint ? (
+                <p
+                  id="vora-write-sentence-hint"
+                  className="vora-sky-write-hint vora-sky-write-hint--sentence"
+                  role="status"
+                >
+                  {t.writeSentenceHint}
+                </p>
+              ) : (
+                <span className="vora-sky-write-guidance-spacer" aria-hidden="true" />
+              )}
+            </div>
             <div className="vora-sky-ritual-action-primary">
               <button
                 type="button"
@@ -370,24 +406,6 @@ export function SkyTodaysLightPanel({
               </button>
             </div>
             <div className="vora-sky-ritual-action-secondary">
-              {hangulBlocked ? (
-                <button
-                  type="button"
-                  className="vora-sky-write-hint vora-sky-write-hint--action"
-                  onClick={() => setLocale('ko')}
-                >
-                  <span className="vora-sky-write-hint-label">{t.writeHangulHint}</span>
-                  <span className="vora-sky-write-hint-cta">{t.writeSwitchKo}</span>
-                </button>
-              ) : showDuplicateHint ? (
-                <p className="vora-sky-write-hint vora-sky-write-hint--sentence" role="status">
-                  {t.writeDuplicateHint}
-                </p>
-              ) : showSentenceHint ? (
-                <p className="vora-sky-write-hint vora-sky-write-hint--sentence" role="status">
-                  {t.writeSentenceHint}
-                </p>
-              ) : null}
               <button
                 type="button"
                 onClick={handleCancelClick}
