@@ -62,6 +62,9 @@ export function LightCardReveal({
   const [status, setStatus] = useState<string | null>(null)
   const [statusTone, setStatusTone] = useState<'success' | 'error'>('success')
   const cardRef = useRef<HTMLElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const openerRef = useRef<HTMLElement | null>(null)
   const busyActionRef = useRef<'save' | 'share' | null>(null)
   const captureCacheRef = useRef<Blob | null>(null)
   const capturePromiseRef = useRef<Promise<Blob> | null>(null)
@@ -86,6 +89,9 @@ export function LightCardReveal({
   }, [])
 
   useLayoutEffect(() => {
+    openerRef.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null
     document.body.dataset.voraCardOpen = 'true'
     const prevOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -94,6 +100,43 @@ export function LightCardReveal({
       document.body.style.overflow = prevOverflow
     }
   }, [])
+
+  // A modal is one interaction island: remove the app behind it from the
+  // accessibility tree, keep focus inside, then return to the originating Star.
+  useEffect(() => {
+    if (!mounted) return
+    const overlay = overlayRef.current
+    if (!overlay) return
+
+    const background = [...document.body.children].filter(
+      (node): node is HTMLElement => node instanceof HTMLElement && node !== overlay,
+    )
+    const previous = background.map((node) => ({
+      node,
+      inert: node.inert,
+      ariaHidden: node.getAttribute('aria-hidden'),
+    }))
+    for (const item of previous) {
+      item.node.inert = true
+      item.node.setAttribute('aria-hidden', 'true')
+    }
+    overlay.focus({ preventScroll: true })
+
+    return () => {
+      for (const item of previous) {
+        item.node.inert = item.inert
+        if (item.ariaHidden == null) item.node.removeAttribute('aria-hidden')
+        else item.node.setAttribute('aria-hidden', item.ariaHidden)
+      }
+      const opener = openerRef.current
+      if (opener?.isConnected) opener.focus({ preventScroll: true })
+    }
+  }, [mounted])
+
+  useEffect(() => {
+    if (phase !== 'ready') return
+    closeButtonRef.current?.focus({ preventScroll: true })
+  }, [phase])
 
   const releaseChrome = useCallback(() => {
     delete document.body.dataset.voraCardOpen
@@ -263,11 +306,37 @@ export function LightCardReveal({
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') void requestClose()
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        void requestClose()
+        return
+      }
+      if (event.key !== 'Tab' || phase === 'closing') return
+
+      const overlay = overlayRef.current
+      if (!overlay) return
+      const focusable = [...overlay.querySelectorAll<HTMLElement>(
+        'button:not(:disabled):not([tabindex="-1"]), a[href], input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [tabindex]:not([tabindex="-1"])',
+      )].filter((node) => {
+        const rect = node.getBoundingClientRect()
+        return rect.width > 0 && rect.height > 0
+      })
+      if (focusable.length === 0) {
+        event.preventDefault()
+        overlay.focus({ preventScroll: true })
+        return
+      }
+
+      const activeIndex = focusable.indexOf(document.activeElement as HTMLElement)
+      const nextIndex = event.shiftKey
+        ? activeIndex <= 0 ? focusable.length - 1 : activeIndex - 1
+        : activeIndex < 0 || activeIndex === focusable.length - 1 ? 0 : activeIndex + 1
+      event.preventDefault()
+      focusable[nextIndex]?.focus({ preventScroll: true })
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [requestClose])
+  }, [phase, requestClose])
 
   // Run only after portal is in the DOM — avoids opacity stuck at 0
   useEffect(() => {
@@ -416,11 +485,13 @@ export function LightCardReveal({
 
   return createPortal(
     <motion.div
+      ref={overlayRef}
       className="vora-light-card-reveal"
       data-sky-theme={theme}
       role="dialog"
       aria-modal="true"
       aria-label={t.lightCard}
+      tabIndex={-1}
       initial={{ opacity: 0 }}
       animate={overlayControls}
     >
@@ -437,6 +508,7 @@ export function LightCardReveal({
               : t.closeCard
         }
         disabled={phase === 'closing'}
+        tabIndex={-1}
         onClick={() => {
           if (phase === 'transforming') skipToReady()
           else if (phase === 'ready') void requestClose()
@@ -446,6 +518,7 @@ export function LightCardReveal({
       <AnimatePresence>
         {showChrome ? (
           <motion.button
+            ref={closeButtonRef}
             key="close"
             type="button"
             className="vora-light-card-reveal-x"

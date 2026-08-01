@@ -221,6 +221,19 @@ expectLines('I attract success through who I am becoming', ['I attract', 'succes
   }
 }
 
+// Long Korean, including the common no-space case, must always become
+// bounded explicit lines instead of one clipped nowrap row.
+for (const sentence of [
+  '오늘도나는나의속도를믿으며조용하지만단단하게앞으로나아갑니다',
+  '오늘 나는 나의 마음을 천천히 바라보고 작은 용기를 모아 앞으로 나아갑니다',
+]) {
+  const ko = getAlbumTypoLines(sentence)
+  const lines = [...ko.primaryLines, ...ko.accentLines]
+  assert.ok(lines.length >= 2, `long Korean was not split: ${sentence}`)
+  assert.ok(lines.every((line) => [...line].length <= 12), `long Korean line can clip: ${lines}`)
+  assert.equal([ko.primary, ko.accent].filter(Boolean).join(' ').replaceAll(' ', ''), sentence.replaceAll(' ', ''))
+}
+
 assert.ok(
   css.includes(
     '.vora-sky-page--writing:not(.vora-sky-page--holding) .vora-sky-ritual--editorial',
@@ -331,6 +344,13 @@ assert.ok(
     !cardReveal.includes('? t.saving : t.save') &&
     !cardReveal.includes('? t.sharing : t.share'),
   'Save and Share labels must stay fixed while feedback uses a reserved status slot',
+)
+assert.ok(
+  cardReveal.includes('item.node.inert = true') &&
+    cardReveal.includes("event.key !== 'Tab'") &&
+    cardReveal.includes('closeButtonRef.current?.focus') &&
+    cardReveal.includes('opener?.isConnected'),
+  'Light card modal must isolate background, trap focus, and restore the opening Star',
 )
 
 console.log('album typo lock OK — center-safe CSS + live splits + balanced attract')

@@ -41,8 +41,11 @@ const LINE_BUDGET = 16
 /** Accent (Rosemartin) reads wider — tighter char budget than primary. */
 const ACCENT_LINE_BUDGET = 14
 /** Hangul squares — optical width budget (see measureTypoWidth). */
-const KR_LINE_BUDGET = 12
-const KR_ACCENT_LINE_BUDGET = 10
+// measureTypoWidth already counts Hangul at 1.85 units. These budgets therefore
+// yield roughly 10 / 9 syllables per line instead of double-penalising Korean
+// into many tiny rows that overflow the card vertically.
+const KR_LINE_BUDGET = 20
+const KR_ACCENT_LINE_BUDGET = 18
 /** Soft overshoot for poster binary splits — keep tiny; large slack overflows the card. */
 const LINE_SLACK = 2
 
@@ -145,8 +148,12 @@ export function balancePhraseLines(text: string, maxChars = LINE_BUDGET): string
   if (measureTypoWidth(joined) <= maxChars) return [joined]
 
   // Two words over budget → stack (never one long nowrap that clips the card).
-  if (words.length === 2) return [words[0], words[1]]
-  if (words.length === 1) return [joined]
+  if (words.length === 2) {
+    return words.flatMap((word) => splitOverlongToken(word, maxChars))
+  }
+  // Korean is commonly entered without spaces. A single 20+ syllable token
+  // must still receive explicit card-safe lines; nowrap CSS cannot rescue it.
+  if (words.length === 1) return splitOverlongToken(joined, maxChars)
 
   // 3–6 words over budget: balanced binary poster split
   if (words.length <= 6) {
@@ -234,8 +241,11 @@ export function balancePhraseLines(text: string, maxChars = LINE_BUDGET): string
 function hardPackOverBudget(lines: string[], maxChars: number): string[] {
   const out: string[] = []
   for (const line of lines) {
-    const words = line.split(/\s+/).filter(Boolean)
-    if (words.length <= 1 || measureTypoWidth(line) <= maxChars + LINE_SLACK) {
+    const words = line
+      .split(/\s+/)
+      .filter(Boolean)
+      .flatMap((word) => splitOverlongToken(word, maxChars))
+    if (measureTypoWidth(line) <= maxChars + LINE_SLACK) {
       out.push(line)
       continue
     }
@@ -256,6 +266,28 @@ function hardPackOverBudget(lines: string[], maxChars: number): string[] {
     if (current.length) out.push(current.join(' '))
   }
   return out
+}
+
+/** Split a space-free token by Unicode code points without cutting Hangul or emoji. */
+function splitOverlongToken(token: string, maxChars: number): string[] {
+  if (measureTypoWidth(token) <= maxChars + LINE_SLACK) return [token]
+
+  const chunks: string[] = []
+  let current = ''
+  let width = 0
+  for (const glyph of Array.from(token)) {
+    const glyphWidth = measureTypoWidth(glyph)
+    if (current && width + glyphWidth > maxChars) {
+      chunks.push(current)
+      current = glyph
+      width = glyphWidth
+    } else {
+      current += glyph
+      width += glyphWidth
+    }
+  }
+  if (current) chunks.push(current)
+  return chunks
 }
 
 function splitVoice(sentence: string): { primary: string; accent: string } {

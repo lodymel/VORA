@@ -27,7 +27,7 @@ const CLASS = {
 /** Keep a quiet margin inside the measure — never flush to the edge. */
 const FIT_AIR = 0.94
 /** Floor so long Lights stay readable; budgets should usually avoid this. */
-const FIT_FLOOR = 0.78
+const FIT_FLOOR = 0.48
 
 function TypoLines({
   lines,
@@ -76,9 +76,16 @@ export function AlbumTypoBlock({
     if (!root) return
 
     const fit = () => {
-      root.style.setProperty('--vora-typo-fit-scale', '1')
+      const voices = root.querySelectorAll<HTMLElement>(
+        '.vora-mirror-album-primary, .vora-mirror-album-accent, .vora-light-card-primary, .vora-light-card-accent',
+      )
+      voices.forEach((node) => node.style.removeProperty('font-size'))
+      const naturalFontSizes = [...voices].map(
+        (node) => Number.parseFloat(getComputedStyle(node).fontSize) || 16,
+      )
       const box = root.clientWidth
-      if (box <= 0) return
+      const parent = root.parentElement
+      if (box <= 0 || !parent) return
 
       let widest = 0
       root.querySelectorAll<HTMLElement>('.vora-album-typo-line').forEach((node) => {
@@ -87,13 +94,28 @@ export function AlbumTypoBlock({
       if (widest <= 0) return
 
       const room = box * FIT_AIR
-      const next = widest > room ? Math.max(FIT_FLOOR, room / widest) : 1
-      root.style.setProperty('--vora-typo-fit-scale', String(next))
+      const widthScale = widest > room ? room / widest : 1
+
+      // The card body also has a fixed star and gap. Fit the complete line stack
+      // into the remaining height so long Korean cannot disappear below the card.
+      const parentStyle = getComputedStyle(parent)
+      const gap = Number.parseFloat(parentStyle.rowGap || parentStyle.gap || '0') || 0
+      const siblings = [...parent.children].filter((node) => node !== root) as HTMLElement[]
+      const siblingHeight = siblings.reduce((sum, node) => sum + node.offsetHeight, 0)
+      const gapCount = Math.max(0, parent.children.length - 1)
+      const heightRoom = Math.max(1, (parent.clientHeight - siblingHeight - gap * gapCount) * FIT_AIR)
+      const naturalHeight = root.scrollHeight
+      const heightScale = naturalHeight > heightRoom ? heightRoom / naturalHeight : 1
+      const next = Math.max(FIT_FLOOR, Math.min(widthScale, heightScale, 1))
+      voices.forEach((node, index) => {
+        if (next < 0.999) node.style.fontSize = `${naturalFontSizes[index] * next}px`
+      })
     }
 
     fit()
     const ro = new ResizeObserver(fit)
-    ro.observe(root)
+    const fitContainer = root.parentElement
+    if (fitContainer) ro.observe(fitContainer)
     if (typeof document !== 'undefined' && document.fonts?.ready) {
       void document.fonts.ready.then(fit)
     }

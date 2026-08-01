@@ -2265,8 +2265,7 @@ html.vora-locale-ko .vora-constellation-node-date,
   gap: var(--vora-typo-pair-gap);
   margin: 0;
   padding: 0;
-  transform: scale(var(--vora-typo-fit-scale, 1));
-  transform-origin: center center;
+  transform: none;
 }
 
 .vora-mirror-oval {
@@ -7725,8 +7724,7 @@ body[data-vora-holding='true'] .vora-tabbar {
   overflow-wrap: normal;
   word-break: normal;
   text-align: center;
-  transform: scale(var(--vora-typo-fit-scale, 1));
-  transform-origin: center center;
+  transform: none;
 }
 
 .vora-light-card-primary {
