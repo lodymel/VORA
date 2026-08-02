@@ -615,8 +615,12 @@ export function LightCardReveal({
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2, ease }}
                       >
-                        <VoraOStar size={12} />
-                        <span>{status}</span>
+                        <span className="vora-light-card-status-copy">
+                          <span className="vora-light-card-status-icon" aria-hidden="true">
+                            <VoraOStar size={12} />
+                          </span>
+                          <span>{status}</span>
+                        </span>
                       </motion.p>
                     ) : null}
                   </AnimatePresence>

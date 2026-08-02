@@ -8146,20 +8146,38 @@ body[data-vora-card-open='true'] .vora-app-header {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
   width: 100%;
   margin: 0;
   padding: 0.25rem 0.5rem;
   text-align: center;
   font-family: var(--font-sky-label);
   font-size: 0.6875rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-transform: none;
   white-space: nowrap;
   color: rgb(245 240 255 / 0.82);
   background: transparent;
   box-shadow: none;
   pointer-events: none;
+}
+.vora-light-card-status-copy {
+  position: relative;
+  display: inline-block;
+  line-height: 1.25;
+  text-align: center;
+}
+.vora-light-card-status-icon {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 0.42rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
+}
+html.vora-locale-ko .vora-light-card-status {
+  font-family: var(--font-ko-label);
+  letter-spacing: 0.035em;
 }
 .vora-light-card-status[data-tone='success'] {
   color: rgb(255 252 250 / 0.92);

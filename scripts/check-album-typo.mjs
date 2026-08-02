@@ -352,5 +352,13 @@ assert.ok(
     cardReveal.includes('opener?.isConnected'),
   'Light card modal must isolate background, trap focus, and restore the opening Star',
 )
+assert.ok(
+  cardReveal.includes('className="vora-light-card-status-copy"') &&
+    cardReveal.includes('className="vora-light-card-status-icon"') &&
+    /\.vora-light-card-status-icon\s*\{[^}]*position:\s*absolute/s.test(css) &&
+    /\.vora-light-card-status-icon\s*\{[^}]*right:\s*calc\(100% \+ 0\.42rem\)/s.test(css) &&
+    /\.vora-light-card-status\s*\{[^}]*text-transform:\s*none/s.test(css),
+  'Save and Share feedback text must own the card center while its Star stays optical',
+)
 
 console.log('album typo lock OK — center-safe CSS + live splits + balanced attract')
