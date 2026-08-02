@@ -620,6 +620,9 @@ export function LightCardReveal({
                             <VoraOStar size={12} />
                           </span>
                           <span>{status}</span>
+                          <span className="vora-light-card-status-icon" aria-hidden="true">
+                            <VoraOStar size={12} />
+                          </span>
                         </span>
                       </motion.p>
                     ) : null}

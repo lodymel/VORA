@@ -355,10 +355,12 @@ assert.ok(
 assert.ok(
   cardReveal.includes('className="vora-light-card-status-copy"') &&
     cardReveal.includes('className="vora-light-card-status-icon"') &&
-    /\.vora-light-card-status-icon\s*\{[^}]*position:\s*absolute/s.test(css) &&
-    /\.vora-light-card-status-icon\s*\{[^}]*right:\s*calc\(100% \+ 0\.42rem\)/s.test(css) &&
+    cardReveal.split('className="vora-light-card-status-icon"').length - 1 === 2 &&
+    /\.vora-light-card-status-copy\s*\{[^}]*display:\s*inline-flex/s.test(css) &&
+    /\.vora-light-card-status-copy\s*\{[^}]*gap:\s*0\.42rem/s.test(css) &&
+    !/\.vora-light-card-status-icon\s*\{[^}]*position:\s*absolute/s.test(css) &&
     /\.vora-light-card-status\s*\{[^}]*text-transform:\s*none/s.test(css),
-  'Save and Share feedback text must own the card center while its Star stays optical',
+  'Save and Share feedback must center the complete Star and text group',
 )
 
 console.log('album typo lock OK — center-safe CSS + live splits + balanced attract')

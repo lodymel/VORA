@@ -8161,19 +8161,19 @@ body[data-vora-card-open='true'] .vora-app-header {
   pointer-events: none;
 }
 .vora-light-card-status-copy {
-  position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
   line-height: 1.25;
   text-align: center;
 }
 .vora-light-card-status-icon {
-  position: absolute;
-  top: 50%;
-  right: calc(100% + 0.42rem);
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  transform: translateY(-50%);
+  opacity: 0.78;
 }
 html.vora-locale-ko .vora-light-card-status {
   font-family: var(--font-ko-label);
